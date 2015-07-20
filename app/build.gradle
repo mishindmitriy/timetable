@@ -6,7 +6,7 @@ android {
 
     defaultConfig {
         applicationId "mishindmitriy.timetable"
-        minSdkVersion 9
+        minSdkVersion 15
         targetSdkVersion 22
         versionCode 1
         versionName "1.0"
@@ -20,10 +20,10 @@ android {
     productFlavors {
         phone {
             applicationId "mishindmitriy.timetable.phone"
-            minSdkVersion 9
+            minSdkVersion 15
             targetSdkVersion 22
-            versionCode 1
-            versionName '1.0'
+            versionCode 2
+            versionName '0.2'
         }
     }
 }

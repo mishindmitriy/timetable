@@ -18,4 +18,15 @@ public class Pair {
         this.typePair=typePair;
         this.subject=subject;
     }
+
+    public String getClassroom()
+    {
+        return classroom;
+    }
+
+    public String getSubject()
+    {
+        return subject;
+    }
+
 }

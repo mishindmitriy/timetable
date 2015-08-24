@@ -20,6 +20,7 @@ import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -62,7 +63,11 @@ public class CaseGroupActivity extends AppCompatActivity {
 
        private class ParseGroups extends AsyncTask<String, Void, List<Group>> {
          protected List<Group> doInBackground(String... arg) {
-            return TolgasModel.getGroupsList();
+            try {
+                return TolgasModel.getGroupsList();
+            }
+            catch(IOException e){}
+            return null;
         }
 
         protected void onPostExecute(List<Group> output) {

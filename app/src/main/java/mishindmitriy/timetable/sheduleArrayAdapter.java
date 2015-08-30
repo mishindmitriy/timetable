@@ -35,7 +35,7 @@ public class SheduleArrayAdapter extends ArrayAdapter<DayPairs>
                 .setText(day.getDate());
         //((ListView) convertView.findViewById(R.id.listViewPairs))
         //        .setAdapter(new PairAdapter(getContext(), R.layout.pair, day.getPairsArray()));
-        LinearLayout l=(LinearLayout) convertView.findViewById(R.id.dayPairsLayout);
+        LinearLayout l=(LinearLayout) convertView.findViewById(R.id.pairLayout);
         //View child = l.getLayoutInflater().inflate(R.layout.pair);
         //тут просто добавлять textView
         View child=null;
@@ -46,17 +46,15 @@ public class SheduleArrayAdapter extends ArrayAdapter<DayPairs>
             Log.d(TAG, "add " + i + " child");
             ((TextView) child.findViewById(R.id.textViewClassroom))
                     .setText(day.getPair(i).getClassroom());
-            Log.d(TAG, "setTExt classroom" + day.getPair(i).getClassroom());
             ((TextView) child.findViewById(R.id.textViewSubject))
                     .setText(day.getPair(i).getSubject());
-            Log.d(TAG, "setTExt subject" + day.getPair(i).getSubject());
             if (child!=null) l.addView(child);
             else Log.d(TAG,"fail, "+i+" child is null");
         }
 
         Log.d(TAG, "view hi=" + convertView.getHeight());
         Log.d(TAG, "parent hi=" + parent.getHeight());
-        //Log.d(TAG,"listview hi="+((ListView) convertView.findViewById(R.id.listViewPairs)).getHeight());
+        Log.d(TAG,"listview hi="+((ListView) convertView.findViewById(R.id.listViewPairs)).getHeight());
         return convertView;
     }
 

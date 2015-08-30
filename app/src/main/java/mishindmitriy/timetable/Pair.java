@@ -24,6 +24,21 @@ public class Pair {
         return classroom;
     }
 
+    public String getPairNumber()
+    {
+        return pairNumber;
+    }
+
+    public String getPrepod()
+    {
+        return prepod;
+    }
+
+    public String getTypePair()
+    {
+        return typePair;
+    }
+
     public String getSubject()
     {
         return subject;

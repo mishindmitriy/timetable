@@ -77,7 +77,7 @@ public class TolgasModel {
         Calendar c = Calendar.getInstance();
         int offset=7;
         String str=getStringDate(c);
-        valuesPairs.put("from", "05.05.2015");
+        valuesPairs.put("from", str);
         if ((c.getMaximum(Calendar.DAY_OF_MONTH)-c.get(Calendar.DAY_OF_MONTH))<=offset)
         {
             c.roll(Calendar.DAY_OF_MONTH, offset);
@@ -87,7 +87,7 @@ public class TolgasModel {
         if (c.get(Calendar.MONTH)==0) c.roll(Calendar.YEAR,1);
 
         str=getStringDate(c);
-        valuesPairs.put("to", "20.05.2015");
+        valuesPairs.put("to", str);
         valuesPairs.put("submit_button", "%CF%CE%CA%C0%C7%C0%D2%DC");
 
         //Загружаем html код сайта

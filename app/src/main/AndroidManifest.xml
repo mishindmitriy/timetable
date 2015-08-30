@@ -3,8 +3,10 @@
     package="mishindmitriy.timetable" >
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.READ_LOGS" />
 
     <application
+        android:name=".TimeTableApp"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -12,20 +14,27 @@
         <activity
             android:name=".CaseGroupActivity"
             android:label="CaseGroupActivity" >
-          <!--  <meta-data
+
+            <!--
+                <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="mishindmitriy.timetable.SheduleActivity" />-->
+                android:value="mishindmitriy.timetable.SheduleActivity" />
+            -->
         </activity>
         <activity
             android:name=".SheduleActivity"
-            android:label="@string/title_activity_shedule">
-           <!-- android:parentActivityName=".CaseGroupActivity" >-->
-            <intent-filter>
+            android:label="@string/title_activity_shedule" >
+
+            <!-- android:parentActivityName=".CaseGroupActivity" > -->
+            <intent-filter>-->
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-
+        </activity>
+        <activity
+            android:name=".MainActivity"
+            android:label="@string/title_activity_main" >
         </activity>
     </application>
 

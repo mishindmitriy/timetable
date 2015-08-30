@@ -7,5 +7,18 @@
     <string name="caseGroup">Выберите группу</string>
     <string name="todayShedule">Расписание на сегодня</string>
     <string name="title_activity_shedule">Расписание ПВГУС</string>
+    <string name="crash_toast_text">Что-то пошло не так. Отчет об ошибке будет отправлен разработчику.</string>
+    <string name="title_activity_main">MainActivity</string>
+
+    <string name="TodayShedule">Сегодня</string>
+    <string name="TomorowShedule">Завтра</string>
+    <string name="SevenDaysShedule">7 дней</string>
+
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+
+    <string name="action_example">Upd</string>
+
+    <string name="action_settings">Settings</string>
 
 </resources>

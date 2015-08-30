@@ -26,11 +26,18 @@ android {
             versionName '1.1'
         }
     }
-}
 
+    packagingOptions {
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/LICENSE-FIREBASE.txt'
+        exclude 'META-INF/NOTICE'
+    }
+}
 
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
-    compile 'com.android.support:appcompat-v7:+'
-    compile 'net.sourceforge.htmlcleaner:htmlcleaner:+'
+    compile 'net.sourceforge.htmlcleaner:htmlcleaner:2.13'
+    compile 'ch.acra:acra:4.6.1'
+    compile 'com.android.support:appcompat-v7:23.0.0'
+    compile 'com.firebase:firebase-client-android:2.3.1'
 }

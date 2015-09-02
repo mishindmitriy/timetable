@@ -16,13 +16,15 @@
         android:layout_toEndOf="@+id/textViewPairNumber" />
     <TextView
         android:text="Subject"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceMedium"
         android:id="@+id/textViewSubject"
         android:layout_below="@+id/textViewClassroom"
         android:layout_alignLeft="@+id/textViewClassroom"
-        android:layout_alignStart="@+id/textViewClassroom" />
+        android:layout_alignStart="@+id/textViewClassroom"
+        android:layout_toLeftOf="@+id/textViewTypePair"
+        android:layout_toStartOf="@+id/textViewTypePair" />
     <TextView
         android:id="@+id/textViewPairNumber"
         android:text="PairNumber"

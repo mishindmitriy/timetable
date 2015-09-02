@@ -1,4 +1,4 @@
-package mishindmitriy.timetable;
+package mishindmitriy.timetable.TolgasModel;
 
 /**
  * Created by mishindmitriy on 05.06.2015.

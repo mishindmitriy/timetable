@@ -1,9 +1,8 @@
-package mishindmitriy.timetable;
+package mishindmitriy.timetable.TolgasModel;
 
 import android.support.annotation.Nullable;
 
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.List;
 
 /**

@@ -11,8 +11,6 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
@@ -24,6 +22,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+
+import mishindmitriy.timetable.TolgasModel.Group;
+import mishindmitriy.timetable.TolgasModel.TolgasModel;
 
 public class CaseGroupActivity extends AppCompatActivity {
     private List<String> groupNameList;
@@ -50,7 +51,7 @@ public class CaseGroupActivity extends AppCompatActivity {
                 SharedPreferences preferences = getSharedPreferences(String.valueOf(PreferensesConst.APP_PREFERENCES), Context.MODE_PRIVATE);
                 SharedPreferences.Editor editor = preferences.edit();
                 editor.putString(String.valueOf(PreferensesConst.GROUP_ID), groups.get(i).getGroupID()); // groupList.get(0).get(pos)
-                editor.putString(String.valueOf(PreferensesConst.GROUP_NUMBER), groups.get(i).getGroupName());
+                editor.putString(String.valueOf(PreferensesConst.GROUP_NAME), groups.get(i).getGroupName());
                 editor.apply();
                 Intent intent = new Intent(CaseGroupActivity.this, SheduleActivity.class);
                 finish();
@@ -125,26 +126,5 @@ public class CaseGroupActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         filterText.removeTextChangedListener(filterTextWatcher);
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_case_group, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_caseGroup) {
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
     }
 }

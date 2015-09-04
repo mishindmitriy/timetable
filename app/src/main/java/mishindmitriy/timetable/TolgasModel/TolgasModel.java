@@ -195,10 +195,10 @@ public class TolgasModel {
         List<TagNode> links = rootNode.getChildTagList();
         //парсинг списка групп
         List<Group> groups = new ArrayList<>();
-        Iterator<TagNode> iterator = links.iterator();
-        while (iterator.hasNext()) {
-            TagNode divElement = iterator.next();
-            groups.add(new Group(divElement.getAttributeByName("value"), divElement.getText().toString()));
+        for (TagNode divElement : links) {
+            String groupId=divElement.getAttributeByName("value");
+            String groupNumber=divElement.getText().toString();
+            groups.add(new Group(groupId, groupNumber));
         }
         return groups;
     }

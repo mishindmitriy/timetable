@@ -7,6 +7,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.app.Activity;
 import android.support.v4.widget.DrawerLayout;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.app.ActionBar;
 import android.support.v4.app.Fragment;
@@ -18,7 +19,6 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.LinearLayout;
-import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
@@ -61,9 +61,6 @@ public class SheduleActivity extends AppCompatActivity implements NavigationDraw
         group_id = preferences.getString(String.valueOf(PreferensesConst.GROUP_ID), "null");
         group_name = preferences.getString(String.valueOf(PreferensesConst.GROUP_NAME), "null");
         period=(byte) preferences.getInt(String.valueOf(PreferensesConst.PERIOD), 0);
-        //SwipeRefreshLayout swipeRefreshLayout=(SwipeRefreshLayout) findViewById(R.id.sheduleLayout);
-        //progressBar=new ProgressBar(SheduleActivity.this);
-        //parseShedule = new ParseShedule();
 
         //если в настройках нет записи, то запускаем активность со списком групп
         if (group_id != null && group_id.contains("null")) {
@@ -72,26 +69,21 @@ public class SheduleActivity extends AppCompatActivity implements NavigationDraw
             startActivity(intent);
         } else {
             setTitle(group_name);
-            //swipeRefreshLayout.setRefreshing(true);
-           // parseShedule.execute(group_id);
         }
-
-
-//        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-//            @Override
-//            public void onRefresh() {
-//                new ParseShedule().execute(group_id);
-//            }
-//        });
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_shedule);
+        SwipeRefreshLayout swipeRefreshLayout=(SwipeRefreshLayout) findViewById(R.id.sheduleSwipeRefresh);
+        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                new ParseShedule().execute(group_id);
+            }
+        });
 
         mNavigationDrawerFragment = (NavigationDrawerFragment)
                 getSupportFragmentManager().findFragmentById(R.id.navigation_drawer);
         mTitle = getTitle();
-        //Установим в заголовке 7 дней, тк пока грузим принудительно 7 дней
-        //mTitle = getString(R.string.SevenDaysShedule);
         // Set up the drawer.
         mNavigationDrawerFragment.setUp(
                 R.id.navigation_drawer,
@@ -104,16 +96,12 @@ public class SheduleActivity extends AppCompatActivity implements NavigationDraw
     public void onNavigationDrawerItemSelected(int position) {
         // update the main content by replacing fragments
         Log.d(TAG,"onNavigationDrawerItemSelected");
-        FragmentManager fragmentManager = getSupportFragmentManager();
-        fragmentManager.beginTransaction()
-                .replace(R.id.container, PlaceholderFragment.newInstance(position + 1))
-                .commit();
-    }
+//        FragmentManager fragmentManager = getSupportFragmentManager();
+//        fragmentManager.beginTransaction()
+//                .replace(R.id.container, PlaceholderFragment.newInstance(position + 1))
+//                .commit();
 
-    public void onSectionAttached(int number) {
-        Log.d(TAG,"onSectionAttached");
-
-        switch (number) {
+        switch (position+1) {
             case 1://сегодня
                 period= TolgasModel.TODAY;
                 mTitle = getString(R.string.TodayShedule);
@@ -141,6 +129,37 @@ public class SheduleActivity extends AppCompatActivity implements NavigationDraw
         parseShedule.execute();
     }
 
+    public void onSectionAttached(int number) {
+        Log.d(TAG,"onSectionAttached");
+
+//        switch (number) {
+//            case 1://сегодня
+//                period= TolgasModel.TODAY;
+//                mTitle = getString(R.string.TodayShedule);
+//                break;
+//            case 2://Завтра
+//                period=TolgasModel.TOMORROW;
+//                mTitle = getString(R.string.TomorowShedule);
+//                break;
+//            case 3://7 дней
+//                period=TolgasModel.SEVEN_DAYS;
+//                mTitle = getString(R.string.SevenDaysShedule);
+//                break;
+//            case 4://Выбрать группу
+//                finish();
+//                Intent intent = new Intent(this, CaseGroupActivity.class);
+//                startActivity(intent);
+//                return;
+//        }
+//        SharedPreferences preferences = getSharedPreferences(String.valueOf(PreferensesConst.APP_PREFERENCES), Context.MODE_PRIVATE);
+//        SharedPreferences.Editor editor = preferences.edit();
+//        editor.putInt(String.valueOf(PreferensesConst.PERIOD), period);
+//        editor.apply();
+//        if (parseShedule!=null) parseShedule.cancel(true);
+//        parseShedule=new ParseShedule();
+//        //parseShedule.execute();
+    }
+
     public void restoreActionBar() {
         Log.d(TAG,"restoreActionBar");
         ActionBar actionBar = getSupportActionBar();
@@ -153,36 +172,34 @@ public class SheduleActivity extends AppCompatActivity implements NavigationDraw
     protected void onResume() {
         Log.d(TAG,"onResume");
         super.onResume();
-
     }
 
     private class ParseShedule extends AsyncTask<String, Void, List<DayPairs>> {
 
         private final static String TAG="ParseActivity";
-        private ProgressBar progressBar;
 
         @Override
         protected void onCancelled() {
             Log.d(TAG,"onCancelled");
-//            LinearLayout sheduleLayout = (LinearLayout) findViewById(R.id.dayPairsLayoutOnActivity);
-//            if (sheduleLayout!=null) sheduleLayout.removeViewAt(0);
+            final SwipeRefreshLayout swipeRefreshLayout=(SwipeRefreshLayout) findViewById(R.id.sheduleSwipeRefresh);
+            swipeRefreshLayout.setRefreshing(false);
             super.onCancelled();
         }
 
         @Override
         protected void onPreExecute() {
             Log.d(TAG,"onPreExecute");
-            // SwipeRefreshLayout swipeRefreshLayout=(SwipeRefreshLayout) findViewById(R.id.sheduleLayout);
-            // swipeRefreshLayout.setRefreshing(true);
-            progressBar//=(ProgressBar) findViewById(R.id.progressBar);
-                    = new ProgressBar(SheduleActivity.this);
-
+            final SwipeRefreshLayout swipeRefreshLayout=(SwipeRefreshLayout) findViewById(R.id.sheduleSwipeRefresh);
+            if (swipeRefreshLayout!=null) {
+                swipeRefreshLayout.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        swipeRefreshLayout.setRefreshing(true);
+                    }
+                });
+            }
             ScrollView scrollView=(ScrollView) findViewById(R.id.scrollView);
             if (scrollView!=null) scrollView.fullScroll(View.FOCUS_UP);
-            LinearLayout sheduleLayout = (LinearLayout) findViewById(R.id.dayPairsLayoutOnActivity);
-            if (sheduleLayout!=null) sheduleLayout.addView(progressBar, 0);
-            progressBar.setVisibility(View.VISIBLE);
-            progressBar.setEnabled(true);
             super.onPreExecute();
         }
 
@@ -205,9 +222,9 @@ public class SheduleActivity extends AppCompatActivity implements NavigationDraw
         protected void onPostExecute(List<DayPairs> output) {
             Log.d(TAG,"onPostExecute");
             //output=null - ошибка, если пустой то нет данных
-            // SwipeRefreshLayout swipeRefreshLayout=(SwipeRefreshLayout) findViewById(R.id.sheduleLayout);
+            SwipeRefreshLayout swipeRefreshLayout=(SwipeRefreshLayout) findViewById(R.id.sheduleSwipeRefresh);
             if (output == null) {
-                //swipeRefreshLayout.setRefreshing(false);
+                swipeRefreshLayout.setRefreshing(false);
                 Toast.makeText(SheduleActivity.this, "Загрузить данные не удалось. Проверьте интернет-соединение", Toast.LENGTH_LONG).show();
                 return;
             }
@@ -274,10 +291,7 @@ public class SheduleActivity extends AppCompatActivity implements NavigationDraw
                 }
 
             }
-            //swipeRefreshLayout.setRefreshing(false);
-
-            progressBar.setVisibility(View.GONE);
-            progressBar.setEnabled(false);
+            swipeRefreshLayout.setRefreshing(false);
             if (output.size() == 0)
                 Toast.makeText(SheduleActivity.this, "Поздравляем! На выбраный период занятий нет", Toast.LENGTH_LONG).show();
         }
@@ -359,12 +373,11 @@ public class SheduleActivity extends AppCompatActivity implements NavigationDraw
         }
 
         @Override
-        public void onAttach(Activity activity) {
+        public void onAttach(Context context) {
             Log.d(TAG,"onAttach");
-            super.onAttach(activity);
+            super.onAttach(context);
 
-            ((SheduleActivity) activity).onSectionAttached(
-                    getArguments().getInt(ARG_SECTION_NUMBER));
+            ((SheduleActivity) context).onSectionAttached(getArguments().getInt(ARG_SECTION_NUMBER));
         }
     }
 

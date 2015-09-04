@@ -6,7 +6,7 @@ android {
 
     defaultConfig {
         applicationId "mishindmitriy.timetable"
-        minSdkVersion 15
+        minSdkVersion 10
         targetSdkVersion 23
         versionCode 1
         versionName "1.0"
@@ -20,10 +20,10 @@ android {
     productFlavors {
         phone {
             applicationId "mishindmitriy.timetable.phone"
-            minSdkVersion 15
+            minSdkVersion 10
             targetSdkVersion 23
-            versionCode 3
-            versionName '1.1'
+            versionCode 4
+            versionName '1.11'
         }
     }
 
@@ -34,11 +34,11 @@ android {
     }
 }
 
+
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     compile 'net.sourceforge.htmlcleaner:htmlcleaner:2.13'
-    //compile 'ch.acra:acra:4.6.1'
     compile 'com.android.support:appcompat-v7:23.0.0'
-    //compile 'com.firebase:firebase-client-android:2.3.1'
     compile 'com.j256.ormlite:ormlite-android:4.48'
+    compile 'com.google.android.gms:play-services-analytics:7.8.0'
 }

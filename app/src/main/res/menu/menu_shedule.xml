@@ -4,5 +4,5 @@
     tools:context="mishindmitriy.timetable.SheduleActivity">
     <item android:id="@+id/refresh_icon" android:title="@string/Refresh"
         android:icon="@drawable/ic_action_refresh"
-        app:showAsAction="withText|ifRoom" />
+        app:showAsAction="ifRoom" />
 </menu>

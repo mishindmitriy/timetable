@@ -14,18 +14,10 @@
         <activity
             android:name=".CaseGroupActivity"
             android:label="CaseGroupActivity" >
-
-            <!--
-                <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="mishindmitriy.timetable.SheduleActivity" />
-            -->
         </activity>
         <activity
             android:name=".SheduleActivity"
             android:label="@string/title_activity_shedule" >
-
-            <!-- android:parentActivityName=".CaseGroupActivity" > -->
             <intent-filter>
 -->
                 <action android:name="android.intent.action.MAIN" />

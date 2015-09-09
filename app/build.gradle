@@ -39,6 +39,6 @@ dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     compile 'net.sourceforge.htmlcleaner:htmlcleaner:2.13'
     compile 'com.android.support:appcompat-v7:23.0.0'
-    compile 'com.j256.ormlite:ormlite-android:4.48'
+    //compile 'com.j256.ormlite:ormlite-android:4.48'
     compile 'com.google.android.gms:play-services-analytics:7.8.0'
 }

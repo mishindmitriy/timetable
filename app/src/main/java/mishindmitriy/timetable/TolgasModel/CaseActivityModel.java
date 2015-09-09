@@ -35,10 +35,23 @@ public class CaseActivityModel {
         return groupNameList;
     }
 
-    public void saveSelectGroup(SharedPreferences preferences,int position)
+    private int getPositionByName(CharSequence groupName)
+    {
+        int pos=0;
+        Iterator iterator=mGroups.iterator();
+        while (!mGroups.get(pos).getGroupName().equals(groupName))
+        {
+            iterator.next();
+            pos++;
+        }
+        return pos;
+    }
+
+    public void saveSelectGroup(SharedPreferences preferences,CharSequence groupName)
     {
         //записываем выбранную группу в настройки
         SharedPreferences.Editor editor = preferences.edit();
+        int position=getPositionByName(groupName);
         editor.putString(String.valueOf(PreferensesConst.GROUP_ID), mGroups.get(position).getGroupID());
         editor.putString(String.valueOf(PreferensesConst.GROUP_NAME), mGroups.get(position).getGroupName());
         editor.apply();

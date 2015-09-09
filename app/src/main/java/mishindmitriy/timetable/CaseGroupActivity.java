@@ -10,6 +10,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
+import android.text.Layout;
 import android.text.TextWatcher;
 import android.view.View;
 import android.widget.AdapterView;
@@ -17,13 +18,14 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.TextView;
+
 import java.util.List;
 
 import mishindmitriy.timetable.TolgasModel.CaseActivityModel;
 import mishindmitriy.timetable.TolgasModel.Group;
 
 public class CaseGroupActivity extends AppCompatActivity implements CaseActivityModel.Observer, OnItemClickListener {
-    private List<Group> groups;
     private EditText filterText;
     private ArrayAdapter<String> adapter = null;
     private CaseActivityModel mCaseModel;
@@ -47,6 +49,7 @@ public class CaseGroupActivity extends AppCompatActivity implements CaseActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
 
         setContentView(R.layout.activity_case_group);
         setTitle(R.string.caseGroup);
@@ -74,8 +77,9 @@ public class CaseGroupActivity extends AppCompatActivity implements CaseActivity
     public void onLoadFinished(CaseActivityModel caseActivityModel) {
         ListView listview = (ListView) findViewById(R.id.listViewData);
         adapter=new ArrayAdapter<String>(CaseGroupActivity.this,
-                android.R.layout.simple_list_item_1, caseActivityModel.getGroupNameList());
+                R.layout.case_list_item, caseActivityModel.getGroupNameList());
         listview.setAdapter(adapter);
+
         pd.dismiss();
     }
 
@@ -89,8 +93,6 @@ public class CaseGroupActivity extends AppCompatActivity implements CaseActivity
                 .setNegativeButton("Попробовать еще раз",
                         new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int id) {
-                                if (pd!=null) pd.dismiss();
-                                pd = ProgressDialog.show(CaseGroupActivity.this, getString(R.string.wait), getString(R.string.connToServ), true, false);
                                 caseActivityModel.LoadData();
                                 dialog.cancel();
                             }
@@ -103,7 +105,8 @@ public class CaseGroupActivity extends AppCompatActivity implements CaseActivity
     public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
         //записываем выбранную группу в настройки
         SharedPreferences preferences = getSharedPreferences(String.valueOf(PreferensesConst.APP_PREFERENCES), Context.MODE_PRIVATE);
-        mCaseModel.saveSelectGroup(preferences,position);
+        TextView text=(TextView)view;
+        mCaseModel.saveSelectGroup(preferences,text.getText());
         Intent intent = new Intent(CaseGroupActivity.this, SheduleActivity.class);
         finish();
         startActivity(intent);

@@ -3,9 +3,7 @@ package mishindmitriy.timetable;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.os.AsyncTask;
 import android.os.Bundle;
-import android.app.Activity;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
@@ -23,23 +21,25 @@ import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
-import java.io.IOException;
+
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
 import mishindmitriy.timetable.TolgasModel.DayPairs;
+import mishindmitriy.timetable.TolgasModel.SheduleActivityModel;
 import mishindmitriy.timetable.TolgasModel.TolgasModel;
 
-public class SheduleActivity extends AppCompatActivity implements NavigationDrawerFragment.NavigationDrawerCallbacks {
+public class SheduleActivity extends AppCompatActivity
+        implements //NavigationDrawerFragment.NavigationDrawerCallbacks,
+        SheduleActivityModel.Observer {
 
-    private byte period;
-    private String group_id;
-    private CharSequence group_name;
-    private final static String TAG="SheduleActivity";
+    private CharSequence mTitle;
+    private SwipeRefreshLayout mSwipeLayout;
+    private SheduleActivityModel mSheduleModel;
+    private boolean isCreate = true;
+    private final static String TAG = "SheduleActivity";
 
     /**
      * Fragment managing the behaviors, interactions and presentation of the navigation drawer.
@@ -49,69 +49,79 @@ public class SheduleActivity extends AppCompatActivity implements NavigationDraw
     /**
      * Used to store the last screen title. For use in {@link #restoreActionBar()}.
      */
-    private CharSequence mTitle;
 
-    private ParseShedule parseShedule;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-
         Log.d(TAG, "startOnCreate");
-        //чтение настроек из файла
-        SharedPreferences preferences = getSharedPreferences(String.valueOf(PreferensesConst.APP_PREFERENCES), Context.MODE_PRIVATE);
-        group_id = preferences.getString(String.valueOf(PreferensesConst.GROUP_ID), "null");
-        group_name = preferences.getString(String.valueOf(PreferensesConst.GROUP_NAME), "null");
-        period=(byte) preferences.getInt(String.valueOf(PreferensesConst.PERIOD), 0);
 
+        mSheduleModel = new SheduleActivityModel(getSharedPreferences(String.valueOf(PreferensesConst.APP_PREFERENCES), Context.MODE_PRIVATE),getCacheDir().getPath());
+
+        //чтение настроек из файла
         //если в настройках нет записи, то запускаем активность со списком групп
-        if (group_id != null && group_id.contains("null")) {
-            Intent intent = new Intent(this, CaseGroupActivity.class);
+        if (mSheduleModel.isGroupAvailable()) {
             finish();
+            Intent intent = new Intent(this, CaseGroupActivity.class);
             startActivity(intent);
         } else {
-            setTitle(group_name);
+            setTitle(mSheduleModel.getGroupName());
         }
+        mSheduleModel.registerObserver(this);
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_shedule);
-        SwipeRefreshLayout swipeRefreshLayout=(SwipeRefreshLayout) findViewById(R.id.sheduleSwipeRefresh);
-        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+
+        mSwipeLayout = (SwipeRefreshLayout) findViewById(R.id.sheduleSwipeRefresh);
+        mSwipeLayout.setColorSchemeResources(R.color.teal500);
+        mSwipeLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                new ParseShedule().execute(group_id);
+                Log.i(TAG,"onSwipeRefresh");
+                mSheduleModel.LoadData();
             }
         });
 
-        mNavigationDrawerFragment = (NavigationDrawerFragment)
-                getSupportFragmentManager().findFragmentById(R.id.navigation_drawer);
-        mTitle = getTitle();
-        // Set up the drawer.
-        mNavigationDrawerFragment.setUp(
-                R.id.navigation_drawer,
-                (DrawerLayout) findViewById(R.id.sheduleLayout));
-
-        Log.d(TAG,"finishOnCreate");
+//        mNavigationDrawerFragment = (NavigationDrawerFragment)
+//                getSupportFragmentManager().findFragmentById(R.id.navigation_drawer);
+//        mTitle = getTitle();
+//        // Set up the drawer.
+//        mNavigationDrawerFragment.setUp(
+//                R.id.navigation_drawer,
+//                (DrawerLayout) findViewById(R.id.sheduleLayout));
+//
+//        Log.d(TAG, "finishOnCreate");
+        mSheduleModel.loadFromCache();
     }
 
-    @Override
-    public void onNavigationDrawerItemSelected(int position) {
-        // update the main content by replacing fragments
-        Log.d(TAG,"onNavigationDrawerItemSelected");
+//    @Override
+//    public void onNavigationDrawerItemSelected(int position) {
+//        // update the main content by replacing fragments
+//        Log.d(TAG, "onNavigationDrawerItemSelected");
 //        FragmentManager fragmentManager = getSupportFragmentManager();
 //        fragmentManager.beginTransaction()
 //                .replace(R.id.container, PlaceholderFragment.newInstance(position + 1))
 //                .commit();
+//    }
 
-        switch (position+1) {
+    public void onSectionAttached(int number) {
+        Log.d(TAG, "onSectionAttached");
+        if (isCreate) {
+            Log.i(TAG, "isCreate=false");
+            isCreate = false;
+            number = mSheduleModel.getPeriod() + 1;
+        }
+        if (mSheduleModel.isWorking()) mSheduleModel.StopLoad();
+        switch (number) {
             case 1://сегодня
-                period= TolgasModel.TODAY;
+                mSheduleModel.setPeriod(TolgasModel.TODAY);
                 mTitle = getString(R.string.TodayShedule);
                 break;
             case 2://Завтра
-                period=TolgasModel.TOMORROW;
+                mSheduleModel.setPeriod(TolgasModel.TOMORROW);
                 mTitle = getString(R.string.TomorowShedule);
                 break;
             case 3://7 дней
-                period=TolgasModel.SEVEN_DAYS;
+                mSheduleModel.setPeriod(TolgasModel.SEVEN_DAYS);
                 mTitle = getString(R.string.SevenDaysShedule);
                 break;
             case 4://Выбрать группу
@@ -120,204 +130,209 @@ public class SheduleActivity extends AppCompatActivity implements NavigationDraw
                 startActivity(intent);
                 return;
         }
-        SharedPreferences preferences = getSharedPreferences(String.valueOf(PreferensesConst.APP_PREFERENCES), Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = preferences.edit();
-        editor.putInt(String.valueOf(PreferensesConst.PERIOD), period);
-        editor.apply();
-        if (parseShedule!=null) parseShedule.cancel(true);
-        parseShedule=new ParseShedule();
-        parseShedule.execute();
-    }
 
-    public void onSectionAttached(int number) {
-        Log.d(TAG,"onSectionAttached");
-
-//        switch (number) {
-//            case 1://сегодня
-//                period= TolgasModel.TODAY;
-//                mTitle = getString(R.string.TodayShedule);
-//                break;
-//            case 2://Завтра
-//                period=TolgasModel.TOMORROW;
-//                mTitle = getString(R.string.TomorowShedule);
-//                break;
-//            case 3://7 дней
-//                period=TolgasModel.SEVEN_DAYS;
-//                mTitle = getString(R.string.SevenDaysShedule);
-//                break;
-//            case 4://Выбрать группу
-//                finish();
-//                Intent intent = new Intent(this, CaseGroupActivity.class);
-//                startActivity(intent);
-//                return;
-//        }
-//        SharedPreferences preferences = getSharedPreferences(String.valueOf(PreferensesConst.APP_PREFERENCES), Context.MODE_PRIVATE);
-//        SharedPreferences.Editor editor = preferences.edit();
-//        editor.putInt(String.valueOf(PreferensesConst.PERIOD), period);
-//        editor.apply();
-//        if (parseShedule!=null) parseShedule.cancel(true);
-//        parseShedule=new ParseShedule();
-//        //parseShedule.execute();
+        mSheduleModel.LoadData();
     }
 
     public void restoreActionBar() {
-        Log.d(TAG,"restoreActionBar");
-        ActionBar actionBar = getSupportActionBar();
-        actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_STANDARD);
-        actionBar.setDisplayShowTitleEnabled(true);
-        actionBar.setTitle(group_name + " , " + mTitle);
+        Log.d(TAG, "restoreActionBar");
+        //ActionBar actionBar = getSupportActionBar();
+        //actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_STANDARD);
+        //actionBar.setDisplayShowTitleEnabled(true);
+        //actionBar.setTitle(mSheduleModel.getGroupName());// + ", " + mTitle);
+        //setTitle(mSheduleModel.getGroupName());
     }
 
     @Override
     protected void onResume() {
-        Log.d(TAG,"onResume");
+        Log.d(TAG, "onResume");
         super.onResume();
     }
 
-    private class ParseShedule extends AsyncTask<String, Void, List<DayPairs>> {
+    @Override
+    public void onLoadStarted(SheduleActivityModel sheduleActivityModel) {
+        Log.i(TAG,"OnLoadStart");
+        if (mSwipeLayout != null) {
+            Log.i(TAG, "piu runnable will be run");
+            //mSwipeLayout.setRefreshing(true);
+            mSwipeLayout.post(new Runnable() {
+                @Override
+                public void run() {
+                    mSwipeLayout.setRefreshing(true);
+                    Log.i(TAG, "piu refresh true");
+                }
+            });
+        }
+        ScrollView scrollView = (ScrollView) findViewById(R.id.scrollView);
+        if (scrollView != null) scrollView.fullScroll(View.FOCUS_UP);
+    }
 
-        private final static String TAG="ParseActivity";
-
-        @Override
-        protected void onCancelled() {
-            Log.d(TAG,"onCancelled");
-            final SwipeRefreshLayout swipeRefreshLayout=(SwipeRefreshLayout) findViewById(R.id.sheduleSwipeRefresh);
-            swipeRefreshLayout.setRefreshing(false);
-            super.onCancelled();
+    @Override
+    public void onLoadFinished(SheduleActivityModel sheduleActivityModel) {
+        Log.i(TAG,"OnLoadFinished");
+        List<DayPairs> shedule = sheduleActivityModel.getShedule();
+        if (shedule == null) {
+            mSwipeLayout.setRefreshing(false);
+            Log.i(TAG, "refresh false");
+            Toast.makeText(SheduleActivity.this, "Загрузить данные не удалось. Проверьте интернет-соединение", Toast.LENGTH_LONG).show();
+            return;
         }
 
-        @Override
-        protected void onPreExecute() {
-            Log.d(TAG,"onPreExecute");
-            final SwipeRefreshLayout swipeRefreshLayout=(SwipeRefreshLayout) findViewById(R.id.sheduleSwipeRefresh);
-            if (swipeRefreshLayout!=null) {
-                swipeRefreshLayout.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        swipeRefreshLayout.setRefreshing(true);
-                    }
-                });
-            }
-            ScrollView scrollView=(ScrollView) findViewById(R.id.scrollView);
-            if (scrollView!=null) scrollView.fullScroll(View.FOCUS_UP);
-            super.onPreExecute();
-        }
+        outputShedule(shedule);
 
-        protected List<DayPairs> doInBackground(String... arg) {
-            Log.d(TAG,"doInBackground");
-            List<DayPairs> list;
+        mSwipeLayout.setRefreshing(false);
+        Log.i(TAG, "refresh false");
+        congratulations(shedule.size());
+    }
 
-            try {
-                list = TolgasModel.getSheduleByGroupId(group_id, period);//передаем id группы
-                if (list == null) {
-                    return new ArrayList<>();
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-                return null;
-            }
-            return list;
-        }
-
-        protected void onPostExecute(List<DayPairs> output) {
-            Log.d(TAG,"onPostExecute");
-            //output=null - ошибка, если пустой то нет данных
-            SwipeRefreshLayout swipeRefreshLayout=(SwipeRefreshLayout) findViewById(R.id.sheduleSwipeRefresh);
-            if (output == null) {
-                swipeRefreshLayout.setRefreshing(false);
-                Toast.makeText(SheduleActivity.this, "Загрузить данные не удалось. Проверьте интернет-соединение", Toast.LENGTH_LONG).show();
-                return;
-            }
-
-            LinearLayout dayslayout = (LinearLayout) findViewById(R.id.dayPairsLayoutOnActivity);
-            dayslayout.removeAllViews();
-            LayoutInflater layoutInflater = getLayoutInflater();
-
-            for (int i = 0; i < output.size(); i++) {
-                LinearLayout dayLayout = (LinearLayout) layoutInflater.inflate(R.layout.day_pairs_layout, null, false);
-                TextView viewDate = (TextView) dayLayout.findViewById(R.id.textViewDate);
-                Date date = new Date();
-
-                SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy");
-                try {
-                    date = sdf.parse(output.get(i).getDate().toString());
-
-
-                } catch (ParseException e) {
-                    e.printStackTrace();
-                }
-                Calendar cal = Calendar.getInstance();
-                cal.setFirstDayOfWeek(Calendar.MONDAY);
-                cal.setTime(date);
-                int d = cal.get(Calendar.DAY_OF_WEEK);
-                String dayOfWeek = "Понедельник";
-                switch (d) {
-                    case Calendar.TUESDAY:
-                        dayOfWeek = "Вторник";
-                        break;
-                    case Calendar.WEDNESDAY:
-                        dayOfWeek = "Среда";
-                        break;
-                    case Calendar.THURSDAY:
-                        dayOfWeek = "Четверг";
-                        break;
-                    case Calendar.FRIDAY:
-                        dayOfWeek = "Пятница";
-                        break;
-                    case Calendar.SATURDAY:
-                        dayOfWeek = "Суббота";
-                        break;
-                    case Calendar.SUNDAY:
-                        dayOfWeek = "Воскресенье";
-                        break;
-                }
-                viewDate.setText(sdf.format(date) + ", " + dayOfWeek);
-                dayslayout.addView(dayLayout);
-
-                for (int n = 0; n < output.get(i).getPairsArray().size(); n++) {
-                    RelativeLayout pairLayout = (RelativeLayout) layoutInflater.inflate(R.layout.pair, null, false);
-                    TextView viewClassroom = (TextView) pairLayout.findViewById(R.id.textViewClassroom);
-                    viewClassroom.setText(output.get(i).getPair(n).getClassroom());
-                    TextView viewSubject = (TextView) pairLayout.findViewById(R.id.textViewSubject);
-                    viewSubject.setText(output.get(i).getPair(n).getSubject());
-                    TextView viewPairNumber = (TextView) pairLayout.findViewById(R.id.textViewPairNumber);
-                    viewPairNumber.setText(output.get(i).getPair(n).getPairNumber());
-                    TextView viewPrepod = (TextView) pairLayout.findViewById(R.id.textViewPrepod);
-                    viewPrepod.setText(output.get(i).getPair(n).getPrepod());
-                    TextView viewTypePair = (TextView) pairLayout.findViewById(R.id.textViewTypePair);
-                    viewTypePair.setText(output.get(i).getPair(n).getTypePair());
-
-                    dayLayout.addView(pairLayout);
-                }
-
-            }
-            swipeRefreshLayout.setRefreshing(false);
-            if (output.size() == 0)
-                Toast.makeText(SheduleActivity.this, "Поздравляем! На выбраный период занятий нет", Toast.LENGTH_LONG).show();
+    private void congratulations(int size)
+    {
+        if (size == 0) {
+            Toast.makeText(SheduleActivity.this, "Поздравляем! На выбраный период занятий нет", Toast.LENGTH_LONG).show();
+            LinearLayout linearLayout = (LinearLayout) findViewById(R.id.dayPairsLayoutOnActivity);
+            TextView congratulations = (TextView) getLayoutInflater().inflate(R.layout.congratulations, null);
+            linearLayout.addView(congratulations);
         }
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        //вызывается при открытии и закрытии меню
-        Log.d(TAG,"onCreateOptionsMenu");
-        if (!mNavigationDrawerFragment.isDrawerOpen()) {
-            // Only show items in the action bar relevant to this screen
-            // if the drawer is not showing. Otherwise, let the drawer
-            // decide what to show in the action bar.
-            getMenuInflater().inflate(R.menu.menu_shedule, menu);
-            restoreActionBar();
-            return true;
-        }
-        // Inflate the menu items for use in the action bar
-        return super.onCreateOptionsMenu(menu);
+    public void onLoadFailed(SheduleActivityModel sheduleActivityModel) {
+        Log.i(TAG,"OnLoadFailed");
+        mSwipeLayout.setRefreshing(false);
+        Toast.makeText(SheduleActivity.this, "Загрузить данные не удалось. Проверьте интернет-соединение", Toast.LENGTH_LONG).show();
     }
+
+    @Override
+    public void onLoadCacheOk(SheduleActivityModel sheduleActivityModel) {
+        Log.i(TAG,"OnLoadCacheOk");
+        List<DayPairs> shedule = sheduleActivityModel.getShedule();
+        outputShedule(shedule);
+        congratulations(shedule.size());
+    }
+
+    private void outputShedule(List<DayPairs> output) {
+        Log.i(TAG,"outputShedule");
+        LinearLayout dayslayout = (LinearLayout) findViewById(R.id.dayPairsLayoutOnActivity);
+        dayslayout.removeAllViews();
+        LayoutInflater layoutInflater = getLayoutInflater();
+
+        for (int i = 0; i < output.size(); i++) {
+            LinearLayout dayLayout = (LinearLayout) layoutInflater.inflate(R.layout.day_pairs_layout, dayslayout, false);
+            TextView viewDate = (TextView) dayLayout.findViewById(R.id.textViewDate);
+            Date date = new Date();
+            SimpleDateFormat sdf = new SimpleDateFormat(TolgasModel.formatDate);
+            try {
+                date = sdf.parse(output.get(i).getDate());
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+            String dayOfWeek = TolgasModel.getDayOfWeek(date);
+
+            viewDate.setText(sdf.format(date));// + ", " + dayOfWeek);
+            TextView viewDayOfWeek = (TextView) dayLayout.findViewById(R.id.textViewDayOfWeek);
+            viewDayOfWeek.setText(dayOfWeek);
+            dayslayout.addView(dayLayout);
+
+            for (int n = 0; n < output.get(i).getPairsArray().size(); n++) {
+                RelativeLayout pairLayout = (RelativeLayout) layoutInflater.inflate(R.layout.pair, dayLayout, false);
+                TextView viewClassroom = (TextView) pairLayout.findViewById(R.id.textViewClassroom);
+                viewClassroom.setText(output.get(i).getPair(n).getClassroom());
+                TextView viewSubject = (TextView) pairLayout.findViewById(R.id.textViewSubject);
+                viewSubject.setText(output.get(i).getPair(n).getSubject());
+                TextView viewPrepod = (TextView) pairLayout.findViewById(R.id.textViewPrepod);
+                viewPrepod.setText(output.get(i).getPair(n).getPrepod());
+                TextView viewTypePair = (TextView) pairLayout.findViewById(R.id.textViewTypePair);
+                viewTypePair.setText(output.get(i).getPair(n).getTypePair());
+
+                TextView viewPairStart = (TextView) pairLayout.findViewById(R.id.textViewPairStart);
+                TextView viewPairEnd = (TextView) pairLayout.findViewById(R.id.textViewPairEnd);
+
+                int d = Integer.parseInt(output.get(i).getPair(n).getPairNumber());
+                if (dayOfWeek.equals("Суббота")) {   //время пар в субботу
+                    switch (d) {
+                        case 1:
+                            viewPairStart.setText(TolgasModel.Saturday.firstPairStart);
+                            viewPairEnd.setText(TolgasModel.Saturday.firstPairEnd);
+                            break;
+                        case 2:
+                            viewPairStart.setText(TolgasModel.Saturday.secondPairStart);
+                            viewPairEnd.setText(TolgasModel.Saturday.secondPairEnd);
+                            break;
+                        case 3:
+                            viewPairStart.setText(TolgasModel.Saturday.thirdPairStart);
+                            viewPairEnd.setText(TolgasModel.Saturday.thirdPairEnd);
+                            break;
+                        case 4:
+                            viewPairStart.setText(TolgasModel.Saturday.fourthPairStart);
+                            viewPairEnd.setText(TolgasModel.Saturday.fourthPairEnd);
+                            break;
+                        case 5:
+                            viewPairStart.setText(TolgasModel.Saturday.fifthPairStart);
+                            viewPairEnd.setText(TolgasModel.Saturday.fifthPairEnd);
+                            break;
+                    }
+                } else {
+                    switch (d) {
+
+                        case 1:
+                            viewPairStart.setText(TolgasModel.firstPairStart);
+                            viewPairEnd.setText(TolgasModel.firstPairEnd);
+                            break;
+                        case 2:
+                            viewPairStart.setText(TolgasModel.secondPairStart);
+                            viewPairEnd.setText(TolgasModel.secondPairEnd);
+                            break;
+                        case 3:
+                            viewPairStart.setText(TolgasModel.thirdPairStart);
+                            viewPairEnd.setText(TolgasModel.thirdPairEnd);
+                            break;
+                        case 4:
+                            viewPairStart.setText(TolgasModel.fourthPairStart);
+                            viewPairEnd.setText(TolgasModel.fourthPairEnd);
+                            break;
+                        case 5:
+                            viewPairStart.setText(TolgasModel.fifthPairStart);
+                            viewPairEnd.setText(TolgasModel.fifthPairEnd);
+                            break;
+                        case 6:
+                            viewPairStart.setText(TolgasModel.sixthPairStart);
+                            viewPairEnd.setText(TolgasModel.sixthPairEnd);
+                            break;
+                        case 7:
+                            viewPairStart.setText(TolgasModel.seventhPairStart);
+                            viewPairEnd.setText(TolgasModel.seventhPairEnd);
+                            break;
+                    }
+                }
+
+                dayLayout.addView(pairLayout);
+            }
+
+        }
+    }
+
+//    @Override
+//    public boolean onCreateOptionsMenu(Menu menu) {
+//        //вызывается при открытии и закрытии меню
+//        //если дровер открыт, то в экшн бар ставится старый заголовок
+//        Log.d(TAG, "onCreateOptionsMenu");
+//        if (!mNavigationDrawerFragment.isDrawerOpen()) {
+//            // Only show items in the action bar relevant to this screen
+//            // if the drawer is not showing. Otherwise, let the drawer
+//            // decide what to show in the action bar.
+//            getMenuInflater().inflate(R.menu.menu_shedule, menu);
+//            restoreActionBar();
+//            return true;
+//        }
+//        // Inflate the menu items for use in the action bar
+//        return super.onCreateOptionsMenu(menu);
+//    }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item)
     //Вызывается при нажатии кнопки меню
     {
-        Log.d(TAG,"onOptionsItemSelected");
+        Log.d(TAG, "onOptionsItemSelected");
 
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
@@ -325,11 +340,9 @@ public class SheduleActivity extends AppCompatActivity implements NavigationDraw
         int id = item.getItemId();
 
         // Handle presses on the action bar items
-        switch (item.getItemId()) {
+        switch (id) {
             case R.id.refresh_icon:
-                if (parseShedule!=null) parseShedule.cancel(true);
-                parseShedule=new ParseShedule();
-                parseShedule.execute();
+                if (!mSheduleModel.isWorking()) mSheduleModel.LoadData();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -345,7 +358,7 @@ public class SheduleActivity extends AppCompatActivity implements NavigationDraw
          * fragment.
          */
 
-        private final static String TAG="PlaceholderFragment";
+        private final static String TAG = "PlaceholderFragment";
         private static final String ARG_SECTION_NUMBER = "section_number";
 
         /**
@@ -353,7 +366,7 @@ public class SheduleActivity extends AppCompatActivity implements NavigationDraw
          * number.
          */
         public static PlaceholderFragment newInstance(int sectionNumber) {
-            Log.d(TAG,"newInstance");
+            Log.d(TAG, "newInstance");
             PlaceholderFragment fragment = new PlaceholderFragment();
             Bundle args = new Bundle();
             args.putInt(ARG_SECTION_NUMBER, sectionNumber);
@@ -361,20 +374,17 @@ public class SheduleActivity extends AppCompatActivity implements NavigationDraw
             return fragment;
         }
 
-        public PlaceholderFragment() {
-        }
-
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                  Bundle savedInstanceState) {
-            Log.d(TAG,"onCreateView");
+            Log.d(TAG, "onCreateView");
             View rootView = inflater.inflate(R.layout.fragment_main, container, false);
             return rootView;
         }
 
         @Override
         public void onAttach(Context context) {
-            Log.d(TAG,"onAttach");
+            Log.d(TAG, "onAttach");
             super.onAttach(context);
 
             ((SheduleActivity) context).onSectionAttached(getArguments().getInt(ARG_SECTION_NUMBER));
@@ -382,9 +392,18 @@ public class SheduleActivity extends AppCompatActivity implements NavigationDraw
     }
 
     @Override
-    protected void onStop() {
-        Log.d(TAG,"onStop");
-        parseShedule.cancel(true);
-        super.onStop();
+    protected void onDestroy() {
+        if (isFinishing()) mSheduleModel.StopLoad();
+
+        mSheduleModel.unregisterObserver(this);
+
+        SharedPreferences preferences = getSharedPreferences(String.valueOf(PreferensesConst.APP_PREFERENCES), Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = preferences.edit();
+        Log.i(TAG, "save period " + mSheduleModel.getPeriod());
+        editor.putInt(String.valueOf(PreferensesConst.PERIOD), mSheduleModel.getPeriod());
+        editor.apply();
+        Log.i(TAG, "onDestroy");
+        super.onDestroy();
     }
+
 }

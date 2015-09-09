@@ -2,13 +2,14 @@ package mishindmitriy.timetable.TolgasModel;
 
 import android.support.annotation.Nullable;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Created by mishindmitriy on 05.06.2015.
  */
-public class DayPairs {
+public class DayPairs implements Serializable {
     private String date;
 
     private List<Pair> arrayPairs;

@@ -1,9 +1,11 @@
 package mishindmitriy.timetable.TolgasModel;
 
+import java.io.Serializable;
+
 /**
  * Created by mishindmitriy on 05.06.2015.
  */
-public class Pair {
+public class Pair implements Serializable {
     private String classroom;
     private String pairNumber;
     private String prepod;

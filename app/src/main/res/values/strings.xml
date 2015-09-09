@@ -17,5 +17,13 @@
     <string name="navigation_drawer_close">Close navigation drawer</string>
     <string name="CaseGroup">Выбрать группу</string>
     <string name="Refresh">Обновить</string>
+    <string name="congratulations">Поздравляем! На выбранный период занятий нет</string>
+
+    <string-array name="screen_array">
+        <item>Сегодня</item>
+        <item>Завтра</item>
+        <item>7 дней</item>
+        <item>Выбрать группу</item>
+    </string-array>
 
 </resources>

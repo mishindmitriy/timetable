@@ -5,19 +5,26 @@ import android.util.Log;
 import org.htmlcleaner.HtmlCleaner;
 import org.htmlcleaner.TagNode;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
+import java.net.HttpURLConnection;
 import java.net.URL;
-import java.net.URLConnection;
 import java.net.URLEncoder;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.zip.GZIPInputStream;
 
 /**
  * Created by dmitriy on 21.05.15.
@@ -25,17 +32,56 @@ import java.util.regex.Pattern;
 public class TolgasModel {
     private static final String TAG="TolgasModel";
     public static final String URL = "http://www.tolgas.ru/services/raspisanie/";
+    public static final String formatDate="dd.MM.yyyy";
     public static final byte TODAY =0;
     public static final byte TOMORROW =1;
     public static final byte SEVEN_DAYS =2;
     public static final byte THIS_WEEK=3;
     public static final byte THIS_MONTH=4;
 
+    public static final CharSequence firstPairStart="09.00";
+    public static final CharSequence firstPairEnd="10.35";
+    public static final CharSequence secondPairStart="10.45";
+    public static final CharSequence secondPairEnd="12.20";
+    public static final CharSequence thirdPairStart="13.00";
+    public static final CharSequence thirdPairEnd="14.35";
+    public static final CharSequence fourthPairStart="14.45";
+    public static final CharSequence fourthPairEnd="16.20";
+    public static final CharSequence fifthPairStart="16.30";
+    public static final CharSequence fifthPairEnd="18.05";
+    public static final CharSequence sixthPairStart="18.15";
+    public static final CharSequence sixthPairEnd="19.50";
+    public static final CharSequence seventhPairStart="20.00";
+    public static final CharSequence seventhPairEnd="21.35";
+
+    public static class Saturday
+    {
+        public static final CharSequence firstPairStart="08.30";
+        public static final CharSequence firstPairEnd="10.05";
+        public static final CharSequence secondPairStart="10.15";
+        public static final CharSequence secondPairEnd="11.50";
+        public static final CharSequence thirdPairStart="12.35";
+        public static final CharSequence thirdPairEnd="14.10";
+        public static final CharSequence fourthPairStart="14.20";
+        public static final CharSequence fourthPairEnd="15.55";
+        public static final CharSequence fifthPairStart="16.05";
+        public static final CharSequence fifthPairEnd="17.35";
+    }
+
+
+
+
+
+
     private static TagNode PostQuery(Map<String, String> valuesPairs) throws IOException {
         TagNode rootNode = null;
 
         URL url = new URL(TolgasModel.URL);
-        URLConnection connection = url.openConnection();
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setRequestProperty("Accept-Encoding", "gzip");
+        connection.setConnectTimeout(5000);
+        connection.setReadTimeout(5000);
+
         if (valuesPairs != null) //значит делаем POST запрос
         {
             connection.setDoOutput(true);
@@ -55,20 +101,55 @@ public class TolgasModel {
         //Создаём объект HtmlCleaner
         HtmlCleaner cleaner = new HtmlCleaner();
         //Загружаем html код сайта
-        rootNode = cleaner.clean(connection.getInputStream(), "windows-1251");
+        InputStream inputStream= new GZIPInputStream(connection.getInputStream());
+        rootNode = cleaner.clean(inputStream, "windows-1251");
 
         return rootNode;
     }
 
     public static String getStringDate(Calendar c) {
-        int day = c.get(Calendar.DAY_OF_MONTH);
-        int month = c.get(Calendar.MONTH) + 1;
-        String str = "";
-        if (day < 10) str = "0";
-        str = str + Integer.toString(day) + ".";
-        if (month < 10) str = str + "0";
-        str = str + month + "." + Integer.toString(c.get(Calendar.YEAR));
-        return str;
+//        Log.i(TAG,"getStringDate");
+//        int day = c.get(Calendar.DAY_OF_MONTH);
+//        int month = c.get(Calendar.MONTH) + 1;
+//        String str = "";
+//        if (day < 10) str = "0";
+//        str = str + Integer.toString(day) + ".";
+//        if (month < 10) str = str + "0";
+//        str = str + month + "." + Integer.toString(c.get(Calendar.YEAR));
+//        Log.i(TAG, "str=" + str);
+
+        SimpleDateFormat sdf=new SimpleDateFormat(formatDate);
+        return sdf.format(c.getTime());
+    }
+
+    public static String getDayOfWeek(Date date)
+    {
+        Calendar cal = Calendar.getInstance();
+        cal.setFirstDayOfWeek(Calendar.MONDAY);
+        cal.setTime(date);
+        int d = cal.get(Calendar.DAY_OF_WEEK);
+        String dayOfWeek = "Понедельник";
+        switch (d) {
+            case Calendar.TUESDAY:
+                dayOfWeek = "Вторник";
+                break;
+            case Calendar.WEDNESDAY:
+                dayOfWeek = "Среда";
+                break;
+            case Calendar.THURSDAY:
+                dayOfWeek = "Четверг";
+                break;
+            case Calendar.FRIDAY:
+                dayOfWeek = "Пятница";
+                break;
+            case Calendar.SATURDAY:
+                dayOfWeek = "Суббота";
+                break;
+            case Calendar.SUNDAY:
+                dayOfWeek = "Воскресенье";
+                break;
+        }
+        return dayOfWeek;
     }
 
     private static TagNode sendPostToGetShedule(String prepodId, String classId, String groupId,
@@ -139,24 +220,6 @@ public class TolgasModel {
         } else c.roll(Calendar.DAY_OF_MONTH, offset);
         if (c.get(Calendar.MONTH) == 0) c.roll(Calendar.YEAR, 1);
         return getStringDate(c);
-    }
-
-    public static List<DayPairs> getSheduleByGroupId(String groupId, int offset) throws IOException {
-        Calendar c = Calendar.getInstance();
-        String from = getStringDate(c);
-        Log.d(TAG,"from:"+from);
-
-        if ((c.getMaximum(Calendar.DAY_OF_MONTH) - c.get(Calendar.DAY_OF_MONTH)) < offset) {
-            c.roll(Calendar.DAY_OF_MONTH, offset);
-            c.roll(Calendar.MONTH, 1);
-        } else c.roll(Calendar.DAY_OF_MONTH, offset);
-        if (c.get(Calendar.MONTH) == 0) c.roll(Calendar.YEAR, 1);
-
-        String to = getStringDate(c);
-        Log.d(TAG,"to:"+to);
-        TagNode node = sendPostToGetShedule("0", "0", groupId, from, to);
-        if (node == null) return null;
-        return parseShedule(node);
     }
 
     public static List<DayPairs> getSheduleByGroupId(final String groupId,final byte period) throws IOException {

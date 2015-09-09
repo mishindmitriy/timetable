@@ -3,47 +3,63 @@
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:paddingTop="10dp"
-
     android:id="@+id/pairLayout">
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceMedium"
-        android:text="Classroom"
-        android:id="@+id/textViewClassroom"
-        android:layout_alignParentTop="true"
-        android:layout_toRightOf="@+id/textViewPairNumber"
-        android:layout_toEndOf="@+id/textViewPairNumber" />
-    <TextView
         android:text="Subject"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceMedium"
         android:id="@+id/textViewSubject"
-        android:layout_below="@+id/textViewClassroom"
-        android:layout_alignLeft="@+id/textViewClassroom"
-        android:layout_alignStart="@+id/textViewClassroom"
+        android:layout_alignParentTop="true"
+        android:layout_toEndOf="@+id/textViewPairStart"
+        android:layout_toRightOf="@+id/textViewPairStart"
+        android:textColor="@android:color/primary_text_light"
         android:layout_toLeftOf="@+id/textViewTypePair"
         android:layout_toStartOf="@+id/textViewTypePair" />
     <TextView
-        android:id="@+id/textViewPairNumber"
-        android:text="PairNumber"
-        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:text="Classroom"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_centerVertical="true"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:id="@+id/textViewClassroom"
+        android:layout_below="@+id/textViewSubject"
+        android:layout_alignLeft="@+id/textViewSubject"
+        android:layout_alignStart="@+id/textViewSubject"
+        android:textColor="@android:color/tertiary_text_light" />
+    <TextView
+        android:id="@+id/textViewPairStart"
+        android:text="PairStart"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
         android:layout_alignParentLeft="true"
+        android:paddingTop="2dp"
+        android:paddingRight="10dp"
+        android:textColor="@android:color/secondary_text_light"/>
+    <TextView
+        android:id="@+id/textViewPairEnd"
+        android:text="PairEnd"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/textViewPairStart"
         android:layout_alignParentStart="true"
-        android:padding="10dp" />
+        android:paddingRight="10dp"
+        android:paddingEnd="10dp"
+        android:textColor="@android:color/secondary_text_light_nodisable"/>
     <TextView
         android:id="@+id/textViewPrepod"
         android:text="Prepod"
         android:textAppearance="?android:attr/textAppearanceSmall"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/textViewSubject"
-        android:layout_alignLeft="@+id/textViewSubject"
-        android:layout_alignStart="@+id/textViewSubject" />
+        android:layout_below="@+id/textViewClassroom"
+        android:layout_alignLeft="@+id/textViewClassroom"
+        android:layout_alignStart="@+id/textViewClassroom"
+        android:textColor="@android:color/secondary_text_light_nodisable"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true" />
     <TextView
         android:id="@+id/textViewTypePair"
         android:text="TypePair"
@@ -53,5 +69,6 @@
         android:layout_alignParentTop="true"
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true"
-        android:layout_centerVertical="true" />
+        android:paddingLeft="5dp"
+        android:textColor="@android:color/tertiary_text_light"/>
 </RelativeLayout>

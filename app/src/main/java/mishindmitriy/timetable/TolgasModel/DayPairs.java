@@ -1,5 +1,7 @@
 package mishindmitriy.timetable.TolgasModel;
 
+import android.database.DataSetObservable;
+import android.database.DataSetObserver;
 import android.support.annotation.Nullable;
 
 import java.io.Serializable;
@@ -8,6 +10,7 @@ import java.util.List;
 
 /**
  * Created by mishindmitriy on 05.06.2015.
+ * Class for Days, which have a pairs
  */
 public class DayPairs implements Serializable {
     private String date;

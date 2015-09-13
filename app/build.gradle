@@ -4,6 +4,16 @@ android {
     compileSdkVersion 23
     buildToolsVersion '23'
 
+    lintOptions {
+        // set to true to turn off analysis progress reporting by lint
+        quiet false
+        // if true, stop the gradle build if errors are found
+        abortOnError true
+        // if true, only report errors
+        ignoreWarnings false
+    }
+
+
     defaultConfig {
         applicationId "mishindmitriy.timetable"
         minSdkVersion 10
@@ -26,19 +36,12 @@ android {
             versionName '1.11'
         }
     }
-
-    packagingOptions {
-        exclude 'META-INF/LICENSE'
-        exclude 'META-INF/LICENSE-FIREBASE.txt'
-        exclude 'META-INF/NOTICE'
-    }
 }
-
 
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
-    compile 'net.sourceforge.htmlcleaner:htmlcleaner:2.13'
-    compile 'com.android.support:appcompat-v7:23.0.0'
-    //compile 'com.j256.ormlite:ormlite-android:4.48'
+    compile 'net.sourceforge.htmlcleaner:htmlcleaner:2.14'
+    compile 'com.android.support:appcompat-v7:23.0.1'
     compile 'com.google.android.gms:play-services-analytics:7.8.0'
+    compile 'com.android.support:design:23.0.1'
 }

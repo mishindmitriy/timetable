@@ -4,27 +4,39 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:layout_margin="16dp">
+    android:padding="10dp">
 
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:background="#26A69A"
+        android:id="@+id/dateLayout"
+        android:padding="16dp">
 
         <TextView
             android:id="@+id/textViewDayOfWeek"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceMedium"
-            android:textColor="@android:color/tertiary_text_light"
-            android:layout_alignParentLeft="true"
-            />
+            android:textColor="@android:color/white"
+            android:layout_alignParentLeft="true"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:id="@+id/today"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:text="Сегодня"
+            android:textColor="@android:color/white"
+            android:visibility="gone"/>
 
         <TextView
             android:id="@+id/textViewDate"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceSmall"
-            android:textColor="@android:color/tertiary_text_light"
+            android:textColor="@android:color/white"
             android:layout_centerVertical="true"
             android:layout_alignParentRight="true"
             />

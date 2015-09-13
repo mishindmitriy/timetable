@@ -1,27 +1,28 @@
 package mishindmitriy.timetable;
 import android.app.Application;
-import android.content.Context;
-import android.content.Intent;
-import android.content.SharedPreferences;
+import android.os.StrictMode;
 
 /**
  * Created by mishindmitriy on 25.08.2015.
+ * TimeTable Application Class
  */
 public class TimeTableApp extends Application {
+    private final static boolean DEVELOPER_MODE=true;
     @Override
     public void onCreate() {
+        if (DEVELOPER_MODE) {
+            StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder()
+                    .detectAll()
+                    .penaltyLog()
+                    .penaltyDeath()
+                    .build());
+            StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder()
+                    .detectAll()
+                    .penaltyLog()
+                    .penaltyDeath()
+                    .build());
+        }
+        AnalyticsTrackers.initialize(this);
         super.onCreate();
-//        SharedPreferences preferences=getSharedPreferences(String.valueOf(PreferensesConst.APP_PREFERENCES), Context.MODE_PRIVATE);
-//        String mGroupId = preferences.getString(String.valueOf(PreferensesConst.GROUP_ID), "null");
-//        if (mGroupId != null && mGroupId.contains("null"))
-//        {
-//            Intent intent = new Intent(this, CaseGroupActivity.class);
-//            startActivity(intent);
-//        } else {
-//            Intent intent = new Intent(this, SheduleActivity.class);
-//            startActivity(intent);
-//        }
     }
-
-
 }

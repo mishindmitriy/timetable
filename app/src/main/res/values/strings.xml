@@ -8,21 +8,20 @@
     <string name="todayShedule">Расписание на сегодня</string>
     <string name="title_activity_shedule">Расписание ПВГУС</string>
 
-    <string name="TodayShedule">Сегодня</string>
-    <string name="TomorowShedule">Завтра</string>
-    <string name="SevenDaysShedule">7 дней</string>
-    <string name="ThisWeekShedule">Текущая неделя</string>
-
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
     <string name="CaseGroup">Выбрать группу</string>
     <string name="Refresh">Обновить</string>
     <string name="congratulations">Поздравляем! На выбранный период занятий нет</string>
 
-    <string-array name="screen_array">
+    <string-array name="menu_array">
         <item>Сегодня</item>
         <item>Завтра</item>
         <item>7 дней</item>
+        <item>Текущая неделя</item>
+        <item>Следующая неделя</item>
+        <item>Текущий месяц</item>
+        <item>Следующий месяц</item>
         <item>Выбрать группу</item>
     </string-array>
 

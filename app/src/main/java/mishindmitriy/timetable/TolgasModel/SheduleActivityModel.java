@@ -1,6 +1,8 @@
 package mishindmitriy.timetable.TolgasModel;
 
 import android.content.SharedPreferences;
+import android.database.DataSetObservable;
+import android.database.DataSetObserver;
 import android.database.Observable;
 import android.os.AsyncTask;
 import android.util.Log;
@@ -12,7 +14,11 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 
 import mishindmitriy.timetable.PreferensesConst;
@@ -60,66 +66,170 @@ public class SheduleActivityModel {
         mGroupName = preferences.getString(String.valueOf(PreferensesConst.GROUP_NAME), "null");
         mPeriod = (byte) preferences.getInt(String.valueOf(PreferensesConst.PERIOD), 0);
 
-        mCacheDir = cacheDir + "/"+mGroupId;
+        mCacheDir=cacheDir + "/" + TolgasModel.GROUPS+"/" + mGroupId+"/";
+        File cache = new File(mCacheDir);
+        if (cache.mkdirs()) Log.i(TAG, mCacheDir + " dir created");
+        else Log.i(TAG, mCacheDir + " dir not created");
 
+        Log.i(TAG,"cache dir "+mCacheDir);
         Log.i(TAG, "load period=" + mPeriod);
 
+        mShedule=new ArrayList<>();
+        clearCache();
     }
 
-    private boolean saveCache() {
-        Log.d(TAG, "saveToFile");
-        if (mShedule==null) return false;
+    private void clearCache() {
+        Calendar cal = Calendar.getInstance();
+        File[] listFiles=new File(mCacheDir).listFiles();
+        if (listFiles==null)
+        {
+            Log.i(TAG,"clearCache. listFiles return null");
+            return;
+        }
+        for (File cacheFile : listFiles) {
+            Date cacheDate = null;
+            try {
+                cacheDate = TolgasModel.getDate(cacheFile.getName());
+            } catch (ParseException e) {
+                e.printStackTrace();
+                return;
+            }
+
+            if (cacheDate.before(cal.getTime()) && !(cacheFile.getName().equals(TolgasModel.getStringDate(cal))) && !(TolgasModel.getStringDate(cal).equals(cacheFile.getName()))) {
+                Log.i(TAG, "file " + cacheFile.getAbsolutePath() + " will be deleted");
+                cacheFile.delete();
+            }
+        }
+    }
+
+    private boolean saveCache(DayPairs dayPairs) {
+        String dir = mCacheDir+ dayPairs.getDate();
+        Log.d(TAG, "saveToFile "+dir);
         try {
-            File f = new File(mCacheDir.toString());
+            File f = new File(dir);
             FileOutputStream fos = new FileOutputStream(f);
             ObjectOutputStream oos = new ObjectOutputStream(fos);
-            Log.d(TAG, "begin save data to " + mCacheDir);
-
-            if (mShedule != null) {
-                oos.writeObject(mShedule);
-                Log.d(TAG, "save in file");
-            } else Log.d(TAG, "save file false");
+            oos.writeObject(dayPairs);
+            Log.d(TAG, "save in file");
+            oos.close();
         } catch (FileNotFoundException e) {
             e.printStackTrace();
             Log.d(TAG, "save file false");
             return false;
         } catch (IOException e) {
             e.printStackTrace();
-            Log.d(TAG, "save file false");
+            Log.d(TAG, "save file false ioexception");
             return false;
         }
         return true;
     }
 
-    private boolean loadCache() {
+    private boolean saveCache() {
+        Log.i(TAG, "start save cache");
+        for (int n = 0; n < mShedule.size(); n++) {
+            saveCache(mShedule.get(n));
+        }
+        Log.i(TAG, "save cache end");
+        return true;
+    }
+
+
+    private DayPairs loadFile(String fileName) {
         Log.d(TAG, "loadFromFile");
+        DayPairs dayPairs = null;
         try {
-            File f = new File(mCacheDir.toString());
+            Log.i(TAG, "begin load file " + fileName);
+            File f = new File(fileName);
 
             FileInputStream fis = new FileInputStream(f);
             ObjectInputStream oin = new ObjectInputStream(fis);
 
-            Log.d(TAG, "begin load File " + mCacheDir);
-            mShedule = (List<DayPairs>) oin.readObject();
+            dayPairs = (DayPairs) oin.readObject();
+            oin.close();
         } catch (ClassNotFoundException e) {
-            Log.d(TAG, "load File fail");
+            Log.d(TAG, "load File ClassNotFoundException fail");
             e.printStackTrace();
-            return false;
         } catch (IOException e) {
-            Log.d(TAG, "load File fail");
+            Log.d(TAG, "load File IOException fail");
             e.printStackTrace();
+        }
+        return dayPairs;
+    }
+
+
+    private boolean loadCache() {
+        Calendar cal = Calendar.getInstance();
+        //надо сделать массив дат, на которые нужен кэш. какой выбран период?
+        int offset = 0;
+        switch (mPeriod) {
+            case TolgasModel.TODAY:
+                break;
+            case TolgasModel.TOMORROW:
+                cal.roll(Calendar.DAY_OF_YEAR, 1);
+                break;
+            case TolgasModel.SEVEN_DAYS:
+                offset = 6;
+                break;
+            case TolgasModel.THIS_WEEK:
+                cal.set(Calendar.DAY_OF_WEEK, cal.getFirstDayOfWeek());
+                offset=6;
+                break;
+            case TolgasModel.NEXT_WEEK:
+                cal.roll(Calendar.DAY_OF_YEAR,6);
+                cal.set(Calendar.DAY_OF_WEEK, cal.getFirstDayOfWeek());
+                offset=6;
+                break;
+            case TolgasModel.THIS_MONTH:
+                cal.set(Calendar.DAY_OF_MONTH, cal.getActualMinimum(Calendar.DAY_OF_MONTH));
+                offset=cal.getActualMaximum(Calendar.DAY_OF_MONTH);
+                break;
+            case TolgasModel.NEXT_MONTH:
+                cal.roll(Calendar.DAY_OF_YEAR,30);
+                cal.set(Calendar.DAY_OF_MONTH, cal.getActualMinimum(Calendar.DAY_OF_MONTH));
+                offset=cal.getActualMaximum(Calendar.DAY_OF_MONTH);
+                break;
+        }
+        String[] dates = new String[offset+1];
+        for (int n = 0; n <= offset; n++) {
+            dates[n] = TolgasModel.getStringDate(cal);
+            cal.roll(Calendar.DAY_OF_YEAR, 1);
+        }
+        Log.i(TAG,"in cache need "+dates.length+" dates from "+mCacheDir);
+        File[] listFiles = new File(mCacheDir).listFiles();
+        if (listFiles==null)
+        {
+            Log.i(TAG,"listFiles cache fail");
             return false;
         }
+        Log.i(TAG, "cache dir is open");
+        mShedule=new ArrayList<>();
+        for (String date : dates) {
+            for (File cacheFile : listFiles) {
+                if (date.equals(cacheFile.getName()) && cacheFile.getName().equals(date)) {
+                    DayPairs day=loadFile(cacheFile.getAbsolutePath());
+                    mShedule.add(day);
+                    Log.i(TAG, "date=" + date + "  file=" + cacheFile.getName());
+                    break;
+                }
+            }
+        }
+        if (mShedule == null) {
+            Log.i(TAG, "from cache load 0 files");
+            return false;
+        }
+        if (mShedule.size()==0)
+        {
+            Log.i(TAG, "from cache load 0 files");
+            return false;
+        }
+
+        Log.i(TAG, "from cache load " + mShedule.size() + " days");
+
         return true;
     }
 
-
     public List<DayPairs> getShedule() {
         return mShedule;
-    }
-
-    public void loadFromCache() {
-        if (loadCache()) mObservable.notifyLoadCacheOk();
     }
 
     private class LoadDataTask extends AsyncTask<Void, Void, Boolean> {
@@ -133,12 +243,18 @@ public class SheduleActivityModel {
                 if (mShedule == null) {
                     mShedule = new ArrayList<>();
                 }
+                Log.i(TAG,"load period done");
             } catch (IOException e) {
                 e.printStackTrace();
                 mShedule = null;
+                Log.i(TAG,"start load cache");
+                loadCache();
+                Log.i(TAG, "load cache done");
                 return false;
             }
+            Log.i(TAG,"start save cache");
             saveCache();
+            Log.i(TAG, "save cache done");
             return true;
         }
 
@@ -150,7 +266,6 @@ public class SheduleActivityModel {
             } else {
                 mObservable.notifyFailed();
             }
-
         }
     }
 
@@ -189,16 +304,9 @@ public class SheduleActivityModel {
         void onLoadFinished(SheduleActivityModel sheduleActivityModel);
 
         void onLoadFailed(SheduleActivityModel sheduleActivityModel);
-
-        void onLoadCacheOk(SheduleActivityModel sheduleActivityModel);
     }
 
-    private class LoadDataObservable extends Observable<Observer> {
-        public void notifyLoadCacheOk() {
-            for (final Observer observer : mObservers) {
-                observer.onLoadCacheOk(SheduleActivityModel.this);
-            }
-        }
+    private class LoadDataObservable extends Observable<Observer>  {
 
         public void notifyStarted() {
             for (final Observer observer : mObservers) {

@@ -1,5 +1,6 @@
 package mishindmitriy.timetable;
 
+import android.app.ActionBar;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -8,6 +9,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
 import android.text.Layout;
@@ -17,7 +19,9 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import java.util.List;
@@ -30,6 +34,7 @@ public class CaseGroupActivity extends AppCompatActivity implements CaseActivity
     private ArrayAdapter<String> adapter = null;
     private CaseActivityModel mCaseModel;
     private ProgressDialog pd;
+    //private ProgressBar mProgressBar;
 
     private TextWatcher filterTextWatcher = new TextWatcher() {
 
@@ -49,8 +54,7 @@ public class CaseGroupActivity extends AppCompatActivity implements CaseActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-
+        //mProgressBar=new ProgressBar(CaseGroupActivity.this);
         setContentView(R.layout.activity_case_group);
         setTitle(R.string.caseGroup);
 
@@ -67,16 +71,14 @@ public class CaseGroupActivity extends AppCompatActivity implements CaseActivity
     @Override
     public void onLoadStarted(CaseActivityModel caseActivityModel) {
         if (pd!=null) pd.dismiss();
-        pd = ProgressDialog
-                .show(CaseGroupActivity.this,
-                        getString(R.string.wait),
-                        getString(R.string.connToServ), true, false);
+        pd = ProgressDialog.show(CaseGroupActivity.this,getString(R.string.wait),getString(R.string.connToServ), true, false);
+
     }
 
     @Override
     public void onLoadFinished(CaseActivityModel caseActivityModel) {
         ListView listview = (ListView) findViewById(R.id.listViewData);
-        adapter=new ArrayAdapter<String>(CaseGroupActivity.this,
+        adapter=new ArrayAdapter<>(CaseGroupActivity.this,
                 R.layout.case_list_item, caseActivityModel.getGroupNameList());
         listview.setAdapter(adapter);
 

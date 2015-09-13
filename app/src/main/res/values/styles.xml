@@ -5,13 +5,13 @@
         <!-- Customize your theme here. -->
         <!-- colorPrimary is used for the default action bar background -->
         <item name="colorPrimary">@color/teal500</item>
-
         <!-- colorPrimaryDark is used for the status bar -->
         <item name="colorPrimaryDark">@color/teal800</item>
 
         <item name="android:textColorPrimary">@android:color/white</item>
         <!-- colorAccent is used as the default value for colorControlActivated,
              which is used to tint widgets -->
+        <item name="colorAccent">#80CBC4</item>
 
         <!-- You can also set colorControlNormal, colorControlActivated
              colorControlHighlight, and colorSwitchThumbNormal. -->

@@ -15,35 +15,28 @@ import android.util.Log;
 import android.view.MenuInflater;
 import android.view.SoundEffectConstants;
 import android.view.View;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.LinearLayout;
 import android.widget.ListView;
-import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
-import android.widget.Toast;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
+
 import java.util.List;
 import android.support.design.widget.Snackbar;
 
 import mishindmitriy.timetable.TolgasModel.DayPairs;
-import mishindmitriy.timetable.TolgasModel.SheduleActivityModel;
+import mishindmitriy.timetable.TolgasModel.SheduleModel;
 import mishindmitriy.timetable.TolgasModel.SheduleListAdapter;
 import mishindmitriy.timetable.TolgasModel.TolgasModel;
 
 public class SheduleActivity extends AppCompatActivity
-        implements SheduleActivityModel.Observer {
+        implements SheduleModel.Observer {
 
     private CharSequence mTitle;
     private SwipeRefreshLayout mSwipeLayout;
-    private SheduleActivityModel mSheduleModel;
+    private SheduleModel mSheduleModel;
     private boolean isCreate = true;
     private final static String TAG = "SheduleActivity";
 
@@ -59,21 +52,23 @@ public class SheduleActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         getWindow().setBackgroundDrawable(null);
         Log.d(TAG, "startOnCreate");
-
-        mSheduleModel = new SheduleActivityModel(getSharedPreferences(String.valueOf(PreferensesConst.APP_PREFERENCES), Context.MODE_PRIVATE), getCacheDir().getPath());
+        super.onCreate(savedInstanceState);
+        mSheduleModel = new SheduleModel(getSharedPreferences(String.valueOf(PreferensesConst.APP_PREFERENCES), Context.MODE_PRIVATE), getCacheDir().getPath());
 
         //чтение настроек из файла
         //если в настройках нет записи, то запускаем активность со списком групп
-        if (mSheduleModel.isGroupAvailable()) {
+        if (!mSheduleModel.isThingAvailable()) {
             finish();
-            Intent intent = new Intent(this, CaseGroupActivity.class);
+            Intent intent = new Intent(this, CaseActivity.class);
             startActivity(intent);
+            mSheduleModel=null;
+            return;
         } else {
-            setTitle(mSheduleModel.getGroupName());
+            setTitle(mSheduleModel.getThingName());
         }
         mSheduleModel.registerObserver(this);
 
-        super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_shedule);
         mListShedule = (ListView) findViewById(R.id.dayPairsLayoutInActivity);
         mSwipeLayout = (SwipeRefreshLayout) findViewById(R.id.sheduleSwipeRefresh);
@@ -132,7 +127,7 @@ public class SheduleActivity extends AppCompatActivity
         }
 
         Log.d(TAG, "finishOnCreate");
-        mSheduleAdapter=new SheduleListAdapter(SheduleActivity.this,mSheduleModel.getShedule());
+        mSheduleAdapter=new SheduleListAdapter(SheduleActivity.this,mSheduleModel.getShedule(),mSheduleModel.getWhatThing());
         mListShedule.setAdapter(mSheduleAdapter);
     }
 
@@ -188,11 +183,11 @@ public class SheduleActivity extends AppCompatActivity
                 break;
             case TolgasModel.CASE_GROUP://Выбрать группу
                 finish();
-                Intent intent = new Intent(this, CaseGroupActivity.class);
+                Intent intent = new Intent(this, CaseActivity.class);
                 startActivity(intent);
                 return;
         }
-        mTitle = mSheduleModel.getGroupName();
+        mTitle = mSheduleModel.getThingName();
         mSheduleModel.LoadData();
         // Highlight the selected item, update the title, and close the drawer
         mDrawerList.setItemChecked(position, true);
@@ -234,7 +229,7 @@ public class SheduleActivity extends AppCompatActivity
 
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     @Override
-    public void onLoadStarted(SheduleActivityModel sheduleActivityModel) {
+    public void onLoadStarted(SheduleModel sheduleModel) {
         Log.i(TAG, "OnLoadStart");
         if (mSwipeLayout != null) {
             Log.i(TAG, "piu runnable will be run");
@@ -253,14 +248,14 @@ public class SheduleActivity extends AppCompatActivity
     }
 
     @Override
-    public void onLoadFinished(SheduleActivityModel sheduleActivityModel) {
+    public void onLoadFinished(SheduleModel sheduleModel) {
         Log.i(TAG, "OnLoadFinished");
-        List<DayPairs> shedule = sheduleActivityModel.getShedule();
+        List<DayPairs> shedule = sheduleModel.getShedule();
         mSheduleAdapter.setData(shedule);
         mSwipeLayout.setRefreshing(false);
         Log.i(TAG, "refresh false");
         //congratulations(shedule.size());
-        Snackbar.make(mSwipeLayout, "Расписание обновлено", 2000).show();
+        Snackbar.make(mSwipeLayout, "Расписание обновлено", Snackbar.LENGTH_LONG).show();
     }
 
     private void congratulations(int size) {
@@ -272,12 +267,12 @@ public class SheduleActivity extends AppCompatActivity
     }
 
     @Override
-    public void onLoadFailed(SheduleActivityModel sheduleActivityModel) {
+    public void onLoadFailed(SheduleModel sheduleModel) {
         Log.i(TAG, "OnLoadFailed");
-        List<DayPairs> shedule = sheduleActivityModel.getShedule();
+        List<DayPairs> shedule = sheduleModel.getShedule();
         mSheduleAdapter.setData(shedule);
         mSwipeLayout.setRefreshing(false);
-        Snackbar.make(mSwipeLayout, "Ошибка загрузки. Загружены локальные данные.", 2000).show();
+        Snackbar.make(mSwipeLayout, "Ошибка загрузки. Загружены локальные данные.", Snackbar.LENGTH_LONG).show();
     }
 
     @Override
@@ -311,7 +306,12 @@ public class SheduleActivity extends AppCompatActivity
 
     @Override
     protected void onDestroy() {
-        if (isFinishing()) mSheduleModel.StopLoad();
+        super.onDestroy();
+        if (mSheduleModel==null) return;
+        if (isFinishing())
+        {
+            mSheduleModel.StopLoad();
+        }
 
         mSheduleModel.unregisterObserver(this);
 
@@ -321,7 +321,7 @@ public class SheduleActivity extends AppCompatActivity
         editor.putInt(String.valueOf(PreferensesConst.PERIOD), mSheduleModel.getPeriod());
         editor.apply();
         Log.i(TAG, "onDestroy");
-        super.onDestroy();
+
     }
 
 }

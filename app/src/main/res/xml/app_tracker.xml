@@ -3,8 +3,7 @@
     <!-- End current session if app sleeps for a period of time -->
     <integer name="ga_sessionTimeout">300</integer>
 
-    <!-- Enable automatic Activity measurement -->
-    <bool name="ga_autoActivityTracking">true</bool>
+    <bool name="ga_reportUncaughtExceptions">true</bool>
 
     <!--  The property id associated with this analytics tracker -->
     <string name="ga_trackingId">UA-67182094-1</string>
@@ -13,4 +12,14 @@
       See Project Structure -> Analytics -> Google Analytics -> Learn More
       to learn more about configuring this file.
     -->
+    <!-- Enable automatic Activity measurement -->
+    <bool name="ga_autoActivityTracking">true</bool>
+
+    <!-- The screen names that will appear in reports -->
+    <screenName name="mishindmitriy.timetable.CaseActivity">
+        TimeTable CaseActivity
+    </screenName>
+    <screenName name="mishindmitriy.timetable.SheduleActivity">
+        TimeTable SheduleActivity
+    </screenName>
 </resources>

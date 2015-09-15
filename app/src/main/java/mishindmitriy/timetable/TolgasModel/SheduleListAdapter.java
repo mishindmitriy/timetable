@@ -23,10 +23,12 @@ import mishindmitriy.timetable.R;
 public class SheduleListAdapter extends BaseAdapter {
     private List<DayPairs> shedule;
     private Activity mContext;
+    private String mWhatThing;
 
-    public SheduleListAdapter(Activity context,List<DayPairs> shedule) {
+    public SheduleListAdapter(Activity context, List<DayPairs> shedule, String whatThing) {
         this.mContext =context;
         this.shedule=shedule;
+        this.mWhatThing=whatThing;
     }
 
     static class ViewHolder {
@@ -66,15 +68,10 @@ public class SheduleListAdapter extends BaseAdapter {
             convertView = inflater.inflate(R.layout.day_pairs_layout, parent, false);
             viewHolder = new ViewHolder();
             viewHolder.dayLayout = (LinearLayout) convertView.findViewById(R.id.dayPairsLayout);
-            //viewHolder.pairLayout = (RelativeLayout) inflater.inflate(R.layout.pair, null, false);
             convertView.setTag(viewHolder);
         } else {
             viewHolder = (ViewHolder) convertView.getTag();
             sizeConvertView=viewHolder.dayLayout.getChildCount()-1;
-//            while (viewHolder.dayLayout.getChildCount()>1)
-//            {
-//                viewHolder.dayLayout.removeViewAt(1);
-//            }
         }
 
         if (sizeConvertView<sizeOutput)
@@ -107,11 +104,12 @@ public class SheduleListAdapter extends BaseAdapter {
 
         String today=sdf.format(new Date());
         String someDate=sdf.format(date);
+        TextView textView=(TextView) viewHolder.dayLayout.findViewById(R.id.today);
         if (today.equals(someDate)&&someDate.equals(today))
         {
-            TextView textView=(TextView) viewHolder.dayLayout.findViewById(R.id.today);
             textView.setVisibility(View.VISIBLE);
         }
+        else textView.setVisibility(View.GONE);
         viewDate.setText(someDate);
         TextView viewDayOfWeek = (TextView) viewHolder.dayLayout.findViewById(R.id.textViewDayOfWeek);
         viewDayOfWeek.setText(dayOfWeek);
@@ -127,10 +125,27 @@ public class SheduleListAdapter extends BaseAdapter {
             TextView viewPairStart = (TextView) pairLayout.findViewById(R.id.textViewPairStart);
             TextView viewPairEnd = (TextView) pairLayout.findViewById(R.id.textViewPairEnd);
 
-            viewClassroom.setText(shedule.get(position).getPair(n).getClassroom());
-            viewSubject.setText(shedule.get(position).getPair(n).getSubject());
-            viewPrepod.setText(shedule.get(position).getPair(n).getPrepod());
-            viewTypePair.setText(shedule.get(position).getPair(n).getTypePair());
+            switch (mWhatThing)
+            {
+                case TolgasModel.GROUPS:
+                    viewClassroom.setText(shedule.get(position).getPair(n).getClassroom());
+                    viewSubject.setText(shedule.get(position).getPair(n).getSubject());
+                    viewPrepod.setText(shedule.get(position).getPair(n).getPrepod());
+                    viewTypePair.setText(shedule.get(position).getPair(n).getTypePair());
+                    break;
+                case TolgasModel.PREDODS:
+                    viewClassroom.setText(shedule.get(position).getPair(n).getClassroom());
+                    viewSubject.setText(shedule.get(position).getPair(n).getSubject());
+                    viewPrepod.setText(shedule.get(position).getPair(n).getGroups());
+                    viewTypePair.setText(shedule.get(position).getPair(n).getTypePair());
+                    break;
+                case TolgasModel.CLASSROOMS:
+                    viewClassroom.setText(shedule.get(position).getPair(n).getGroups());
+                    viewSubject.setText(shedule.get(position).getPair(n).getSubject());
+                    viewPrepod.setText(shedule.get(position).getPair(n).getPrepod());
+                    viewTypePair.setText(shedule.get(position).getPair(n).getTypePair());
+                    break;
+            }
 
             int d = Integer.parseInt(shedule.get(position).getPair(n).getPairNumber());
             if (dayOfWeek.equals("Суббота")) {   //время пар в субботу

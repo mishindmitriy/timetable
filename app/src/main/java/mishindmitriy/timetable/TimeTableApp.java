@@ -7,7 +7,7 @@ import android.os.StrictMode;
  * TimeTable Application Class
  */
 public class TimeTableApp extends Application {
-    private final static boolean DEVELOPER_MODE=true;
+    private final static boolean DEVELOPER_MODE=false;
     @Override
     public void onCreate() {
         if (DEVELOPER_MODE) {

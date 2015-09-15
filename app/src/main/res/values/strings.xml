@@ -24,5 +24,9 @@
         <item>Следующий месяц</item>
         <item>Выбрать группу</item>
     </string-array>
+    <string name="title_activity_case">CaseActivity</string>
+
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
 
 </resources>

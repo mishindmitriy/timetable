@@ -1,23 +1,21 @@
 package mishindmitriy.timetable.TolgasModel;
 
 import android.content.SharedPreferences;
-import android.database.DataSetObservable;
-import android.database.DataSetObserver;
 import android.database.Observable;
 import android.os.AsyncTask;
 import android.util.Log;
-
+import com.google.gson.Gson;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
@@ -26,7 +24,7 @@ import mishindmitriy.timetable.PreferensesConst;
 /**
  * Created by mishindmitriy on 04.09.2015.
  */
-public class SheduleActivityModel {
+public class SheduleModel {
     private static final String TAG = "SheduleModel";
     private boolean mIsWorking;
     private LoadDataTask mLoadTask;
@@ -35,13 +33,16 @@ public class SheduleActivityModel {
     public void setPeriod(byte mPeriod) {
         Log.i(TAG, "setPeriod=" + mPeriod);
         this.mPeriod = mPeriod;
+        getDates();
     }
 
     private byte mPeriod;
-    private String mGroupId;
-    private CharSequence mGroupName;
+    private Thing mThing=null;
+    //private String mThingId=null;
+   // private CharSequence mThingName=null;
     private List<DayPairs> mShedule;
     private String mCacheDir = null;
+    private String[] dates;
 
     public byte getPeriod() {
         return mPeriod;
@@ -51,22 +52,34 @@ public class SheduleActivityModel {
         return mIsWorking;
     }
 
-    public CharSequence getGroupName() {
-        return mGroupName;
+    public CharSequence getThingName() {
+        if (mThing==null) return null;
+        return mThing.getThingName();
     }
 
-    public boolean isGroupAvailable() {
-        return mGroupId != null && mGroupId.contains("null");
+    public boolean isThingAvailable() {
+        return mThing != null;
     }
 
-    public SheduleActivityModel(SharedPreferences preferences, String cacheDir) {
+    public SheduleModel(SharedPreferences preferences, String cacheDir) {
         Log.i(TAG, "new Instance ");
 
-        mGroupId = preferences.getString(String.valueOf(PreferensesConst.GROUP_ID), "null");
-        mGroupName = preferences.getString(String.valueOf(PreferensesConst.GROUP_NAME), "null");
-        mPeriod = (byte) preferences.getInt(String.valueOf(PreferensesConst.PERIOD), 0);
+        mShedule=new ArrayList<>();
 
-        mCacheDir=cacheDir + "/" + TolgasModel.GROUPS+"/" + mGroupId+"/";
+        String json=preferences.getString(PreferensesConst.CURRENT_THING,null);
+        Gson gson=new Gson();
+        mThing=gson.fromJson(json, Thing.class);
+
+        if (mThing==null) return;
+        //mThingId=thing.getThingID();
+        //mThingName=thing.getThingName();
+        //mThingId = preferences.getString(String.valueOf(PreferensesConst.GROUP_ID), "null");
+        //mThingName = preferences.getString(String.valueOf(PreferensesConst.GROUP_NAME), "null");
+        mPeriod = (byte) preferences.getInt(String.valueOf(PreferensesConst.PERIOD), 0);
+        getDates();
+
+        mCacheDir=cacheDir + "/" + mThing.getWhatThing()+"/" + mThing.getThingID() +"/";
+
         File cache = new File(mCacheDir);
         if (cache.mkdirs()) Log.i(TAG, mCacheDir + " dir created");
         else Log.i(TAG, mCacheDir + " dir not created");
@@ -74,7 +87,7 @@ public class SheduleActivityModel {
         Log.i(TAG,"cache dir "+mCacheDir);
         Log.i(TAG, "load period=" + mPeriod);
 
-        mShedule=new ArrayList<>();
+
         clearCache();
     }
 
@@ -103,15 +116,17 @@ public class SheduleActivityModel {
     }
 
     private boolean saveCache(DayPairs dayPairs) {
+        String json=new Gson().toJson(dayPairs);
+        //Log.i(TAG,"json = "+json);
         String dir = mCacheDir+ dayPairs.getDate();
-        Log.d(TAG, "saveToFile "+dir);
+        Log.d(TAG, "saveToFile " + dir);
         try {
             File f = new File(dir);
             FileOutputStream fos = new FileOutputStream(f);
-            ObjectOutputStream oos = new ObjectOutputStream(fos);
-            oos.writeObject(dayPairs);
+            OutputStreamWriter outputStreamWriter=new OutputStreamWriter(fos);
+            outputStreamWriter.write(json);
             Log.d(TAG, "save in file");
-            oos.close();
+            outputStreamWriter.close();
         } catch (FileNotFoundException e) {
             e.printStackTrace();
             Log.d(TAG, "save file false");
@@ -140,15 +155,12 @@ public class SheduleActivityModel {
         try {
             Log.i(TAG, "begin load file " + fileName);
             File f = new File(fileName);
-
             FileInputStream fis = new FileInputStream(f);
-            ObjectInputStream oin = new ObjectInputStream(fis);
-
-            dayPairs = (DayPairs) oin.readObject();
-            oin.close();
-        } catch (ClassNotFoundException e) {
-            Log.d(TAG, "load File ClassNotFoundException fail");
-            e.printStackTrace();
+            InputStreamReader inputStreamReader= new InputStreamReader(fis);
+            BufferedReader reader = new BufferedReader(inputStreamReader);
+            Gson gson=new Gson();
+            dayPairs = gson.fromJson(reader,DayPairs.class);
+            inputStreamReader.close();
         } catch (IOException e) {
             Log.d(TAG, "load File IOException fail");
             e.printStackTrace();
@@ -156,8 +168,8 @@ public class SheduleActivityModel {
         return dayPairs;
     }
 
-
-    private boolean loadCache() {
+    private String[] getDates()
+    {
         Calendar cal = Calendar.getInstance();
         //надо сделать массив дат, на которые нужен кэш. какой выбран период?
         int offset = 0;
@@ -171,29 +183,36 @@ public class SheduleActivityModel {
                 offset = 6;
                 break;
             case TolgasModel.THIS_WEEK:
-                cal.set(Calendar.DAY_OF_WEEK, cal.getFirstDayOfWeek());
+                if (cal.get(Calendar.DAY_OF_WEEK)==Calendar.SUNDAY) cal.roll(Calendar.DAY_OF_YEAR,-1);
+                cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
                 offset=6;
                 break;
             case TolgasModel.NEXT_WEEK:
-                cal.roll(Calendar.DAY_OF_YEAR,6);
-                cal.set(Calendar.DAY_OF_WEEK, cal.getFirstDayOfWeek());
+                if (cal.get(Calendar.DAY_OF_WEEK)==Calendar.SUNDAY) cal.roll(Calendar.DAY_OF_YEAR,5);
+                else cal.roll(Calendar.DAY_OF_YEAR, 7);
+                cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
                 offset=6;
                 break;
             case TolgasModel.THIS_MONTH:
                 cal.set(Calendar.DAY_OF_MONTH, cal.getActualMinimum(Calendar.DAY_OF_MONTH));
-                offset=cal.getActualMaximum(Calendar.DAY_OF_MONTH);
+                offset=cal.getActualMaximum(Calendar.DAY_OF_MONTH)-1;
                 break;
             case TolgasModel.NEXT_MONTH:
                 cal.roll(Calendar.DAY_OF_YEAR,30);
                 cal.set(Calendar.DAY_OF_MONTH, cal.getActualMinimum(Calendar.DAY_OF_MONTH));
-                offset=cal.getActualMaximum(Calendar.DAY_OF_MONTH);
+                offset=cal.getActualMaximum(Calendar.DAY_OF_MONTH)-1;
                 break;
         }
-        String[] dates = new String[offset+1];
+        dates = new String[offset+1];
         for (int n = 0; n <= offset; n++) {
             dates[n] = TolgasModel.getStringDate(cal);
             cal.roll(Calendar.DAY_OF_YEAR, 1);
         }
+        return dates;
+    }
+
+    private boolean loadCache() {
+        String[] dates=getDates();
         Log.i(TAG,"in cache need "+dates.length+" dates from "+mCacheDir);
         File[] listFiles = new File(mCacheDir).listFiles();
         if (listFiles==null)
@@ -232,6 +251,11 @@ public class SheduleActivityModel {
         return mShedule;
     }
 
+    public String getWhatThing() {
+        if (mThing!=null) return mThing.getWhatThing();
+        return null;
+    }
+
     private class LoadDataTask extends AsyncTask<Void, Void, Boolean> {
         @Override
         protected Boolean doInBackground(Void... arg) {
@@ -239,7 +263,20 @@ public class SheduleActivityModel {
 
             try {
                 Log.i(TAG, "load period=" + mPeriod);
-                mShedule = TolgasModel.getSheduleByGroupId(mGroupId, mPeriod);
+                switch (mThing.getWhatThing())
+                {
+                    case TolgasModel.GROUPS:
+                        mShedule = TolgasModel.getSheduleByGroupId(mThing.getThingID(), mPeriod, dates);
+                        break;
+                    case TolgasModel.PREDODS:
+                        mShedule=TolgasModel.getSheduleByPrepodId(mThing.getThingID(),mPeriod,dates);
+                        break;
+                    case TolgasModel.CLASSROOMS:
+                        mShedule=TolgasModel.getSheduleByClassroomId(mThing.getThingID(), mPeriod, dates);
+                        break;
+
+                }
+
                 if (mShedule == null) {
                     mShedule = new ArrayList<>();
                 }
@@ -299,30 +336,30 @@ public class SheduleActivityModel {
     }
 
     public interface Observer {
-        void onLoadStarted(SheduleActivityModel sheduleActivityModel);
+        void onLoadStarted(SheduleModel sheduleModel);
 
-        void onLoadFinished(SheduleActivityModel sheduleActivityModel);
+        void onLoadFinished(SheduleModel sheduleModel);
 
-        void onLoadFailed(SheduleActivityModel sheduleActivityModel);
+        void onLoadFailed(SheduleModel sheduleModel);
     }
 
     private class LoadDataObservable extends Observable<Observer>  {
 
         public void notifyStarted() {
             for (final Observer observer : mObservers) {
-                observer.onLoadStarted(SheduleActivityModel.this);
+                observer.onLoadStarted(SheduleModel.this);
             }
         }
 
         public void notifySucceeded() {
             for (final Observer observer : mObservers) {
-                observer.onLoadFinished(SheduleActivityModel.this);
+                observer.onLoadFinished(SheduleModel.this);
             }
         }
 
         public void notifyFailed() {
             for (final Observer observer : mObservers) {
-                observer.onLoadFailed(SheduleActivityModel.this);
+                observer.onLoadFailed(SheduleModel.this);
             }
         }
     }

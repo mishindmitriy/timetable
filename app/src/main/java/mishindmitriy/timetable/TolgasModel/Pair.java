@@ -11,14 +11,16 @@ public class Pair implements Serializable {
     private String prepod;
     private String typePair;
     private String subject;
+    private String groups;
 
-    public Pair(String classroom,String pairNumber,String prepod,String typePair, String subject)
+    public Pair(String classroom,String pairNumber,String prepod,String typePair, String subject, String groups)
     {
         this.classroom=classroom;
         this.pairNumber=pairNumber;
         this.prepod=prepod;
         this.typePair=typePair;
         this.subject=subject;
+        this.groups=groups;
     }
 
     public String getClassroom()
@@ -44,6 +46,11 @@ public class Pair implements Serializable {
     public String getSubject()
     {
         return subject;
+    }
+
+    public String getGroups()
+    {
+        return groups;
     }
 
 }

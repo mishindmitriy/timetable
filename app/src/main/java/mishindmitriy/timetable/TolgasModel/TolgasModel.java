@@ -1,5 +1,6 @@
 package mishindmitriy.timetable.TolgasModel;
 
+import android.support.annotation.Nullable;
 import android.util.Log;
 
 import org.htmlcleaner.HtmlCleaner;
@@ -29,6 +30,8 @@ import java.util.regex.Pattern;
 public class TolgasModel {
     private static final String TAG = "TolgasModel";
     public static final String URL = "http://www.tolgas.ru/services/raspisanie/";
+    public static final String URLprepods = "http://www.tolgas.ru/services/raspisanie/?id=1";
+    public static final String URLclassrooms = "http://www.tolgas.ru/services/raspisanie/?id=2";
     public static final String formatDate = "dd.MM.yyyy";
     public static final byte TODAY = 0;
     public static final byte TOMORROW = 1;
@@ -58,6 +61,8 @@ public class TolgasModel {
     public static final CharSequence seventhPairStart = "20.00";
     public static final CharSequence seventhPairEnd = "21.35";
 
+
+
     public static class Saturday {
         public static final CharSequence firstPairStart = "08.30";
         public static final CharSequence firstPairEnd = "10.05";
@@ -71,8 +76,7 @@ public class TolgasModel {
         public static final CharSequence fifthPairEnd = "17.35";
     }
 
-
-    private static TagNode groupsPostQuery() throws IOException {
+ /*   private static TagNode thingsGetQuery(String url) throws IOException {
         Log.i(TAG, "postQuery");
         TagNode rootNode = null;
         String htmlCode = null;
@@ -120,13 +124,13 @@ public class TolgasModel {
         Log.i(TAG, "clean done");
 
         return rootNode;
-    }
+    }*/
 
-    private static TagNode PostQuery(Map<String, String> valuesPairs) throws IOException {
+    private static TagNode someQuery(String inpupUrl, @Nullable Map<String, String> valuesPairs, String patternStart, String patternEnd) throws IOException {
         Log.i(TAG, "postQuery");
         TagNode rootNode = null;
         String htmlCode = null;
-        URL url = new URL(TolgasModel.URL);
+        URL url = new URL(inpupUrl);
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         if (valuesPairs != null) //значит делаем POST запрос
         {
@@ -141,7 +145,7 @@ public class TolgasModel {
                 String value = pair.getValue();
                 out.print(name);
                 out.print('=');
-                out.print(URLEncoder.encode(value, "UTF-8"));
+                out.print(URLEncoder.encode(value, "windows-1251"));
             }
             out.close();
             Log.i(TAG, "post done");
@@ -155,20 +159,22 @@ public class TolgasModel {
         StringBuilder buf = new StringBuilder();
         String line = "";
 
-        Pattern pattern = Pattern.compile(".*[Ii][Dd](\\s*)=(\\s*)['\"][Ss][Ee][Nn][Dd]['\"\\s>].*");
+        Pattern pattern = Pattern.compile(patternStart);
         Matcher matcher = pattern.matcher(line);
 
         while (!matcher.matches())
         {
             line=reader.readLine();
+            if (line==null) new IOException();
             matcher = pattern.matcher(line);
         }
-        pattern=Pattern.compile(".*</[Tt][Aa][Bb][Ll][Ee]>.*");
+        pattern=Pattern.compile(patternEnd);
         matcher = pattern.matcher(line);
         while (!matcher.matches())
         {
             buf.append(line);
             line =reader.readLine();
+            if (line==null) new IOException();
             matcher = pattern.matcher(line);
         }
 
@@ -178,10 +184,10 @@ public class TolgasModel {
 
         int status = connection.getResponseCode();
         if (status != 200) {
-            throw new IOException("Post failed with error code " + status);
+            throw new IOException("query failed with error code " + status);
         }
         connection.disconnect();
-        Log.i(TAG, "postQuery done");
+        Log.i(TAG, "Query done");
         Log.i(TAG, "start clean");
         rootNode = new HtmlCleaner().clean(htmlCode);
         Log.i(TAG, "clean done");
@@ -228,22 +234,24 @@ public class TolgasModel {
         return dayOfWeek;
     }
 
-    private static TagNode sendPostToGetShedule(String prepodId, String classId, String groupId,
+    private static TagNode sendPostToGetShedule(String rel,String prepodId, String classId, String thingId,
                                                 String fromDate, String toDate)
             throws IOException {
-        Log.i(TAG, "sendPost from "+fromDate+" to "+toDate);
+        Log.i(TAG, "sendPost from " + fromDate + " to " + toDate);
         final Map<String, String> valuesPairs = new HashMap<>();
 
-        valuesPairs.put("rel", "0");//0 - запрос групп, 1 - запрос преподавателей, 2 - запрос по аудиториям
-        //valuesPairs.put("prep", prepodId);//id преподавателя
-        //valuesPairs.put("audi", classId);//id аудитории
-        valuesPairs.put("vr", groupId);//id группы
+        valuesPairs.put("rel", rel);//0 - запрос групп, 1 - запрос преподавателей, 2 - запрос по аудиториям
+        valuesPairs.put("prep", prepodId);//id преподавателя
+        valuesPairs.put("audi", classId);//id аудитории
+        valuesPairs.put("vr",thingId);//id группы
         valuesPairs.put("from", fromDate);//с даты
         valuesPairs.put("to", toDate);//по дату
         valuesPairs.put("submit_button", "ПОКАЗАТЬ");//без этого вроде не возвращалась страница
 
         //Загружаем html код сайта
-        TagNode rootNode = PostQuery(valuesPairs);
+        String pattertStart=".*[Ii][Dd](\\s*)=(\\s*)['\"][Ss][Ee][Nn][Dd]['\"\\s>].*";
+        String patternEnd=".*</[Tt][Aa][Bb][Ll][Ee]>.*";
+        TagNode rootNode = someQuery(URL, valuesPairs, pattertStart, patternEnd);
         if (rootNode == null) {
             return null;
         }
@@ -251,30 +259,41 @@ public class TolgasModel {
         return rootNode;//в html у таблицы с данными id=send
     }
 
-    private static List<DayPairs> parseShedule(TagNode output) {
+    private static List<DayPairs> parseShedule(TagNode output,String[] dates) {
         //парсит html код с расписанием, выводит список дней
         Log.i(TAG, "parseShedule");
         output = output.findElementByAttValue("id", "send", true, true);
         TagNode[] outputTd = output.getElementsByAttValue("class", "hours", true, true);
 
         List<DayPairs> arrayDayPair = new ArrayList<>();
-        final int len = outputTd.length;
+        int len = outputTd.length;
 
-        if (len == 1) return null;
+        if (len == 1) len=0;
 
         String classroom;
         String pairNumber;
         String prepod;
         String typePair;
         String subject;
+        String groups;
+
+        for (int k=0; k<dates.length; k++)
+        {
+            arrayDayPair.add(new DayPairs(dates[k],null));
+        }
 
         int day = -1;
-        for (int n = 0; n != len; n++) {
+        int p=0;
+        for (int n = 0; n < len; n++) {
             String s = outputTd[n].getText().toString();
             Pattern pattern = Pattern.compile("\\d\\d.\\d\\d.\\d\\d\\d\\d");
             Matcher matcher = pattern.matcher(s);
             if (matcher.matches()) {
-                arrayDayPair.add(new DayPairs(s, null));
+                //arrayDayPair.add(new DayPairs(s, null));
+                while (!s.equals(arrayDayPair.get(p).getDate()))
+                {
+                    p++;
+                }
                 day++;
             } else {
                 classroom = outputTd[n++].getText().toString();
@@ -282,8 +301,9 @@ public class TolgasModel {
                 prepod = outputTd[n++].getText().toString();
                 typePair = outputTd[n++].getText().toString();
                 subject = outputTd[n++].getText().toString();
+                groups = outputTd[n].getText().toString();
                 if (n != len) n++;
-                arrayDayPair.get(day).addPair(new Pair(classroom, pairNumber, prepod, typePair, subject));
+                arrayDayPair.get(p).addPair(new Pair(classroom, pairNumber, prepod, typePair, subject, groups));
             }
         }
         Log.i(TAG, "parseShedule done");
@@ -299,84 +319,69 @@ public class TolgasModel {
         return lastUpdate;
     }
 
-    public static List<DayPairs> getSheduleByGroupId(final String groupId, final byte period) throws IOException {
-        //TODO сделать обьекты для всех дат, для дат где нет расписания, оставлять пустыми и записывать в кэш
+    public static List<DayPairs> getSheduleByGroupId(final String groupId, final byte period, String[] dates)
+            throws IOException {
         Log.i(TAG, "getSheduleByGroupId");
-        TagNode node = null;
-        Calendar c = Calendar.getInstance();
-        c.setFirstDayOfWeek(Calendar.MONDAY);
-        String today = getStringDate(c);
-        switch (period) {
-            case TolgasModel.TODAY:
-                node = sendPostToGetShedule("0", "0", groupId, today, today);
-                break;
-
-            case TolgasModel.TOMORROW:
-                c.roll(Calendar.DAY_OF_YEAR, 1);
-                final String tomorrow = getStringDate(c);
-                node = sendPostToGetShedule("0", "0", groupId, tomorrow, tomorrow);
-                break;
-
-            case TolgasModel.SEVEN_DAYS:
-                c.roll(Calendar.DAY_OF_YEAR, 6);
-                final String sevendays = getStringDate(c);//сдвинуть на 7 дней, это 6 дней + сегодня
-                node = sendPostToGetShedule("0", "0", groupId, today, sevendays);
-                break;
-
-            case TolgasModel.THIS_WEEK:
-                if (c.get(Calendar.DAY_OF_WEEK)==Calendar.SUNDAY) c.roll(Calendar.DAY_OF_YEAR,-1);
-                c.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
-                final String from = getStringDate(c);
-                c.roll(Calendar.DAY_OF_YEAR, 6);
-                final String thisweek = getStringDate(c);
-                node = sendPostToGetShedule("0", "0", groupId, from, thisweek);
-                break;
-
-            case TolgasModel.NEXT_WEEK:
-                if (c.get(Calendar.DAY_OF_WEEK)==Calendar.SUNDAY) c.roll(Calendar.DAY_OF_YEAR,5);
-                else c.roll(Calendar.DAY_OF_YEAR, 6);
-                c.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
-                final String startweek = getStringDate(c);
-                c.roll(Calendar.DAY_OF_YEAR, 6);
-                final String endweek = getStringDate(c);
-                node = sendPostToGetShedule("0", "0", groupId, startweek, endweek);
-                break;
-
-            case TolgasModel.THIS_MONTH:
-                c.set(Calendar.DAY_OF_MONTH, c.getActualMinimum(Calendar.DAY_OF_MONTH));
-                final String startMonth = getStringDate(c);
-                c.set(Calendar.DAY_OF_MONTH, c.getActualMaximum(Calendar.DAY_OF_MONTH));
-                final String endMonth = getStringDate(c);
-                node = sendPostToGetShedule("0", "0", groupId, startMonth, endMonth);
-                break;
-
-            case TolgasModel.NEXT_MONTH:
-                c.roll(Calendar.DAY_OF_YEAR, 30);
-                c.set(Calendar.DAY_OF_MONTH, c.getActualMinimum(Calendar.DAY_OF_MONTH));
-                final String startNextMonth = getStringDate(c);
-                c.set(Calendar.DAY_OF_MONTH, c.getActualMaximum(Calendar.DAY_OF_MONTH));
-                final String endNextMonth = getStringDate(c);
-                node = sendPostToGetShedule("0", "0", groupId, startNextMonth, endNextMonth);
-                break;
-        }
-
+        TagNode node = sendPostToGetShedule("0","0","0",groupId,dates[0],dates[dates.length-1]);
         if (node == null) return null;
         //String lastMod = parseLastUpdateServer(node);
-        return parseShedule(node);
+        return parseShedule(node, dates);
     }
 
-    public static List<Group> getGroupsList() throws IOException {
-        TagNode rootNode = groupsPostQuery();
+    public static List<DayPairs> getSheduleByPrepodId(final String prepodId, final byte period, String[] dates)
+            throws IOException {
+        Log.i(TAG, "getSheduleByGroupId");
+        TagNode node = sendPostToGetShedule("1","0","0",prepodId,dates[0],dates[dates.length-1]);
+        if (node == null) return null;
+        //String lastMod = parseLastUpdateServer(node);
+        return parseShedule(node, dates);
+    }
+
+    public static List<DayPairs> getSheduleByClassroomId(final String classroomID, byte mPeriod, String[] dates)     throws IOException {
+        Log.i(TAG, "getSheduleByGroupId");
+        TagNode node = sendPostToGetShedule("2","0","89",classroomID,dates[0],dates[dates.length-1]);
+        if (node == null) return null;
+        //String lastMod = parseLastUpdateServer(node);
+        return parseShedule(node, dates);
+    }
+
+    public static List<Thing> getSomeThing(String url) throws IOException {
+        String pattertStart=".*[Ii][Dd](\\s*)=(\\s*)['\"][Vv][Rr]['\"\\s>].*";
+        String patternEnd=".*</[Ss][Ee][Ll][Ee][Cc][Tt]>.*";
+        String thing=GROUPS;
+        switch (url)
+        {
+            case URLprepods:
+                thing=PREDODS;
+                break;
+            case URLclassrooms:
+                thing=CLASSROOMS;
+                break;
+        }
+        TagNode rootNode = someQuery(url, null, pattertStart, patternEnd);
         if (rootNode == null) return null;
         rootNode = rootNode.findElementByAttValue("name", "vr", true, true);
         List<TagNode> links = rootNode.getChildTagList();
         //парсинг списка групп
-        List<Group> groups = new ArrayList<>();
+        List<Thing> things = new ArrayList<>();
         for (TagNode divElement : links) {
             String groupId = divElement.getAttributeByName("value");
             String groupNumber = divElement.getText().toString();
-            groups.add(new Group(groupId, groupNumber));
+            things.add(new Thing(groupId, groupNumber, thing));
         }
-        return groups;
+        return things;
     }
+
+    public static List<Thing> getGroupsList() throws IOException {
+        return getSomeThing(URL);
+    }
+
+    public static List<Thing> getPrepodsList() throws IOException {
+        return getSomeThing(URLprepods);
+    }
+
+    public static List<Thing> getClassroomList() throws IOException {
+        return getSomeThing(URLclassrooms);
+    }
+
 }

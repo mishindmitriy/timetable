@@ -47,7 +47,7 @@
         android:layout_alignParentStart="true"
         android:paddingRight="10dp"
         android:paddingEnd="10dp"
-        android:textColor="@android:color/secondary_text_light_nodisable"/>
+        android:textColor="@android:color/tertiary_text_light"/>
     <TextView
         android:id="@+id/textViewPrepod"
         android:text="Prepod"
@@ -57,13 +57,13 @@
         android:layout_below="@+id/textViewClassroom"
         android:layout_alignLeft="@+id/textViewClassroom"
         android:layout_alignStart="@+id/textViewClassroom"
-        android:textColor="@android:color/secondary_text_light_nodisable"
+        android:textColor="@android:color/tertiary_text_light"
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true" />
     <TextView
         android:id="@+id/textViewTypePair"
         android:text="TypePair"
-        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:textAppearance="?android:attr/textAppearanceMedium"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"

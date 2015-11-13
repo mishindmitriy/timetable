@@ -16,10 +16,10 @@
     <bool name="ga_autoActivityTracking">true</bool>
 
     <!-- The screen names that will appear in reports -->
-    <screenName name="mishindmitriy.timetable.CaseActivity">
+    <screenName name="mishindmitriy.timetable.app.casething.CaseActivity">
         TimeTable CaseActivity
     </screenName>
-    <screenName name="mishindmitriy.timetable.SheduleActivity">
+    <screenName name="mishindmitriy.timetable.app.shedule.SheduleActivity">
         TimeTable SheduleActivity
     </screenName>
 </resources>

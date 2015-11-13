@@ -14,6 +14,8 @@
     <string name="Refresh">Обновить</string>
     <string name="congratulations">Поздравляем! На выбранный период занятий нет</string>
 
+    <string name="title_activity_case">CaseActivity</string>
+
     <string-array name="menu_array">
         <item>Сегодня</item>
         <item>Завтра</item>
@@ -22,11 +24,6 @@
         <item>Следующая неделя</item>
         <item>Текущий месяц</item>
         <item>Следующий месяц</item>
-        <item>Выбрать группу</item>
     </string-array>
-    <string name="title_activity_case">CaseActivity</string>
-
-    <string name="hello_world">Hello world!</string>
-    <string name="action_settings">Settings</string>
 
 </resources>

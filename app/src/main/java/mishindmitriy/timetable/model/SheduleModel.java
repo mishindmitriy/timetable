@@ -21,12 +21,13 @@ import java.util.Date;
 import java.util.List;
 
 import mishindmitriy.timetable.model.data.DayPairs;
+import mishindmitriy.timetable.model.data.Pair;
 import mishindmitriy.timetable.model.data.PeriodType;
 import mishindmitriy.timetable.model.data.PeriodTypeConverter;
 import mishindmitriy.timetable.model.data.Thing;
 import mishindmitriy.timetable.model.data.ThingType;
-import mishindmitriy.timetable.utils.PreferencesHelper;
 import mishindmitriy.timetable.utils.ParseHelper;
+import mishindmitriy.timetable.utils.PreferencesHelper;
 
 /**
  * Model for Shedule. Include all operation with shedule
@@ -39,7 +40,7 @@ public class SheduleModel {
     private boolean mIsWorking=false;
     private LoadDataTask mLoadTask=null;
     private PeriodType mPeriod;
-    private List<DayPairs> mShedule=new ArrayList<>();
+    private List<Pair> mShedule=new ArrayList<>();
     private String mCacheDir=null;
     private String[] mDates=null;
 
@@ -49,6 +50,7 @@ public class SheduleModel {
         if (mPeriod==null) mPeriod=PeriodType.TODAY;
     }
 
+    @Deprecated
     private static DayPairs loadFile(final String fileName) {
         Log.d(TAG, "loadFromFile");
         DayPairs dayPairs = null;
@@ -59,7 +61,7 @@ public class SheduleModel {
             final InputStreamReader inputStreamReader = new InputStreamReader(fis);
             final BufferedReader reader = new BufferedReader(inputStreamReader);
             final Gson gson = new Gson();
-            dayPairs = gson.fromJson(reader, DayPairs.class);
+            //dayPairs = gson.fromJson(reader, DayPairs.class);
             inputStreamReader.close();
         } catch (final IOException e) {
             Log.d(TAG, "load File IOException fail");
@@ -91,15 +93,15 @@ public class SheduleModel {
         return this.mPeriod;
     }
 
-    public int getPeriodPosition() {
-        return PeriodTypeConverter.getPositionByPeriod(mPeriod);
-    }
-
     public void setPeriod(final PeriodType period) {
         Log.i(TAG, "setPeriod=" + period);
         this.mPeriod = period;
         PreferencesHelper.getInstance().saveOutputPeriod(period);
         this.getDates();
+    }
+
+    public int getPeriodPosition() {
+        return PeriodTypeConverter.getPositionByPeriod(mPeriod);
     }
 
     public boolean isWorking() {
@@ -141,6 +143,7 @@ public class SheduleModel {
         }
     }
 
+    @Deprecated
     private boolean saveCache(final DayPairs dayPairs) {
         final String json = new Gson().toJson(dayPairs);
         //Log.i(TAG,"json = "+json);
@@ -150,7 +153,7 @@ public class SheduleModel {
             final File f = new File(dir);
             final FileOutputStream fos = new FileOutputStream(f);
             final OutputStreamWriter outputStreamWriter = new OutputStreamWriter(fos);
-            outputStreamWriter.write(json);
+            //outputStreamWriter.write(json);
             Log.d(TAG, "save in file");
             outputStreamWriter.close();
         } catch (final FileNotFoundException e) {
@@ -165,10 +168,11 @@ public class SheduleModel {
         return true;
     }
 
+    @Deprecated
     private boolean saveCache() {
         Log.i(TAG, "start save cache");
         for (int n = 0; n < this.mShedule.size(); n++) {
-            this.saveCache(this.mShedule.get(n));
+            //this.saveCache(this.mShedule.get(n));
         }
         Log.i(TAG, "save cache end");
         return true;
@@ -220,6 +224,7 @@ public class SheduleModel {
         return this.mDates;
     }
 
+    @Deprecated
     private boolean loadCache() {
         final String[] dates = this.getDates();
         Log.i(TAG, "in cache need " + dates.length + " dates from " + this.mCacheDir);
@@ -234,7 +239,7 @@ public class SheduleModel {
             for (final File cacheFile : listFiles) {
                 if (date.equals(cacheFile.getName()) && cacheFile.getName().equals(date)) {
                     final DayPairs day = SheduleModel.loadFile(cacheFile.getAbsolutePath());
-                    this.mShedule.add(day);
+                    //this.mShedule.add(day);
                     Log.i(TAG, "date=" + date + "  file=" + cacheFile.getName());
                     break;
                 }
@@ -254,7 +259,7 @@ public class SheduleModel {
         return true;
     }
 
-    public List<DayPairs> getShedule() {
+    public List<Pair> getShedule() {
         return this.mShedule;
     }
 

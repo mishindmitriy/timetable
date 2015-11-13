@@ -24,11 +24,9 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import mishindmitriy.timetable.model.data.PeriodType;
-import mishindmitriy.timetable.model.data.ThingType;
-import mishindmitriy.timetable.model.data.DayPairs;
 import mishindmitriy.timetable.model.data.Pair;
 import mishindmitriy.timetable.model.data.Thing;
+import mishindmitriy.timetable.model.data.ThingType;
 
 /**
  * Created by dmitriy on 21.05.15.
@@ -183,61 +181,42 @@ public class ParseHelper {
         if (rootNode == null) {
             return null;
         }
-        Log.i(TAG, "sendPost Done");
         return rootNode;//в html у таблицы с данными id=send
     }
 
-    private static List<DayPairs> parseShedule(TagNode output, String[] dates) {
-        //парсит html код с расписанием, выводит список дней
-        Log.i(TAG, "parseShedule");
+    private static List<Pair> mapPairList(TagNode output, String[] dates) {
+        //парсит html код с расписанием
         output = output.findElementByAttValue("id", "send", true, true);
         TagNode[] outputTd = output.getElementsByAttValue("class", "hours", true, true);
 
-        List<DayPairs> arrayDayPair = new ArrayList<>();
+        List<Pair> pairs=new ArrayList<>();
         int len = outputTd.length;
-
         if (len == 1) len = 0;
 
-        String classroom;
-        String pairNumber;
-        String prepod;
-        String typePair;
-        String subject;
-        String groups;
-
-        for (int k = 0; k < dates.length; k++) {
-            arrayDayPair.add(new DayPairs(dates[k], null));
-        }
-
-        int day = -1;
-        int p = 0;
+        String date="";
         for (int n = 0; n < len; n++) {
             String s = outputTd[n].getText().toString();
             Pattern pattern = Pattern.compile("\\d\\d.\\d\\d.\\d\\d\\d\\d");
             Matcher matcher = pattern.matcher(s);
             if (matcher.matches()) {
-                //arrayDayPair.add(new DayPairs(s, null));
-                while (!s.equals(arrayDayPair.get(p).getDate())) {
-                    p++;
-                }
-                day++;
+                date=s;
             } else {
-                classroom = outputTd[n++].getText().toString();
-                pairNumber = outputTd[n++].getText().toString();
-                prepod = outputTd[n++].getText().toString();
-                typePair = outputTd[n++].getText().toString();
-                subject = outputTd[n++].getText().toString();
-                groups = outputTd[n].getText().toString();
+                Pair pair=new Pair();
+                pair.setClassroom(outputTd[n++].getText().toString());
+                pair.setPairNumber(outputTd[n++].getText().toString());
+                pair.setPrepod(outputTd[n++].getText().toString());
+                pair.setTypePair(outputTd[n++].getText().toString());
+                pair.setSubject(outputTd[n++].getText().toString());
+                pair.setGroups(outputTd[n].getText().toString());
+                pair.setDate(date);
                 if (n != len) n++;
-                arrayDayPair.get(p).addPair(new Pair(classroom, pairNumber, prepod, typePair, subject, groups));
+                pairs.add(pair);
             }
         }
-        Log.i(TAG, "parseShedule done");
-        return arrayDayPair;
+        return pairs;
     }
 
     private static String parseLastUpdateServer(TagNode output) {
-        Log.i(TAG, "parseLastMod");
         String lastUpdate = null;
         TagNode[] outputTd = output.getElementsByAttValue("class", "last_mod", true, true);
         lastUpdate = outputTd[0].getText().toString();
@@ -245,30 +224,27 @@ public class ParseHelper {
         return lastUpdate;
     }
 
-    public static List<DayPairs> getSheduleByGroupId(final String groupId, String[] dates)
+    public static List<Pair> getSheduleByGroupId(final String groupId, String[] dates)
             throws IOException {
-        Log.i(TAG, "getSheduleByGroupId");
         TagNode node = sendPostToGetShedule("0", "0", "0", groupId, dates[0], dates[dates.length - 1]);
         if (node == null) return null;
         //String lastMod = parseLastUpdateServer(node);
-        return parseShedule(node, dates);
+        return mapPairList(node, dates);
     }
 
-    public static List<DayPairs> getSheduleByTeacherId(final String prepodId, String[] dates)
+    public static List<Pair> getSheduleByTeacherId(final String prepodId, String[] dates)
             throws IOException {
-        Log.i(TAG, "getSheduleByGroupId");
         TagNode node = sendPostToGetShedule("1", "0", "0", prepodId, dates[0], dates[dates.length - 1]);
         if (node == null) return null;
         //String lastMod = parseLastUpdateServer(node);
-        return parseShedule(node, dates);
+        return mapPairList(node, dates);
     }
 
-    public static List<DayPairs> getSheduleByClassroomId(final String classroomID,String[] dates) throws IOException {
-        Log.i(TAG, "getSheduleByGroupId");
+    public static List<Pair> getSheduleByClassroomId(final String classroomID,String[] dates) throws IOException {
         TagNode node = sendPostToGetShedule("2", "0", "89", classroomID, dates[0], dates[dates.length - 1]);
         if (node == null) return null;
         //String lastMod = parseLastUpdateServer(node);
-        return parseShedule(node, dates);
+        return mapPairList(node, dates);
     }
 
     public static List<Thing> getSomeThing(String url) throws IOException {

@@ -1,10 +1,8 @@
 package mishindmitriy.timetable.app.casething;
 
-import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -76,7 +74,8 @@ public class CaseFragment extends Fragment implements CaseThingModel.Observer {
         setRetainInstance(true);
         this.mCaseModel = new CaseThingModel(mWhatCase);
         this.mCaseModel.registerObserver(this);
-        this.mCaseModel.LoadData();
+        if (mCaseModel.isWorking()) onLoadStarted(mCaseModel);
+        else this.mCaseModel.LoadData();
         this.filterText.addTextChangedListener(this.filterTextWatcher);
     }
 

@@ -1,20 +1,17 @@
 package mishindmitriy.timetable.model;
 
-import android.content.SharedPreferences;
 import android.database.Observable;
 import android.os.AsyncTask;
 import android.util.Log;
 
-import com.google.gson.Gson;
-
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
 import mishindmitriy.timetable.model.data.Thing;
 import mishindmitriy.timetable.model.data.ThingType;
-import mishindmitriy.timetable.utils.PreferencesHelper;
 import mishindmitriy.timetable.utils.ParseHelper;
 
 /**
@@ -27,6 +24,7 @@ public class CaseThingModel {
     public LoadDataTask mLoadTask;
     private boolean mIsWorking;
     private List<Thing> mListThingCases = new ArrayList<>();
+    private HashMap<String,Thing> mThingCasesMap=new HashMap<>();//TODO
 
     public CaseThingModel(ThingType thing) {
         Log.i(TAG, "new Instance");
@@ -51,29 +49,6 @@ public class CaseThingModel {
             pos++;
         }
         return pos;
-    }
-
-    public void saveSelectThing(SharedPreferences preferences, CharSequence groupName) {
-        String json = preferences.getString(PreferencesHelper.FAVORITES, null);
-//        List<Thing> favorites = new ArrayList<>();
-//        Favorites favoritesThing = new Favorites(favorites);
-        Gson gson = new Gson();
-        int position = this.getPositionByName(groupName);
-        Thing currentThing = this.mListThingCases.get(position);
-
-//        if (json != null) {
-//            favoritesThing = gson.fromJson(json, Favorites.class);
-//        }
-//        favoritesThing.getFavorites().add(currentThing);
-
-
-        SharedPreferences.Editor editor = preferences.edit();
-        //json=gson.toJson(favoritesThing);
-        //editor.putString(PrefConst.FAVORITES,json);
-
-        //записываем выбранную группу в настройки
-        editor.putString(PreferencesHelper.CURRENT_THING, gson.toJson(currentThing));
-        editor.apply();
     }
 
     public boolean isWorking() {

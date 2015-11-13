@@ -1,6 +1,5 @@
 package mishindmitriy.timetable.app.shedule;
 
-import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
@@ -11,7 +10,6 @@ import android.support.v4.widget.SwipeRefreshLayout.OnRefreshListener;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -33,17 +31,14 @@ import java.io.File;
 import java.util.List;
 
 import mishindmitriy.timetable.R;
-import mishindmitriy.timetable.R.color;
-import mishindmitriy.timetable.R.id;
-import mishindmitriy.timetable.R.string;
-import mishindmitriy.timetable.app.casething.CaseActivity;
 import mishindmitriy.timetable.app.casething.CaseActivity_;
 import mishindmitriy.timetable.model.SheduleListAdapter;
 import mishindmitriy.timetable.model.SheduleModel;
 import mishindmitriy.timetable.model.SheduleWorkerFragment;
-import mishindmitriy.timetable.model.data.DayPairs;
+import mishindmitriy.timetable.model.data.Pair;
 import mishindmitriy.timetable.model.data.PeriodType;
 import mishindmitriy.timetable.model.data.Thing;
+import se.emilsjolander.stickylistheaders.StickyListHeadersListView;
 
 @EActivity(R.layout.activity_shedule)
 public class SheduleActivity extends AppCompatActivity
@@ -64,94 +59,103 @@ public class SheduleActivity extends AppCompatActivity
     @ViewById(R.id.left_drawer)
     protected ListView mDrawerList;
     @ViewById(R.id.dayPairsLayoutInActivity)
-    protected ListView mListShedule;
+    protected StickyListHeadersListView mListShedule;
     //@ViewById(R.id.title)
     //protected TextView mViewTitle;
     @ViewById(R.id.spinner)
     protected Spinner spinner;
     @ViewById(R.id.scrollView)
     protected ScrollView scrollView;
-    @ViewById(id.nvView)
+    @ViewById(R.id.nvView)
     protected NavigationView navigationView;
-
+    @FragmentByTag(TAG_WORKER)
+    protected SheduleWorkerFragment sheduleWorkerFragment;
     private CharSequence mTitle;
     private SheduleModel mSheduleModel;
     private ActionBarDrawerToggle mDrawerToggle;
     private SheduleListAdapter mSheduleAdapter;
 
-    @FragmentByTag(TAG_WORKER)
-    protected SheduleWorkerFragment sheduleWorkerFragment;
-
     @AfterViews
     protected void init() {
         this.getWindow().setBackgroundDrawable(null);
 
-        if (sheduleWorkerFragment != null)
-            this.mSheduleModel = sheduleWorkerFragment.getSheduleModel();
-        else {
-            final SheduleWorkerFragment workerFragment = new SheduleWorkerFragment();
-            getSupportFragmentManager().beginTransaction()
-                    .add(workerFragment, TAG_WORKER)
-                    .commit();
-            this.mSheduleModel = workerFragment.getSheduleModel();
-            final File cacheDir = this.getCacheDir();
-            final String path = cacheDir.getPath();
-            this.mSheduleModel.init(path,thing);
+        {
+            // init toolbar
+            setSupportActionBar(toolbar);
+            if (this.getSupportActionBar() != null) {
+                this.getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+                this.getSupportActionBar().setHomeButtonEnabled(true);
+                getSupportActionBar().setDisplayShowTitleEnabled(false);
+            }
         }
 
-        this.mSheduleModel.registerObserver(this);
+        {
+            // init sheduleModel
+            if (sheduleWorkerFragment != null)
+                this.mSheduleModel = sheduleWorkerFragment.getSheduleModel();
+            else {
+                final SheduleWorkerFragment workerFragment = new SheduleWorkerFragment();
+                getSupportFragmentManager().beginTransaction()
+                        .add(workerFragment, TAG_WORKER)
+                        .commit();
+                this.mSheduleModel = workerFragment.getSheduleModel();
+                final File cacheDir = this.getCacheDir();
+                final String path = cacheDir.getPath();
+                this.mSheduleModel.init(path, thing);
+            }
+            this.mSheduleModel.registerObserver(this);
 
-        if (mSheduleModel.isThingAvailable()) {
-            this.mTitle = this.mSheduleModel.getThingName();
-        } else {
-            this.finish();
-            CaseActivity_.intent(this).start();
-            finish();
-            return;
+            if (mSheduleModel.isThingAvailable()) {
+                this.mTitle = this.mSheduleModel.getThingName();
+            } else {
+                this.finish();
+                CaseActivity_.intent(this).start();
+                finish();
+                return;
+            }
+
         }
-
-        setSupportActionBar(toolbar);
 
         //mViewTitle.setText(mTitle);
 
-        this.mSwipeLayout.setSoundEffectsEnabled(true);
-        this.mSwipeLayout.setColorSchemeResources(color.teal500);
-        this.mSwipeLayout.setOnRefreshListener(new OnRefreshListener() {
-            @Override
-            public void onRefresh() {
-                SheduleActivity.this.mSwipeLayout.playSoundEffect(SoundEffectConstants.CLICK);
-                if (mSheduleModel != null) SheduleActivity.this.mSheduleModel.LoadData();
-            }
-        });
-
-        mDrawerList.setOnItemClickListener(new DrawerItemClickListener());
-
-        if (this.getSupportActionBar() != null) {
-            this.getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-            this.getSupportActionBar().setHomeButtonEnabled(true);
-            getSupportActionBar().setDisplayShowTitleEnabled(false);
+        {
+            this.mSwipeLayout.setSoundEffectsEnabled(true);
+            this.mSwipeLayout.setColorSchemeResources(R.color.teal500);
+            this.mSwipeLayout.setOnRefreshListener(new OnRefreshListener() {
+                @Override
+                public void onRefresh() {
+                    SheduleActivity.this.mSwipeLayout.playSoundEffect(SoundEffectConstants.CLICK);
+                    if (mSheduleModel != null) SheduleActivity.this.mSheduleModel.LoadData();
+                }
+            });
         }
-        this.mDrawerToggle = new ActionBarDrawerToggle(
-                this,                    /* host Activity */
-                SheduleActivity.this.mDrawerLayout, toolbar,                    /* DrawerLayout object */
-                string.navigation_drawer_open,  /* "open drawer" description for accessibility */
-                string.navigation_drawer_close  /* "close drawer" description for accessibility */
-        );
 
-        // Set the drawer toggle as the DrawerListener
-        this.mDrawerLayout.setDrawerListener(this.mDrawerToggle);
+        {
+            // init navigation drawer
+            mDrawerList.setOnItemClickListener(new DrawerItemClickListener());
+            mDrawerToggle = new ActionBarDrawerToggle(
+                    this,                    /* host Activity */
+                    SheduleActivity.this.mDrawerLayout, toolbar,                    /* DrawerLayout object */
+                    R.string.navigation_drawer_open,  /* "open drawer" description for accessibility */
+                    R.string.navigation_drawer_close  /* "close drawer" description for accessibility */
+            );
+            // Set the drawer toggle as the DrawerListener
+            mDrawerLayout.setDrawerListener(mDrawerToggle);
+            setupDrawerContent(navigationView);
+        }
 
+        {
+            // init spinner
+            spinner.setAdapter(ArrayAdapter.createFromResource(this, R.array.menu_array, R.layout.spinner_item));
+            spinner.setOnItemSelectedListener(this);
+            spinner.setSelection(mSheduleModel.getPeriodPosition());
+        }
 
-        this.mSheduleAdapter = new SheduleListAdapter(this, this.mSheduleModel.getShedule(), this.mSheduleModel.getWhatThing());
-        this.mListShedule.setAdapter(this.mSheduleAdapter);
+        mSheduleAdapter = new SheduleListAdapter(this, mSheduleModel.getShedule(), mSheduleModel.getWhatThing());
+        mListShedule.setAdapter(mSheduleAdapter);
 
-        spinner.setAdapter(ArrayAdapter.createFromResource(this, R.array.menu_array, R.layout.spinner_item));
-        spinner.setOnItemSelectedListener(this);
-
-        spinner.setSelection(mSheduleModel.getPeriodPosition());
-
-        setupDrawerContent(navigationView);
-        mSheduleModel.LoadData();
+        if (mSheduleModel.isWorking()) onLoadStarted(mSheduleModel);
+        else mSheduleModel.LoadData();
     }
 
     private void selectItem(int position) {
@@ -205,7 +209,7 @@ public class SheduleActivity extends AppCompatActivity
             case id.item_next_month:
                 this.mSheduleModel.setPeriod(TolgasParseModel.NEXT_MONTH);
                 break;*/
-            case id.item_caseThing://Выбрать группу
+            case R.id.item_caseThing://Выбрать группу
                 //this.finish();
                 CaseActivity_.intent(this).start();
                 mDrawerLayout.closeDrawers();
@@ -244,21 +248,20 @@ public class SheduleActivity extends AppCompatActivity
 
     @Override
     public final void onLoadStarted(final SheduleModel sheduleModel) {
-        if (this.mSwipeLayout != null) {
-            this.mSwipeLayout.post(new Runnable() {
-                @Override
-                public void run() {
-                    SheduleActivity.this.mSwipeLayout.setRefreshing(true);
-                }
-            });
-        }
+        this.mSwipeLayout.post(new Runnable() {
+            @Override
+            public void run() {
+                SheduleActivity.this.mSwipeLayout.setRefreshing(true);
+            }
+        });
+
 //        this.mListShedule.smoothScrollToPosition(0);
-        if (scrollView != null) scrollView.fullScroll(View.FOCUS_UP);
+        //scrollView.fullScroll(View.FOCUS_UP);
     }
 
     @Override
     public void onLoadFinished(final SheduleModel sheduleModel) {
-        List<DayPairs> shedule = sheduleModel.getShedule();
+        List<Pair> shedule = sheduleModel.getShedule();
         this.mSheduleAdapter.setData(shedule, this.mSheduleModel.getWhatThing());
         this.mSwipeLayout.setRefreshing(false);
         Snackbar.make(this.mSwipeLayout, "Расписание обновлено", Snackbar.LENGTH_LONG).show();
@@ -266,7 +269,7 @@ public class SheduleActivity extends AppCompatActivity
 
     @Override
     public final void onLoadFailed(final SheduleModel sheduleModel) {
-        List<DayPairs> shedule = sheduleModel.getShedule();
+        List<Pair> shedule = sheduleModel.getShedule();
         this.mSheduleAdapter.setData(shedule, this.mSheduleModel.getWhatThing());
         this.mSwipeLayout.setRefreshing(false);
         Snackbar.make(this.mSwipeLayout, "Ошибка загрузки. Отображены локальные данные.", Snackbar.LENGTH_LONG).show();
@@ -288,7 +291,7 @@ public class SheduleActivity extends AppCompatActivity
 
         // Handle presses on the action bar items
         switch (itemId) {
-            case id.refresh_icon:
+            case R.id.refresh_icon:
                 if (this.mSheduleModel != null && !this.mSheduleModel.isWorking())
                     this.mSheduleModel.LoadData();
                 return true;

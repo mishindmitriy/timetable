@@ -7,44 +7,45 @@
     android:padding="10dp">
 
     <RelativeLayout
+        android:id="@+id/dateLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="#26A69A"
-        android:id="@+id/dateLayout"
-        android:padding="16dp">
+        android:padding="16dp"
+        android:visibility="gone">
 
         <TextView
             android:id="@+id/textViewDayOfWeek"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:textColor="@android:color/white"
+            android:layout_alignParentLeft="true"
             android:text="Понед"
-            android:layout_alignParentLeft="true"/>
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:textColor="@android:color/white" />
 
         <TextView
+            android:id="@+id/today"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/today"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:text="Сегодня"
-            android:layout_toRightOf="@+id/textViewDayOfWeek"
-            android:layout_toLeftOf="@+id/textViewDate"
             android:layout_toEndOf="@+id/textViewDayOfWeek"
+            android:layout_toLeftOf="@+id/textViewDate"
+            android:layout_toRightOf="@+id/textViewDayOfWeek"
             android:layout_toStartOf="@+id/textViewDate"
             android:gravity="center"
+            android:text="Сегодня"
+            android:textAppearance="?android:attr/textAppearanceMedium"
             android:textColor="@android:color/white"
             android:visibility="visible"/>
 
         <TextView
             android:id="@+id/textViewDate"
             android:layout_width="wrap_content"
-            android:text="21.21.2121"
             android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:text="21.21.2121"
             android:textAppearance="?android:attr/textAppearanceSmall"
             android:textColor="@android:color/white"
-            android:layout_centerVertical="true"
-            android:layout_alignParentRight="true"
             />
 
     </RelativeLayout>

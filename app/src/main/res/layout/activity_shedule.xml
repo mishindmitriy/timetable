@@ -34,7 +34,7 @@
             android:layout_height="wrap_content"
             android:background="@android:color/white">
 
-            <ListView
+            <se.emilsjolander.stickylistheaders.StickyListHeadersListView
                 android:id="@+id/dayPairsLayoutInActivity"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent" />
@@ -46,9 +46,9 @@
         android:id="@+id/nvView"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
-        app:headerLayout="@layout/drawer_header"
         android:layout_gravity="start"
         android:background="@android:color/white"
+        app:headerLayout="@layout/drawer_header"
         app:menu="@menu/drawer_items" >
         <ListView android:id="@+id/left_drawer"
             android:layout_width="wrap_content"

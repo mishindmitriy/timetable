@@ -23,11 +23,16 @@ public class SheduleListAdapter extends BaseAdapter implements StickyListHeaders
     private final Activity mContext;
     private List<Pair> shedule;
     private ThingType mWhatThing;
+    private boolean setToday=false;
 
     public SheduleListAdapter(Activity context, List<Pair> shedule, ThingType whatThing) {
         this.mContext = context;
         this.shedule = shedule;
         this.mWhatThing = whatThing;
+    }
+
+    public void setSetToday(boolean setToday) {
+        this.setToday = setToday;
     }
 
     public void setData(List<Pair> shedule, ThingType thing) {
@@ -48,7 +53,8 @@ public class SheduleListAdapter extends BaseAdapter implements StickyListHeaders
 
     @Override
     public long getItemId(int position) {
-        return shedule.get(position).hashCode();
+        if (shedule!=null && shedule.size()>0) return shedule.get(position).hashCode();
+        else return 0;
     }
 
     @Override
@@ -64,7 +70,7 @@ public class SheduleListAdapter extends BaseAdapter implements StickyListHeaders
     @Override
     public View getHeaderView(int position, View convertView, ViewGroup parent) {
         PairHeaderView headerView=PairHeaderView_.build(mContext);
-        headerView.setDate(this.shedule.get(position).getDate());
+        headerView.setDate(this.shedule.get(position).getDate(),setToday);
         return headerView;
     }
 

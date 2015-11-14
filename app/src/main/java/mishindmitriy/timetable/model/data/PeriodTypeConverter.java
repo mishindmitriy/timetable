@@ -7,6 +7,9 @@ import java.util.HashMap;
  */
 public class PeriodTypeConverter {
     private static HashMap<String,PeriodType> periodTypeByString;
+    private static HashMap<Byte,PeriodType> periodTypeByPosition;
+    private static HashMap<PeriodType,Byte> positionByPeriodType;
+
     static
     {
         periodTypeByString =new HashMap<>();
@@ -19,7 +22,6 @@ public class PeriodTypeConverter {
         periodTypeByString.put(PeriodType.SEVEN_DAYS.toString(), PeriodType.SEVEN_DAYS);
     }
 
-    private static HashMap<Byte,PeriodType> periodTypeByPosition;
     static
     {
         periodTypeByPosition =new HashMap<>();
@@ -32,7 +34,6 @@ public class PeriodTypeConverter {
         periodTypeByPosition.put((byte)2, PeriodType.SEVEN_DAYS);
     }
 
-    private static HashMap<PeriodType,Byte> positionByPeriodType;
     static
     {
         positionByPeriodType =new HashMap<>();
@@ -47,16 +48,22 @@ public class PeriodTypeConverter {
 
     public static PeriodType getPeriodTypeFromString(String type)
     {
-        return periodTypeByString.get(type);
+        PeriodType periodType=periodTypeByString.get(type);
+        if (periodType==null) throw new IllegalArgumentException("Wrong argument");
+        else return periodType;
     }
 
     public static int getPositionByPeriod(PeriodType type)
     {
-        return positionByPeriodType.get(type);
+        int pos=positionByPeriodType.get(type);
+        if (pos<0 || pos>6) throw new IllegalArgumentException("Wrong argument");
+        else return pos;
     }
 
     public static PeriodType getPeriodTypeByPosition(int pos)
     {
-        return periodTypeByPosition.get((byte)pos);
+        PeriodType periodType=periodTypeByPosition.get((byte)pos);
+        if (periodType==null) throw new IllegalArgumentException("Wrong argument");
+        else return periodType;
     }
 }

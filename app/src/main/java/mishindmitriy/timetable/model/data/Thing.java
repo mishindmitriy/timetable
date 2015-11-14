@@ -21,6 +21,12 @@ public class Thing implements Serializable {
     }
 
 
+    @Override
+    public String toString() {
+        if (thingName!=null) return thingName;
+        else return super.toString();
+    }
+
     public String getThingName() {
         return this.thingName;
     }

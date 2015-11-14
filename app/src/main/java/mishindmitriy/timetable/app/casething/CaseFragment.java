@@ -17,9 +17,12 @@ import org.androidannotations.annotations.FragmentArg;
 import org.androidannotations.annotations.ItemClick;
 import org.androidannotations.annotations.ViewById;
 
+import java.util.List;
+
 import mishindmitriy.timetable.R;
 import mishindmitriy.timetable.app.shedule.SheduleActivity_;
 import mishindmitriy.timetable.model.CaseThingModel;
+import mishindmitriy.timetable.model.data.Thing;
 import mishindmitriy.timetable.model.data.ThingType;
 
 /**
@@ -42,7 +45,7 @@ public class CaseFragment extends Fragment implements CaseThingModel.Observer {
     protected ListView listView;
 
     private CaseThingModel mCaseModel;
-    private ArrayAdapter<String> adapter;
+    private ArrayAdapter<Thing> adapter;
     private final TextWatcher filterTextWatcher = new TextWatcher() {
 
         public void afterTextChanged(Editable s) {
@@ -74,7 +77,7 @@ public class CaseFragment extends Fragment implements CaseThingModel.Observer {
         setRetainInstance(true);
         this.mCaseModel = new CaseThingModel(mWhatCase);
         this.mCaseModel.registerObserver(this);
-        if (mCaseModel.isWorking()) onLoadStarted(mCaseModel);
+        if (mCaseModel.isWorking()) onLoadStarted();
         else this.mCaseModel.LoadData();
         this.filterText.addTextChangedListener(this.filterTextWatcher);
     }
@@ -85,14 +88,14 @@ public class CaseFragment extends Fragment implements CaseThingModel.Observer {
     }
 
     @Override
-    public void onLoadStarted(CaseThingModel caseThingModel) {
+    public void onLoadStarted() {
         this.mProgressBar.setVisibility(View.VISIBLE);
         this.mButton.setVisibility(View.INVISIBLE);
     }
 
     @Override
-    public void onLoadFinished(CaseThingModel caseThingModel) {
-        this.adapter = new ArrayAdapter<>(this.getActivity(), R.layout.case_list_item, caseThingModel.getNameList());
+    public void onLoadFinished(List<Thing> listThings) {
+        this.adapter = new ArrayAdapter<>(this.getActivity(), R.layout.case_list_item, listThings);
         this.adapter.getFilter().filter(this.filterText.getText());
         listView.setAdapter(adapter);
         this.mProgressBar.setVisibility(View.INVISIBLE);
@@ -101,7 +104,7 @@ public class CaseFragment extends Fragment implements CaseThingModel.Observer {
     }
 
     @Override
-    public void onLoadFailed(CaseThingModel caseThingModel) {
+    public void onLoadFailed() {
         if (this.mProgressBar != null) {
             this.mProgressBar.setVisibility(View.INVISIBLE);
         }
@@ -117,8 +120,8 @@ public class CaseFragment extends Fragment implements CaseThingModel.Observer {
 
     @Override
     public void onDestroy() {
-        super.onDestroy();
         this.mCaseModel.StopLoad();
         this.mCaseModel.unregisterObserver(this);
+        super.onDestroy();
     }
 }

@@ -3,7 +3,6 @@ package mishindmitriy.timetable.app.casething;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
-import android.util.Log;
 
 import mishindmitriy.timetable.model.data.ThingType;
 
@@ -19,7 +18,6 @@ public class ThingsPagerAdapter extends FragmentPagerAdapter {
 
     @Override
     public Fragment getItem(int position) {
-        Log.i(TAG, "getItem");
 
         switch (position) {
             case 0: return CaseFragment_.builder().mWhatCase(ThingType.GROUP).build();

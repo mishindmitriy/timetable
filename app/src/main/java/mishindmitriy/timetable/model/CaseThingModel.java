@@ -2,12 +2,9 @@ package mishindmitriy.timetable.model;
 
 import android.database.Observable;
 import android.os.AsyncTask;
-import android.util.Log;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 
 import mishindmitriy.timetable.model.data.Thing;
@@ -24,31 +21,9 @@ public class CaseThingModel {
     public LoadDataTask mLoadTask;
     private boolean mIsWorking;
     private List<Thing> mListThingCases = new ArrayList<>();
-    private HashMap<String,Thing> mThingCasesMap=new HashMap<>();//TODO
 
     public CaseThingModel(ThingType thing) {
-        Log.i(TAG, "new Instance");
         this.mWhatCase = thing;
-    }
-
-    public List<String> getNameList() {
-        Iterator<Thing> i = this.mListThingCases.iterator();
-        List<String> groupNameList = new ArrayList<>();
-        while (i.hasNext()) {
-            Thing g = i.next();
-            groupNameList.add(g.getThingName());
-        }
-        return groupNameList;
-    }
-
-    public int getPositionByName(CharSequence groupName) {
-        int pos = 0;
-        Iterator iterator = this.mListThingCases.iterator();
-        while (!this.mListThingCases.get(pos).getThingName().equals(groupName)) {
-            iterator.next();
-            pos++;
-        }
-        return pos;
     }
 
     public boolean isWorking() {
@@ -61,9 +36,7 @@ public class CaseThingModel {
 
     public void LoadData() {
         if (this.mIsWorking) return;
-
         this.mObservable.notifyStarted();
-
         this.mIsWorking = true;
         this.mLoadTask = new LoadDataTask();
         this.mLoadTask.execute();
@@ -71,7 +44,7 @@ public class CaseThingModel {
 
     public void registerObserver(final Observer observer) {
         this.mObservable.registerObserver(observer);
-        if (this.mIsWorking) observer.onLoadStarted(this);
+        if (this.mIsWorking) observer.onLoadStarted();
     }
 
     public void unregisterObserver(final Observer observer) {
@@ -86,11 +59,11 @@ public class CaseThingModel {
     }
 
     public interface Observer {
-        void onLoadStarted(CaseThingModel caseGroupModel);
+        void onLoadStarted();
 
-        void onLoadFinished(CaseThingModel caseGroupModel);
+        void onLoadFinished(List<Thing> listThings);
 
-        void onLoadFailed(CaseThingModel caseGroupModel);
+        void onLoadFailed();
     }
 
     private class LoadDataTask extends AsyncTask<Void, Void, Boolean> {
@@ -130,19 +103,19 @@ public class CaseThingModel {
     private class LoadDataObservable extends Observable<Observer> {
         public void notifyStarted() {
             for (final Observer observer : this.mObservers) {
-                observer.onLoadStarted(CaseThingModel.this);
+                observer.onLoadStarted();
             }
         }
 
         public void notifySucceeded() {
             for (final Observer observer : this.mObservers) {
-                observer.onLoadFinished(CaseThingModel.this);
+                observer.onLoadFinished(CaseThingModel.this.mListThingCases);
             }
         }
 
         public void notifyFailed() {
             for (final Observer observer : this.mObservers) {
-                observer.onLoadFailed(CaseThingModel.this);
+                observer.onLoadFailed();
             }
         }
     }

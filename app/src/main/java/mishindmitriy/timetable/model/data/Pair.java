@@ -1,24 +1,25 @@
 package mishindmitriy.timetable.model.data;
 
 import java.io.Serializable;
+import java.util.Date;
 
 /**
  * Created by mishindmitriy on 05.06.2015.
  */
 public class Pair implements Serializable {
     private String classroom;
-    private String pairNumber;
+    private Integer pairNumber;
     private String prepod;
     private String typePair;
     private String subject;
     private String groups;
-    private String date;
+    private Date date;
 
     public Pair(){
 
     }
 
-    public Pair(String classroom, String pairNumber, String prepod, String typePair, String subject, String groups, String date) {
+    public Pair(String classroom, Integer pairNumber, String prepod, String typePair, String subject, String groups, Date date) {
         this.classroom = classroom;
         this.pairNumber = pairNumber;
         this.prepod = prepod;
@@ -36,11 +37,11 @@ public class Pair implements Serializable {
         this.classroom = classroom;
     }
 
-    public String getPairNumber() {
+    public Integer getPairNumber() {
         return this.pairNumber;
     }
 
-    public void setPairNumber(String pairNumber) {
+    public void setPairNumber(Integer pairNumber) {
         this.pairNumber = pairNumber;
     }
 
@@ -76,11 +77,11 @@ public class Pair implements Serializable {
         this.groups = groups;
     }
 
-    public String getDate() {
+    public Date getDate() {
         return date;
     }
 
-    public void setDate(String date) {
+    public void setDate(Date date) {
         this.date = date;
     }
 }

@@ -7,13 +7,10 @@ import android.widget.TextView;
 import org.androidannotations.annotations.EViewGroup;
 import org.androidannotations.annotations.ViewById;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-
 import mishindmitriy.timetable.R;
 import mishindmitriy.timetable.model.data.Pair;
 import mishindmitriy.timetable.model.data.ThingType;
+import mishindmitriy.timetable.utils.DateUtils;
 import mishindmitriy.timetable.utils.ParseHelper;
 
 /**
@@ -39,14 +36,6 @@ public class PairView extends RelativeLayout {
     }
 
     public void setPair(ThingType thing, Pair pair) {
-        Date date = new Date();
-        SimpleDateFormat sdf = new SimpleDateFormat(ParseHelper.formatDate);
-        try {
-            date = sdf.parse(pair.getDate());
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }
-        String dayOfWeek = ParseHelper.getDayOfWeek(date);
         switch (thing) {
             case GROUP:
                 classroomTextView.setText(pair.getClassroom());
@@ -67,14 +56,10 @@ public class PairView extends RelativeLayout {
                 pairTypeTextView.setText(pair.getTypePair());
                 break;
         }
-        int d = 0;
-        try {
-            d = Integer.parseInt(pair.getPairNumber(), 10);
-        } catch (NumberFormatException e) {
-            e.printStackTrace();
-        }
+
+        String dayOfWeek = DateUtils.getDayOfWeek(pair.getDate());
         if (dayOfWeek.equals("Суббота")) {   //время пар в субботу
-            switch (d) {
+            switch (pair.getPairNumber()) {
                 case 1:
                     pairStartTextView.setText(ParseHelper.Saturday.firstPairStart);
                     pairEndTextView.setText(ParseHelper.Saturday.firstPairEnd);
@@ -97,7 +82,7 @@ public class PairView extends RelativeLayout {
                     break;
             }
         } else {
-            switch (d) {
+            switch (pair.getPairNumber()) {
 
                 case 1:
                     pairStartTextView.setText(ParseHelper.firstPairStart);

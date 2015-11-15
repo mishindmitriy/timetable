@@ -83,8 +83,8 @@ public class CaseFragment extends Fragment implements CaseThingModel.Observer {
     }
 
     @ItemClick(R.id.listView)
-    protected void itemClick(int position) {
-        SheduleActivity_.intent(this.getActivity()).thing(mCaseModel.getList().get(position)).start();
+    protected void itemClick(Thing thing) {
+        SheduleActivity_.intent(this.getActivity()).thing(thing).start();
     }
 
     @Override
@@ -95,7 +95,7 @@ public class CaseFragment extends Fragment implements CaseThingModel.Observer {
 
     @Override
     public void onLoadFinished(List<Thing> listThings) {
-        this.adapter = new ArrayAdapter<>(this.getActivity(), R.layout.case_list_item, listThings);
+        this.adapter = new ArrayAdapter<>(this.getActivity(), R.layout.item_thing_list, listThings);
         this.adapter.getFilter().filter(this.filterText.getText());
         listView.setAdapter(adapter);
         this.mProgressBar.setVisibility(View.INVISIBLE);

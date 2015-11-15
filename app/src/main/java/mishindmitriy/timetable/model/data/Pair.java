@@ -8,25 +8,34 @@ import java.util.Date;
  */
 public class Pair implements Serializable {
     private String classroom;
-    private Integer pairNumber;
-    private String prepod;
-    private String typePair;
+    private Byte number;
+    private String teacher;
+    private String type;
     private String subject;
     private String groups;
     private Date date;
+    private String note;
 
     public Pair(){
 
     }
 
-    public Pair(String classroom, Integer pairNumber, String prepod, String typePair, String subject, String groups, Date date) {
+    public Pair(String classroom, Byte number, String teacher, String type, String subject, String groups, Date date) {
         this.classroom = classroom;
-        this.pairNumber = pairNumber;
-        this.prepod = prepod;
-        this.typePair = typePair;
+        this.number = number;
+        this.teacher = teacher;
+        this.type = type;
         this.subject = subject;
         this.groups = groups;
         this.date = date;
+    }
+
+    public String getNote() {
+        return note;
+    }
+
+    public void setNote(String note) {
+        this.note = note;
     }
 
     public String getClassroom() {
@@ -37,28 +46,28 @@ public class Pair implements Serializable {
         this.classroom = classroom;
     }
 
-    public Integer getPairNumber() {
-        return this.pairNumber;
+    public Byte getNumber() {
+        return this.number;
     }
 
-    public void setPairNumber(Integer pairNumber) {
-        this.pairNumber = pairNumber;
+    public void setNumber(Byte number) {
+        this.number = number;
     }
 
-    public String getPrepod() {
-        return this.prepod;
+    public String getTeacher() {
+        return this.teacher;
     }
 
-    public void setPrepod(String prepod) {
-        this.prepod = prepod;
+    public void setTeacher(String teacher) {
+        this.teacher = teacher;
     }
 
-    public String getTypePair() {
-        return this.typePair;
+    public String getType() {
+        return this.type;
     }
 
-    public void setTypePair(String typePair) {
-        this.typePair = typePair;
+    public void setType(String type) {
+        this.type = type;
     }
 
     public String getSubject() {

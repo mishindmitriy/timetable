@@ -2,7 +2,6 @@ package mishindmitriy.timetable.model;
 
 import android.database.Observable;
 import android.os.AsyncTask;
-import android.util.Log;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -49,16 +48,16 @@ public class SheduleModel {
         return this.mPeriod;
     }
 
-    public void setPeriod(int position)
-    {
-        setPeriod(PeriodTypeConverter.getPeriodTypeByPosition(position));
-    }
-
     public void setPeriod(final PeriodType period) {
         if (mPeriod==period) return;
         this.mPeriod = period;
         PreferencesHelper.getInstance().saveOutputPeriod(period);
         LoadData();
+    }
+
+    public void setPeriod(int position)
+    {
+        setPeriod(PeriodTypeConverter.getPeriodTypeByPosition(position));
     }
 
     public int getPeriodPosition() {
@@ -182,34 +181,15 @@ public class SheduleModel {
         protected Boolean doInBackground(final Void... arg) {
             try {
                 SheduleModel.this.mShedule = ParseHelper.getShedule(mThing, SheduleModel.this.getFromDate(),SheduleModel.this.getToDate());
-                /*final Integer thingID = SheduleModel.this.mThing.getThingID();
-                switch (SheduleModel.this.mThing.getWhatThing()) {
-                    case GROUP:
-                        SheduleModel.this.mShedule = ParseHelper.getSheduleByGroupId(thingID, SheduleModel.this.mDates);
-                        break;
-                    case TEACHER:
-                        SheduleModel.this.mShedule = ParseHelper.getSheduleByTeacherId(thingID, SheduleModel.this.mDates);
-                        break;
-                    case CLASSROOM:
-                        SheduleModel.this.mShedule = ParseHelper.getSheduleByClassroomId(thingID, SheduleModel.this.mDates);
-                        break;
-                }*/
-
-                if (SheduleModel.this.mShedule == null) {
-                    SheduleModel.this.mShedule = new ArrayList<>();
-                }
-                Log.i(TAG, "load period done");
             } catch (final IOException e) {
-                e.printStackTrace();
                 SheduleModel.this.mShedule = null;
-                Log.i(TAG, "start load cache");
                 //SheduleModel.this.loadCache();
-                Log.i(TAG, "load cache done");
-                return false;
+                //return false;
             }
-            Log.i(TAG, "start save cache");
+            if (SheduleModel.this.mShedule == null) {
+                SheduleModel.this.mShedule = new ArrayList<>();
+            }
             //SheduleModel.this.saveCache();
-            Log.i(TAG, "save cache done");
             return true;
         }
 

@@ -70,17 +70,7 @@ public class CaseThingModel {
         @Override
         protected Boolean doInBackground(final Void... params) {
             try {
-                switch (mWhatCase) {
-                    case GROUP:
-                        CaseThingModel.this.mListThingCases = ParseHelper.getGroupsList();
-                        break;
-                    case TEACHER:
-                        CaseThingModel.this.mListThingCases = ParseHelper.getTeachersList();
-                        break;
-                    case CLASSROOM:
-                        CaseThingModel.this.mListThingCases = ParseHelper.getClassroomsList();
-                        break;
-                }
+                mListThingCases=ParseHelper.getSomeThing(mWhatCase);
             } catch (IOException e) {
                 e.printStackTrace();
                 return false;

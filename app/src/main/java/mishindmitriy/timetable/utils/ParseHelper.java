@@ -1,10 +1,11 @@
 package mishindmitriy.timetable.utils;
 
 import android.support.annotation.Nullable;
-import android.util.Log;
 
-import org.htmlcleaner.HtmlCleaner;
-import org.htmlcleaner.TagNode;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -16,6 +17,7 @@ import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -32,34 +34,13 @@ import mishindmitriy.timetable.model.data.ThingTypeConverter;
  */
 public class ParseHelper {
     public static final String URL = "http://www.tolgas.ru/services/raspisanie/";
-    public static final String URLprepods = "http://www.tolgas.ru/services/raspisanie/?id=1";
-    public static final String URLclassrooms = "http://www.tolgas.ru/services/raspisanie/?id=2";
-    public static final String formatDate = "dd.MM.yyyy";
-    public static final CharSequence firstPairStart = "09.00";
-    public static final CharSequence firstPairEnd = "10.35";
-    public static final CharSequence secondPairStart = "10.45";
-    public static final CharSequence secondPairEnd = "12.20";
-    public static final CharSequence thirdPairStart = "13.00";
-    public static final CharSequence thirdPairEnd = "14.35";
-    public static final CharSequence fourthPairStart = "14.45";
-    public static final CharSequence fourthPairEnd = "16.20";
-    public static final CharSequence fifthPairStart = "16.30";
-    public static final CharSequence fifthPairEnd = "18.05";
-    public static final CharSequence sixthPairStart = "18.15";
-    public static final CharSequence sixthPairEnd = "19.50";
-    public static final CharSequence seventhPairStart = "20.00";
-    public static final CharSequence seventhPairEnd = "21.35";
     private static final String TAG = "TolgasModel";
 
-    private static TagNode someQuery(String inpupUrl, @Nullable Map<String, String> valuesPairs, String patternStart, String patternEnd) throws IOException {
-        Log.i(TAG, "postQuery");
-        TagNode rootNode = null;
-        String htmlCode = null;
+    private static String doQuery(String inpupUrl, @Nullable Map<String, String> valuesPairs) throws IOException {
         URL url = new URL(inpupUrl);
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         if (valuesPairs != null) //значит делаем POST запрос
         {
-            Log.i(TAG, "start post");
             connection.setDoOutput(true);
             PrintWriter out = new PrintWriter(connection.getOutputStream());
             boolean first = true; //чтобы & не поставить перед переменными
@@ -73,52 +54,73 @@ public class ParseHelper {
                 out.print(URLEncoder.encode(value, "windows-1251"));
             }
             out.close();
-            Log.i(TAG, "post done");
         }
-        Log.i(TAG, "start connection");
         connection.connect();
-        Log.i(TAG, "connection done");
-        Log.i(TAG, "start read");
-        BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream(), "windows-1251"));
-        Log.i(TAG, "reader done");
-        StringBuilder buf = new StringBuilder();
-        String line = "";
-
         int status = connection.getResponseCode();
+        BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream(), "windows-1251"));
         if (status != 200) {
             throw new IOException("query failed with error code " + status);
         }
 
-        Pattern pattern = Pattern.compile(patternStart);
-        Matcher matcher = pattern.matcher(line);
+        StringBuilder buf = new StringBuilder();
+        String line;
 
-        while (!matcher.matches()) {
-            line = reader.readLine();
-            if (line == null) throw new IOException();
-            matcher = pattern.matcher(line);
-        }
-        pattern = Pattern.compile(patternEnd);
-        matcher = pattern.matcher(line);
-        while (!matcher.matches()) {
+        while ((line = reader.readLine()) != null) {
             buf.append(line);
-            line = reader.readLine();
-            if (line == null) throw new IOException();
-            matcher = pattern.matcher(line);
         }
 
         reader.close();
-        htmlCode = buf.toString();
-
         connection.disconnect();
-        rootNode = new HtmlCleaner().clean(htmlCode);
-
-        return rootNode;
+        String html=buf.toString();
+        validateHtml(html);
+        return html;
     }
 
-    private static TagNode sendPostToGetShedule(String thingTypeId, String thingId,
+    private static List<Pair> mappingListPairs(String html)
+    {
+        Document doc = Jsoup.parse(html);
+        Element table = doc.select("table[class=table][id=send]").first();
+        Iterator<Element> iterator = table.select("td[class=hours]").iterator();
+        List<Pair> pairs=new ArrayList<>();
+        Date date=null;
+        while (iterator.hasNext())
+        {
+            Element element =iterator.next();
+            if (element.attr("colspan").equals("7")&&validateParseDate(element.text()))
+            {
+                date=DateFormatter.parseDate(element.text());
+            }
+            else {
+                pairs.add(parsePair(element,iterator,date));
+            }
+        }
+        return pairs;
+    }
+
+    private static Pair parsePair(Element element,Iterator<Element> iterator,Date date)
+    {
+        Pair pair=new Pair();
+        pair.setClassroom(element.text());
+        pair.setNumber(Byte.parseByte(iterator.next().text()));
+        pair.setTeacher(iterator.next().text());
+        pair.setType(iterator.next().text());
+        pair.setSubject(iterator.next().text());
+        pair.setGroups(iterator.next().text());
+        pair.setNote(iterator.next().text());
+        pair.setDate(date);
+        return pair;
+    }
+
+    private static void validateHtml(String html) throws IOException {
+        CharSequence uniqueString="Вопросы по телефону: 22-13-97 – отдел организации учебного процесса";
+        if (!html.contains(uniqueString)) throw new IOException("html code was replaced");
+        uniqueString="Выберите диапазон даты для отображения расписания";
+        if (!html.contains(uniqueString)) throw new IOException("html code was replaced");
+    }
+
+    private static String sendPostToGetShedule(String thingTypeId, String thingId,
                                                 String fromDate, String toDate)
             throws IOException {
-        Log.i(TAG, "sendPost from " + fromDate + " to " + toDate);
         final Map<String, String> valuesPairs = new HashMap<>();
 
         valuesPairs.put("rel", thingTypeId);
@@ -128,115 +130,45 @@ public class ParseHelper {
         valuesPairs.put("submit_button", "ПОКАЗАТЬ");//без этого вроде не возвращалась страница
 
         //Загружаем html код сайта
-        String pattertStart = ".*[Ii][Dd](\\s*)=(\\s*)['\"][Ss][Ee][Nn][Dd]['\"\\s>].*";
-        String patternEnd = ".*</[Tt][Aa][Bb][Ll][Ee]>.*";
-        TagNode rootNode = someQuery(URL, valuesPairs, pattertStart, patternEnd);
-        if (rootNode == null) {
-            return null;
-        }
-        return rootNode;//в html у таблицы с данными id=send
+        return doQuery(URL, valuesPairs);
     }
 
-    private static List<Pair> mapPairList(TagNode output, Thing thing) {
-        //парсит html код с расписанием
-        output = output.findElementByAttValue("id", "send", true, true);
-        TagNode[] outputTd = output.getElementsByAttValue("class", "hours", true, true);
-
-        List<Pair> pairs= new ArrayList<>();
-        int len = outputTd.length;
-        if (len == 1) len = 0;
-
-        String date = null;
-        for (int n = 0; n < len; n++) {
-            String s = outputTd[n].getText().toString();
-            Pattern pattern = Pattern.compile("\\d\\d.\\d\\d.\\d\\d\\d\\d");
-            Matcher matcher = pattern.matcher(s);
-            if (matcher.matches()) {
-                date=s;
-            } else {
-                Pair pair=new Pair();
-                pair.setClassroom(outputTd[n++].getText().toString());
-                pair.setPairNumber(Integer.parseInt(outputTd[n++].getText().toString()));
-                pair.setPrepod(outputTd[n++].getText().toString());
-                pair.setTypePair(outputTd[n++].getText().toString());
-                pair.setSubject(outputTd[n++].getText().toString());
-                pair.setGroups(outputTd[n].getText().toString());
-                pair.setDate(DateFormatter.parseDate(date));
-                pairs.add(pair);
-                if (n != len) n++;
-            }
-        }
-        return pairs;
+    private static boolean validateParseDate(String s)
+    {
+        Pattern pattern = Pattern.compile("\\d\\d.\\d\\d.\\d\\d\\d\\d");
+        Matcher matcher = pattern.matcher(s);
+        return matcher.matches();
     }
 
-    private static String parseLastUpdateServer(TagNode output) {
+   /* private static String parseLastUpdateServer(TagNode output) {
         String lastUpdate = null;
         TagNode[] outputTd = output.getElementsByAttValue("class", "last_mod", true, true);
         lastUpdate = outputTd[0].getText().toString();
-
         return lastUpdate;
-    }
+    }*/
 
     public static List<Pair> getShedule(Thing thing, Date from, Date to)
             throws IOException {
-        TagNode node = sendPostToGetShedule(String.valueOf(ThingTypeConverter.getPositionByPeriod(thing.getWhatThing()))
+        String html = sendPostToGetShedule(String.valueOf(ThingTypeConverter.getPositionByPeriod(thing.getWhatThing()))
                 , thing.getThingID(), DateFormatter.DateToString(from), DateFormatter.DateToString(to));
-        if (node == null) return null;
-        return mapPairList(node,thing);
+        return mappingListPairs(html);
     }
 
-    public static List<Thing> getSomeThing(String url) throws IOException {
-        String pattertStart = ".*[Ii][Dd](\\s*)=(\\s*)['\"][Vv][Rr]['\"\\s>].*";
-        String patternEnd = ".*</[Ss][Ee][Ll][Ee][Cc][Tt]>.*";
-        ThingType thing = null;
-        switch (url) {
-            case URL:
-                thing = ThingType.GROUP;
-                break;
-            case URLprepods:
-                thing = ThingType.TEACHER;
-                break;
-            case URLclassrooms:
-                thing = ThingType.CLASSROOM;
-                break;
-        }
-        TagNode rootNode = someQuery(url, null, pattertStart, patternEnd);
-        if (rootNode == null) return null;
-        rootNode = rootNode.findElementByAttValue("name", "vr", true, true);
-        List<TagNode> links = rootNode.getChildTagList();
-        //парсинг списка групп
-        List<Thing> things = new ArrayList<>();
-        for (TagNode divElement : links) {
-            String groupId = divElement.getAttributeByName("value");
-            String groupNumber = divElement.getText().toString();
-            things.add(new Thing(groupId, groupNumber, thing));
+    private static List<Thing> mappingListThings(String html,ThingType type)
+    {
+        Document doc = Jsoup.parse(html);
+        Element spinner=doc.select("select[id=vr][name=vr]").first();
+        Elements elements = spinner.select("option");
+        List<Thing> things=new ArrayList<>();
+        for (Element element:elements)
+        {
+            things.add(new Thing(element.attr("value"),element.text(),type));
         }
         return things;
     }
 
-    public static List<Thing> getGroupsList() throws IOException {
-        return getSomeThing(URL);
+    public static List<Thing> getSomeThing(ThingType thingType) throws IOException {
+        String url=URL+"?id="+ThingTypeConverter.getPositionByPeriod(thingType);
+        return mappingListThings(doQuery(url, null),thingType);
     }
-
-    public static List<Thing> getTeachersList() throws IOException {
-        return getSomeThing(URLprepods);
-    }
-
-    public static List<Thing> getClassroomsList() throws IOException {
-        return getSomeThing(URLclassrooms);
-    }
-
-    public static class Saturday {
-        public static final CharSequence firstPairStart = "08.30";
-        public static final CharSequence firstPairEnd = "10.05";
-        public static final CharSequence secondPairStart = "10.15";
-        public static final CharSequence secondPairEnd = "11.50";
-        public static final CharSequence thirdPairStart = "12.35";
-        public static final CharSequence thirdPairEnd = "14.10";
-        public static final CharSequence fourthPairStart = "14.20";
-        public static final CharSequence fourthPairEnd = "15.55";
-        public static final CharSequence fifthPairStart = "16.05";
-        public static final CharSequence fifthPairEnd = "17.35";
-    }
-
 }

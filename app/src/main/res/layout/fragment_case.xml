@@ -13,15 +13,16 @@
             android:id="@+id/editText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:inputType="textFilter"
-            android:textColor="@android:color/tertiary_text_light"
             android:foregroundGravity="center"
-            android:gravity="center"/>
+            android:gravity="center"
+            android:inputType="textFilter"
+            android:textColor="@android:color/tertiary_text_light" />
 
         <ListView
             android:id="@+id/listView"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"/>
+            android:layout_height="match_parent"
+            android:listSelector="@color/select" />
     </LinearLayout>
 
     <ProgressBar

@@ -14,8 +14,8 @@
             android:layout_height="wrap_content"
             app:layout_scrollFlags="scroll|enterAlways"
             app:tabMode="scrollable"
-            app:tabSelectedTextColor="@android:color/white" />
-        <!--app:tabTextAppearance="?android:attr/textAppearanceSmall"-->
+            app:tabSelectedTextColor="@android:color/white"
+            app:tabTextAppearance="@style/TabLayoutApperance" />
 
     </android.support.design.widget.AppBarLayout>
     <android.support.v4.view.ViewPager xmlns:android="http://schemas.android.com/apk/res/android"

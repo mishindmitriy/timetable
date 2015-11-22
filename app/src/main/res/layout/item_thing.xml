@@ -6,7 +6,7 @@
     android:layout_height="wrap_content"
     android:gravity="center"
     android:minHeight="?android:attr/listPreferredItemHeight"
-    android:textAppearance="?android:attr/textAppearanceLarge"
-    android:textColor="@android:color/tertiary_text_light"/>
+    android:textColor="@android:color/tertiary_text_light"
+    android:textSize="18sp" />
 
 

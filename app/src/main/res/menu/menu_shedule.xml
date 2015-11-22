@@ -2,7 +2,13 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     tools:context="mishindmitriy.timetable.app.shedule.SheduleActivity">
-    <item android:id="@+id/refresh_icon" android:title="@string/Refresh"
+    <item
+        android:id="@+id/refresh_icon"
         android:icon="@drawable/ic_action_refresh"
-        app:showAsAction="ifRoom" />
+        android:title="@string/Refresh"
+        app:showAsAction="withText" />
+    <item
+        android:id="@+id/case_button"
+        android:title="@string/CaseGroup"
+        app:showAsAction="withText" />
 </menu>

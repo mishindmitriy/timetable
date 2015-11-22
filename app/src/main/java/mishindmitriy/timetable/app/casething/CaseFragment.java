@@ -78,7 +78,7 @@ public class CaseFragment extends Fragment implements CaseThingModel.Observer {
         this.mCaseModel = new CaseThingModel(mWhatCase);
         this.mCaseModel.registerObserver(this);
         if (mCaseModel.isWorking()) onLoadStarted();
-        else this.mCaseModel.LoadData();
+        else this.mCaseModel.loadData();
         this.filterText.addTextChangedListener(this.filterTextWatcher);
     }
 
@@ -115,12 +115,12 @@ public class CaseFragment extends Fragment implements CaseThingModel.Observer {
 
     @Click(R.id.buttonRefresh)
     public void refreshClick() {
-        this.mCaseModel.LoadData();
+        this.mCaseModel.loadData();
     }
 
     @Override
     public void onDestroy() {
-        this.mCaseModel.StopLoad();
+        this.mCaseModel.stopLoad();
         this.mCaseModel.unregisterObserver(this);
         super.onDestroy();
     }

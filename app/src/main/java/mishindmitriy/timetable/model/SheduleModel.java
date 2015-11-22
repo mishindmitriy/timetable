@@ -4,9 +4,9 @@ import android.database.Observable;
 import android.os.AsyncTask;
 
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -15,6 +15,8 @@ import mishindmitriy.timetable.model.data.PeriodType;
 import mishindmitriy.timetable.model.data.PeriodTypeConverter;
 import mishindmitriy.timetable.model.data.Thing;
 import mishindmitriy.timetable.model.data.ThingType;
+import mishindmitriy.timetable.model.db.DatabaseHelper;
+import mishindmitriy.timetable.model.db.PairDAO;
 import mishindmitriy.timetable.utils.ParseHelper;
 import mishindmitriy.timetable.utils.PreferencesHelper;
 
@@ -29,7 +31,7 @@ public class SheduleModel {
     private boolean mIsWorking=false;
     private LoadDataTask mLoadTask=null;
     private PeriodType mPeriod;
-    private List<Pair> mShedule= Collections.emptyList();
+    private List<Pair> mShedule= new ArrayList<>();
 
     public SheduleModel() {
         mPeriod=PreferencesHelper.getInstance().loadOutputPeriod();
@@ -48,16 +50,16 @@ public class SheduleModel {
         return this.mPeriod;
     }
 
+    public void setPeriod(int position)
+    {
+        setPeriod(PeriodTypeConverter.getPeriodTypeByPosition(position));
+    }
+
     public void setPeriod(final PeriodType period) {
         if (mPeriod==period) return;
         this.mPeriod = period;
         PreferencesHelper.getInstance().saveOutputPeriod(period);
-        LoadData();
-    }
-
-    public void setPeriod(int position)
-    {
-        setPeriod(PeriodTypeConverter.getPeriodTypeByPosition(position));
+        loadData();
     }
 
     public int getPeriodPosition() {
@@ -70,7 +72,7 @@ public class SheduleModel {
 
     public CharSequence getThingName() {
         if (this.mThing == null) return null;
-        return this.mThing.getThingName();
+        return this.mThing.getName();
     }
 
     public boolean isThingAvailable() {
@@ -82,12 +84,12 @@ public class SheduleModel {
     }
 
     public ThingType getWhatThing() {
-        if (this.mThing != null) return this.mThing.getWhatThing();
+        if (this.mThing != null) return this.mThing.getType();
         return null;
     }
 
-    public void LoadData() {
-        if (this.mIsWorking) return;
+    public void loadData() {
+        if (this.mIsWorking) stopLoad();
         if (!isThingAvailable()) return;
 
         this.mObservable.notifyStarted();
@@ -106,7 +108,7 @@ public class SheduleModel {
         this.mObservable.unregisterObserver(observer);
     }
 
-    public void StopLoad() {
+    public void stopLoad() {
         if (this.mIsWorking) {
             this.mLoadTask.cancel(true);
             this.mIsWorking = false;
@@ -128,12 +130,17 @@ public class SheduleModel {
                 break;
         }
         cal.roll(Calendar.DAY_OF_YEAR, offset);
-        return new Date(cal.getTimeInMillis());
+        cal.set(Calendar.HOUR_OF_DAY,23);
+        return cal.getTime();
     }
 
     private Calendar getFromCalendar()
     {
         final Calendar cal = Calendar.getInstance();
+        cal.set(Calendar.HOUR_OF_DAY,0);
+        cal.set(Calendar.MINUTE,0);
+        cal.set(Calendar.SECOND,0);
+        cal.set(Calendar.MILLISECOND,0);
         switch (this.mPeriod) {
             case TODAY:
                 break;
@@ -167,7 +174,27 @@ public class SheduleModel {
     }
 
     private Date getFromDate() {
-        return new Date(getFromCalendar().getTimeInMillis());
+        return getFromCalendar().getTime();
+    }
+
+    private void saveCache() {
+        DatabaseHelper helper= DatabaseHelper.getInstance();
+        try {
+            helper.getPairDAO().saveListPairs(mShedule);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void loadCache() {
+        List<Pair> pairs=null;
+        try {
+            PairDAO dao= DatabaseHelper.getInstance().getPairDAO();
+            pairs=dao.loadListPairs(mThing, getFromDate(), getToDate());
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        if (pairs!=null) mShedule=pairs;
     }
 
     public interface Observer {
@@ -182,14 +209,13 @@ public class SheduleModel {
             try {
                 SheduleModel.this.mShedule = ParseHelper.getShedule(mThing, SheduleModel.this.getFromDate(),SheduleModel.this.getToDate());
             } catch (final IOException e) {
-                SheduleModel.this.mShedule = null;
-                //SheduleModel.this.loadCache();
-                //return false;
+                SheduleModel.this.mShedule = new ArrayList<>();
+                SheduleModel.this.loadCache();
+                return false;
             }
             if (SheduleModel.this.mShedule == null) {
                 SheduleModel.this.mShedule = new ArrayList<>();
-            }
-            //SheduleModel.this.saveCache();
+            } else SheduleModel.this.saveCache();
             return true;
         }
 

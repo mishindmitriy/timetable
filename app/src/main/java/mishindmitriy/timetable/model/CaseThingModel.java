@@ -4,11 +4,14 @@ import android.database.Observable;
 import android.os.AsyncTask;
 
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
 import mishindmitriy.timetable.model.data.Thing;
 import mishindmitriy.timetable.model.data.ThingType;
+import mishindmitriy.timetable.model.db.DatabaseHelper;
+import mishindmitriy.timetable.model.db.ThingDAO;
 import mishindmitriy.timetable.utils.ParseHelper;
 
 /**
@@ -17,13 +20,13 @@ import mishindmitriy.timetable.utils.ParseHelper;
 public class CaseThingModel {
     private static final String TAG = "CaseModel";
     private final LoadDataObservable mObservable = new LoadDataObservable();
-    private final ThingType mWhatCase;
+    private final ThingType mThingType;
     public LoadDataTask mLoadTask;
     private boolean mIsWorking;
-    private List<Thing> mListThingCases = new ArrayList<>();
+    private List<Thing> mListThings = new ArrayList<>();
 
     public CaseThingModel(ThingType thing) {
-        this.mWhatCase = thing;
+        this.mThingType = thing;
     }
 
     public boolean isWorking() {
@@ -31,10 +34,10 @@ public class CaseThingModel {
     }
 
     public List<Thing> getList() {
-        return this.mListThingCases;
+        return this.mListThings;
     }
 
-    public void LoadData() {
+    public void loadData() {
         if (this.mIsWorking) return;
         this.mObservable.notifyStarted();
         this.mIsWorking = true;
@@ -51,11 +54,30 @@ public class CaseThingModel {
         this.mObservable.unregisterObserver(observer);
     }
 
-    public void StopLoad() {
+    public void stopLoad() {
         if (this.mIsWorking) {
             this.mLoadTask.cancel(true);
             this.mIsWorking = false;
         }
+    }
+
+    private void saveCache() {
+        try {
+            DatabaseHelper.getInstance().getThingGAO().saveListThings(mListThings);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void loadCache() {
+        List<Thing> things=null;
+        try {
+            ThingDAO dao= DatabaseHelper.getInstance().getThingGAO();
+            things=dao.loadListThings(mThingType);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        if (things!=null) mListThings=things;
     }
 
     public interface Observer {
@@ -70,11 +92,13 @@ public class CaseThingModel {
         @Override
         protected Boolean doInBackground(final Void... params) {
             try {
-                mListThingCases=ParseHelper.getSomeThing(mWhatCase);
+                mListThings =ParseHelper.getSomeThing(mThingType);
             } catch (IOException e) {
                 e.printStackTrace();
-                return false;
+                CaseThingModel.this.loadCache();
+                return true;
             }
+            CaseThingModel.this.saveCache();
             return true;
         }
 
@@ -99,7 +123,7 @@ public class CaseThingModel {
 
         public void notifySucceeded() {
             for (final Observer observer : this.mObservers) {
-                observer.onLoadFinished(CaseThingModel.this.mListThingCases);
+                observer.onLoadFinished(CaseThingModel.this.mListThings);
             }
         }
 

@@ -10,7 +10,6 @@ import android.support.v4.widget.SwipeRefreshLayout.OnRefreshListener;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.view.SoundEffectConstants;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -20,14 +19,15 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 import org.androidannotations.annotations.AfterViews;
-import org.androidannotations.annotations.Click;
 import org.androidannotations.annotations.EActivity;
 import org.androidannotations.annotations.Extra;
 import org.androidannotations.annotations.FragmentByTag;
+import org.androidannotations.annotations.InstanceState;
 import org.androidannotations.annotations.OptionsItem;
 import org.androidannotations.annotations.OptionsMenu;
 import org.androidannotations.annotations.ViewById;
 
+import java.util.Date;
 import java.util.List;
 
 import mishindmitriy.timetable.R;
@@ -70,10 +70,31 @@ public class SheduleActivity extends AppCompatActivity
     protected NavigationView navigationView;
     @FragmentByTag(TAG_WORKER)
     protected SheduleWorkerFragment sheduleWorkerFragment;
+    @InstanceState
+    protected Date lastUpdate;
     private CharSequence mTitle;
     private SheduleModel mSheduleModel;
     private ActionBarDrawerToggle mDrawerToggle;
     private SheduleListAdapter mSheduleAdapter;
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mSheduleModel.stopLoad();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (!mSheduleModel.isWorking() && canUpdate()) {
+            mSheduleModel.loadData();
+        }
+    }
+
+    private boolean canUpdate() {
+        if (lastUpdate==null) return true;
+        return (new Date().getTime()-lastUpdate.getTime())>3600000.0; //one hour
+    }
 
     @AfterViews
     protected void init() {
@@ -121,8 +142,7 @@ public class SheduleActivity extends AppCompatActivity
             this.mSwipeLayout.setOnRefreshListener(new OnRefreshListener() {
                 @Override
                 public void onRefresh() {
-                    SheduleActivity.this.mSwipeLayout.playSoundEffect(SoundEffectConstants.CLICK);
-                    if (mSheduleModel != null) SheduleActivity.this.mSheduleModel.LoadData();
+                    SheduleActivity.this.mSheduleModel.loadData();
                 }
             });
         }
@@ -150,10 +170,9 @@ public class SheduleActivity extends AppCompatActivity
         mListShedule.setAdapter(mSheduleAdapter);
 
         if (mSheduleModel.isWorking()) onLoadStarted();
-        else mSheduleModel.LoadData();
     }
 
-    @Click(R.id.case_button)
+    @OptionsItem(R.id.case_button)
     void caseClick()
     {
         CaseActivity_.intent(this).start();
@@ -188,16 +207,22 @@ public class SheduleActivity extends AppCompatActivity
     public void onLoadFinished(List<Pair> shedule,boolean isCache) {
         if (mSheduleModel.getPeriodPosition()>0) mSheduleAdapter.setSetToday(true);
         else mSheduleAdapter.setSetToday(false);
-        this.mSheduleAdapter.setData(shedule, this.mSheduleModel.getWhatThing());
-        this.mSwipeLayout.setRefreshing(false);
-        if (isCache) Snackbar.make(this.mSwipeLayout, "Ошибка загрузки. Отображены локальные данные.", Snackbar.LENGTH_LONG).show();
-        this.mListShedule.setSelection(0);
+        mSheduleAdapter.setData(shedule, mSheduleModel.getWhatThing());
+        mSwipeLayout.post(new Runnable() {
+            @Override
+            public void run() {
+                mSwipeLayout.setRefreshing(false);
+            }
+        });
+        if (isCache) Snackbar.make(mSwipeLayout, "Ошибка загрузки. Отображены локальные данные.", Snackbar.LENGTH_LONG).show();
+        mListShedule.setSelection(0);
+        lastUpdate=new Date();
     }
 
     @OptionsItem(R.id.refresh_icon)
     void refreshIconClick()
     {
-        if (this.mSheduleModel != null) this.mSheduleModel.LoadData();
+        mSheduleModel.loadData();
     }
 
     @Override
@@ -205,7 +230,7 @@ public class SheduleActivity extends AppCompatActivity
         super.onDestroy();
         if (this.mSheduleModel == null) return;
         if (this.isFinishing()) {
-            this.mSheduleModel.StopLoad();
+            this.mSheduleModel.stopLoad();
         }
         this.mSheduleModel.unregisterObserver(this);
     }

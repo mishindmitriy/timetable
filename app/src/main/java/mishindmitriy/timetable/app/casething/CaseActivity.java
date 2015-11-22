@@ -3,7 +3,6 @@ package mishindmitriy.timetable.app.casething;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.view.ViewPager;
-import android.util.Log;
 
 import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.EActivity;
@@ -22,12 +21,8 @@ public class CaseActivity extends FragmentActivity {
 
     @AfterViews
     protected void init() {
-        Log.i(TAG, "onCreate");
-
-        mViewPager.setOffscreenPageLimit(2);
         ThingsPagerAdapter pagerAdapter = new ThingsPagerAdapter(this.getSupportFragmentManager());
         mViewPager.setAdapter(pagerAdapter);
-
         tabLayout.setupWithViewPager(mViewPager);
     }
 }

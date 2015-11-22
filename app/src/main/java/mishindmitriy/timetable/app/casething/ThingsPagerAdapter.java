@@ -42,7 +42,7 @@ public class ThingsPagerAdapter extends FragmentPagerAdapter {
             case 2:
                 return "Аудитории";
             default:
-                return "wtf";
+                throw new IllegalArgumentException("Illegal number of fragment in case thing");
         }
     }
 }

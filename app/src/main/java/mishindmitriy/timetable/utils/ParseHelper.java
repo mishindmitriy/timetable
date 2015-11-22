@@ -39,6 +39,8 @@ public class ParseHelper {
     private static String doQuery(String inpupUrl, @Nullable Map<String, String> valuesPairs) throws IOException {
         URL url = new URL(inpupUrl);
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setConnectTimeout(5000);
+        connection.setReadTimeout(5000);
         if (valuesPairs != null) //значит делаем POST запрос
         {
             connection.setDoOutput(true);
@@ -86,6 +88,10 @@ public class ParseHelper {
         while (iterator.hasNext())
         {
             Element element =iterator.next();
+            if (element.attr("colspan").equals("6") && element.text().equals("По данному запросу ничего не найдено!"))
+            {
+                break;
+            }
             if (element.attr("colspan").equals("7")&&validateParseDate(element.text()))
             {
                 date=DateFormatter.parseDate(element.text());
@@ -149,8 +155,8 @@ public class ParseHelper {
 
     public static List<Pair> getShedule(Thing thing, Date from, Date to)
             throws IOException {
-        String html = sendPostToGetShedule(String.valueOf(ThingTypeConverter.getPositionByPeriod(thing.getWhatThing()))
-                , thing.getThingID(), DateFormatter.DateToString(from), DateFormatter.DateToString(to));
+        String html = sendPostToGetShedule(String.valueOf(ThingTypeConverter.getPositionByPeriod(thing.getType()))
+                , thing.getServerId(), DateFormatter.DateToString(from), DateFormatter.DateToString(to));
         return mappingListPairs(html);
     }
 

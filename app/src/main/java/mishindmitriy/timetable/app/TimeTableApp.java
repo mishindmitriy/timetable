@@ -4,6 +4,7 @@ import android.app.Application;
 import android.os.StrictMode;
 
 import mishindmitriy.timetable.BuildConfig;
+import mishindmitriy.timetable.model.db.DatabaseHelper;
 import mishindmitriy.timetable.utils.AnalyticsTrackers;
 import mishindmitriy.timetable.utils.PreferencesHelper;
 
@@ -26,7 +27,8 @@ public class TimeTableApp extends Application {
                     .build());
         }
         AnalyticsTrackers.initialize(this);
-        PreferencesHelper.init(getSharedPreferences(PreferencesHelper.APP_PREFERENCES,MODE_PRIVATE));
+        PreferencesHelper.init(getSharedPreferences(PreferencesHelper.APP_PREFERENCES, MODE_PRIVATE));
         super.onCreate();
+        DatabaseHelper.init(getApplicationContext());
     }
 }

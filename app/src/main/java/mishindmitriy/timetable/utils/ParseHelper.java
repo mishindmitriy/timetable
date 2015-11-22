@@ -78,7 +78,7 @@ public class ParseHelper {
         return html;
     }
 
-    private static List<Pair> mappingListPairs(String html)
+    private static List<Pair> mappingListPairs(String html,Thing thing)
     {
         Document doc = Jsoup.parse(html);
         Element table = doc.select("table[class=table][id=send]").first();
@@ -97,7 +97,9 @@ public class ParseHelper {
                 date=DateFormatter.parseDate(element.text());
             }
             else {
-                pairs.add(parsePair(element,iterator,date));
+                Pair p=parsePair(element,iterator,date);
+                p.setThing(thing);
+                pairs.add(p);
             }
         }
         return pairs;
@@ -111,7 +113,7 @@ public class ParseHelper {
         pair.setTeacher(iterator.next().text());
         pair.setType(iterator.next().text());
         pair.setSubject(iterator.next().text());
-        pair.setGroups(iterator.next().text());
+        pair.setGroup(iterator.next().text());
         pair.setNote(iterator.next().text());
         pair.setDate(date);
         return pair;
@@ -153,11 +155,13 @@ public class ParseHelper {
         return lastUpdate;
     }*/
 
-    public static List<Pair> getShedule(Thing thing, Date from, Date to)
-            throws IOException {
-        String html = sendPostToGetShedule(String.valueOf(ThingTypeConverter.getPositionByPeriod(thing.getType()))
-                , thing.getServerId(), DateFormatter.DateToString(from), DateFormatter.DateToString(to));
-        return mappingListPairs(html);
+    public static List<Pair> getShedule(Thing thing, Date from, Date to) throws IOException {
+        String html = sendPostToGetShedule(
+                String.valueOf(ThingTypeConverter.getPositionByPeriod(thing.getType())),
+                thing.getServerId(),
+                DateFormatter.DateToString(from),
+                DateFormatter.DateToString(to));
+        return mappingListPairs(html,thing);
     }
 
     private static List<Thing> mappingListThings(String html,ThingType type)

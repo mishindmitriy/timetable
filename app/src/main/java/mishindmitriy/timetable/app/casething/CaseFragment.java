@@ -95,7 +95,7 @@ public class CaseFragment extends Fragment implements CaseThingModel.Observer {
 
     @Override
     public void onLoadFinished(List<Thing> listThings) {
-        this.adapter = new ArrayAdapter<>(this.getActivity(), R.layout.item_thing_list, listThings);
+        this.adapter = new ArrayAdapter<>(this.getActivity(), R.layout.item_thing, listThings);
         this.adapter.getFilter().filter(this.filterText.getText());
         listView.setAdapter(adapter);
         this.mProgressBar.setVisibility(View.INVISIBLE);

@@ -19,6 +19,8 @@ public class Thing implements Serializable {
     private ThingType type;
     @DatabaseField(generatedId = true)
     private long id;
+    @DatabaseField(dataType = DataType.BOOLEAN, defaultValue = "false")
+    private boolean favorite=false;
 
     public Thing()
     {
@@ -29,6 +31,14 @@ public class Thing implements Serializable {
         this.serverId = serverId;
         this.name = name;
         this.type = thing;
+    }
+
+    public boolean isFavorite() {
+        return favorite;
+    }
+
+    public void setFavorite(boolean favorite) {
+        this.favorite = favorite;
     }
 
     public long getId() {
@@ -43,6 +53,10 @@ public class Thing implements Serializable {
         return this.serverId;
     }
 
+    public void setServerId(String serverId) {
+        this.serverId = serverId;
+    }
+
     @Override
     public String toString() {
         if (name != null) return name;
@@ -53,8 +67,16 @@ public class Thing implements Serializable {
         return this.name;
     }
 
+    public void setName(String name) {
+        this.name = name;
+    }
+
     public ThingType getType() {
         return this.type;
+    }
+
+    public void setType(ThingType type) {
+        this.type = type;
     }
 
 }

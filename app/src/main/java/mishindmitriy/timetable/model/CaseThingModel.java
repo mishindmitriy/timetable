@@ -95,10 +95,9 @@ public class CaseThingModel {
                 mListThings =ParseHelper.getSomeThing(mThingType);
             } catch (IOException e) {
                 e.printStackTrace();
-                CaseThingModel.this.loadCache();
-                return true;
             }
             CaseThingModel.this.saveCache();
+            CaseThingModel.this.loadCache();
             return true;
         }
 

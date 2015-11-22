@@ -26,14 +26,24 @@ public class Pair implements Serializable {
     @DatabaseField(dataType = DataType.STRING)
     private String subject;
     @DatabaseField(dataType = DataType.STRING)
-    private String groups;
+    private String group;
     @DatabaseField(dataType = DataType.DATE_LONG, index = true)
     private Date date;
     @DatabaseField(dataType = DataType.STRING)
     private String note;
+    @DatabaseField(foreign = true, foreignAutoRefresh = true)
+    private Thing thing;
 
     public Pair() {
 
+    }
+
+    public Thing getThing() {
+        return thing;
+    }
+
+    public void setThing(Thing thing) {
+        this.thing = thing;
     }
 
     public String getNote() {
@@ -84,12 +94,12 @@ public class Pair implements Serializable {
         this.subject = subject;
     }
 
-    public String getGroups() {
-        return this.groups;
+    public String getGroup() {
+        return this.group;
     }
 
-    public void setGroups(String groups) {
-        this.groups = groups;
+    public void setGroup(String group) {
+        this.group = group;
     }
 
     public Date getDate() {

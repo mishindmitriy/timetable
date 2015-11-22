@@ -1,4 +1,4 @@
-package mishindmitriy.timetable.model;
+package mishindmitriy.timetable.app.shedule;
 
 import android.app.Activity;
 import android.view.View;
@@ -12,7 +12,6 @@ import mishindmitriy.timetable.app.shedule.widgets.PairHeaderView_;
 import mishindmitriy.timetable.app.shedule.widgets.PairView;
 import mishindmitriy.timetable.app.shedule.widgets.PairView_;
 import mishindmitriy.timetable.model.data.Pair;
-import mishindmitriy.timetable.model.data.ThingType;
 import se.emilsjolander.stickylistheaders.StickyListHeadersAdapter;
 
 /**
@@ -22,22 +21,19 @@ import se.emilsjolander.stickylistheaders.StickyListHeadersAdapter;
 public class SheduleListAdapter extends BaseAdapter implements StickyListHeadersAdapter {
     private final Activity mContext;
     private List<Pair> shedule;
-    private ThingType mWhatThing;
     private boolean setToday=false;
 
-    public SheduleListAdapter(Activity context, List<Pair> shedule, ThingType whatThing) {
+    public SheduleListAdapter(Activity context, List<Pair> shedule) {
         this.mContext = context;
         this.shedule = shedule;
-        this.mWhatThing = whatThing;
     }
 
     public void setSetToday(boolean setToday) {
         this.setToday = setToday;
     }
 
-    public void setData(List<Pair> shedule, ThingType thing) {
+    public void setData(List<Pair> shedule) {
         this.shedule = shedule;
-        this.mWhatThing=thing;
         this.notifyDataSetChanged();
     }
 
@@ -63,7 +59,7 @@ public class SheduleListAdapter extends BaseAdapter implements StickyListHeaders
         if (pairView==null) {
             pairView = PairView_.build(mContext);
         }
-        pairView.setPair(mWhatThing,shedule.get(position));
+        pairView.setPair(shedule.get(position));
         return pairView;
     }
 

@@ -34,10 +34,13 @@ public class PairHeaderView extends RelativeLayout {
         dateTextView.setText(DateFormatter.DateToString(date));
         String dayOfWeek = DateUtils.getDayOfWeek(date);
         String today = DateFormatter.DateToString(new Date());
-        if (!setToday || !today.equals(DateFormatter.DateToString(date)))
+        if (//!setToday ||
+             !today.equals(DateFormatter.DateToString(date)))
         {
             todayTextView.setVisibility(View.GONE);
         } else {
+            setBackgroundResource(R.color.select);
+            requestLayout();
             todayTextView.setVisibility(View.VISIBLE);
         }
         dayOfWeekTextView.setText(dayOfWeek);

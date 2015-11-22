@@ -10,15 +10,16 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
+import mishindmitriy.timetable.model.data.Config;
 import mishindmitriy.timetable.model.data.Pair;
 import mishindmitriy.timetable.model.data.PeriodType;
 import mishindmitriy.timetable.model.data.PeriodTypeConverter;
 import mishindmitriy.timetable.model.data.Thing;
 import mishindmitriy.timetable.model.data.ThingType;
+import mishindmitriy.timetable.model.db.ConfigDAO;
 import mishindmitriy.timetable.model.db.DatabaseHelper;
 import mishindmitriy.timetable.model.db.PairDAO;
 import mishindmitriy.timetable.utils.ParseHelper;
-import mishindmitriy.timetable.utils.PreferencesHelper;
 
 /**
  * Model for Shedule. Include all operation with shedule
@@ -27,27 +28,68 @@ import mishindmitriy.timetable.utils.PreferencesHelper;
 public class SheduleModel {
     private static final String TAG = "SheduleModel";
     private final LoadDataObservable mObservable = new LoadDataObservable();
-    private Thing mThing=null;
+    private Config config=null;
     private boolean mIsWorking=false;
     private LoadDataTask mLoadTask=null;
-    private PeriodType mPeriod;
     private List<Pair> mShedule= new ArrayList<>();
 
     public SheduleModel() {
-        mPeriod=PreferencesHelper.getInstance().loadOutputPeriod();
+        loadConfig();
     }
 
     public void setThing(Thing thing)
     {
-        this.mThing = thing;
-        if (this.mThing == null)
-        {
-            mThing = PreferencesHelper.getInstance().loadThing();
-        } else PreferencesHelper.getInstance().saveThing(thing);
+        if (thing==null) return;
+        config.setCurrentThing(thing);
+        updateConfig();
     }
 
-    public PeriodType getPeriod() {
-        return this.mPeriod;
+    public boolean isFavorites()
+    {
+        return config.getCurrentThing().isFavorite();
+    }
+
+    public void setFavorites(boolean flag) {
+        config.getCurrentThing().setFavorite(flag);
+        try {
+            DatabaseHelper.getInstance().getThingGAO().update(config.getCurrentThing());
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void loadConfig()
+    {
+        try {
+            config=DatabaseHelper.getInstance().getConfigDAO().queryForId(1);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        if (config==null)
+        {
+            config=new Config();
+            try {
+                ConfigDAO dao=DatabaseHelper.getInstance().getConfigDAO();
+                dao.create(config);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void updateConfig() {
+        try {
+            ConfigDAO dao=DatabaseHelper.getInstance().getConfigDAO();
+            dao.update(config);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void setPeriod(final PeriodType period) {
+        if (config.getPeriodType()==period) return;
+        config.setPeriodType(period);
+        updateConfig();
     }
 
     public void setPeriod(int position)
@@ -55,15 +97,8 @@ public class SheduleModel {
         setPeriod(PeriodTypeConverter.getPeriodTypeByPosition(position));
     }
 
-    public void setPeriod(final PeriodType period) {
-        if (mPeriod==period) return;
-        this.mPeriod = period;
-        PreferencesHelper.getInstance().saveOutputPeriod(period);
-        loadData();
-    }
-
     public int getPeriodPosition() {
-        return PeriodTypeConverter.getPositionByPeriod(mPeriod);
+        return PeriodTypeConverter.getPositionByPeriod(config.getPeriodType());
     }
 
     public boolean isWorking() {
@@ -71,12 +106,12 @@ public class SheduleModel {
     }
 
     public CharSequence getThingName() {
-        if (this.mThing == null) return null;
-        return this.mThing.getName();
+        if (config.getCurrentThing() == null) return null;
+        return config.getCurrentThing().getName();
     }
 
     public boolean isThingAvailable() {
-        return this.mThing != null;
+        return config!=null && config.getCurrentThing()!=null;
     }
 
     public List<Pair> getShedule() {
@@ -84,13 +119,17 @@ public class SheduleModel {
     }
 
     public ThingType getWhatThing() {
-        if (this.mThing != null) return this.mThing.getType();
-        return null;
+        if (config.getCurrentThing()== null) return null;
+        return config.getCurrentThing().getType();
     }
 
     public void loadData() {
         if (this.mIsWorking) stopLoad();
-        if (!isThingAvailable()) return;
+        if (!isThingAvailable()
+                ||config==null
+                ||config.getCurrentThing()==null
+                ||config.getCurrentThing().getServerId()==null
+                ||config.getPeriodType()==null) throw new IllegalArgumentException("some agrument is null");
 
         this.mObservable.notifyStarted();
 
@@ -118,7 +157,7 @@ public class SheduleModel {
     private Date getToDate() {
         final Calendar cal = getFromCalendar();
         int offset = 0;
-        switch (this.mPeriod) {
+        switch (config.getPeriodType()) {
             case SEVEN_DAYS:
             case THIS_WEEK:
             case NEXT_WEEK:
@@ -130,6 +169,7 @@ public class SheduleModel {
                 break;
         }
         cal.roll(Calendar.DAY_OF_YEAR, offset);
+        if (cal.get(Calendar.DAY_OF_YEAR)-offset<0) cal.roll(Calendar.YEAR,1);
         cal.set(Calendar.HOUR_OF_DAY,23);
         return cal.getTime();
     }
@@ -139,9 +179,9 @@ public class SheduleModel {
         final Calendar cal = Calendar.getInstance();
         cal.set(Calendar.HOUR_OF_DAY,0);
         cal.set(Calendar.MINUTE,0);
-        cal.set(Calendar.SECOND,0);
+        cal.set(Calendar.SECOND, 0);
         cal.set(Calendar.MILLISECOND,0);
-        switch (this.mPeriod) {
+        switch (config.getPeriodType()) {
             case TODAY:
                 break;
             case TOMORROW:
@@ -190,11 +230,25 @@ public class SheduleModel {
         List<Pair> pairs=null;
         try {
             PairDAO dao= DatabaseHelper.getInstance().getPairDAO();
-            pairs=dao.loadListPairs(mThing, getFromDate(), getToDate());
+            pairs=dao.loadListPairs(config.getCurrentThing(), getFromDate(), getToDate());
         } catch (SQLException e) {
             e.printStackTrace();
         }
         if (pairs!=null) mShedule=pairs;
+    }
+
+    public List<Thing> getFavoritesThings() {
+        List<Thing> list=null;
+        try {
+            list=DatabaseHelper.getInstance().getThingGAO().loadFavorites();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    public Thing getCurrentThing() {
+        return config.getCurrentThing();
     }
 
     public interface Observer {
@@ -207,15 +261,15 @@ public class SheduleModel {
         @Override
         protected Boolean doInBackground(final Void... arg) {
             try {
-                SheduleModel.this.mShedule = ParseHelper.getShedule(mThing, SheduleModel.this.getFromDate(),SheduleModel.this.getToDate());
+                if (config.getCurrentThing()==null) return false;
+                SheduleModel.this.mShedule = ParseHelper.getShedule(config.getCurrentThing(), SheduleModel.this.getFromDate(),SheduleModel.this.getToDate());
             } catch (final IOException e) {
                 SheduleModel.this.mShedule = new ArrayList<>();
-                SheduleModel.this.loadCache();
-                return false;
             }
             if (SheduleModel.this.mShedule == null) {
                 SheduleModel.this.mShedule = new ArrayList<>();
             } else SheduleModel.this.saveCache();
+            SheduleModel.this.loadCache();
             return true;
         }
 

@@ -27,14 +27,12 @@ public class PairDAO extends BaseDaoImpl<Pair, Integer> {
         TransactionManager transactionManager = new TransactionManager(getConnectionSource());
         Callable transaction = new Callable() {
             @Override
-            public Object call() throws Exception {
+            public Void call() throws Exception {
                 for (Pair pair : pairs) {
                     QueryBuilder<Pair, Integer> queryBuilder = queryBuilder();
                     queryBuilder.where()
-                            .eq("groups", pair.getGroups())
-                            .and()
-                            .eq("date", pair.getDate())
-                            .and()
+                            //.eq("date", pair.getDate())
+                            //.and()
                             .eq("classroom", pair.getClassroom())
                             .and()
                             .eq("number", pair.getNumber())
@@ -44,8 +42,9 @@ public class PairDAO extends BaseDaoImpl<Pair, Integer> {
                             .eq("subject", pair.getSubject())
                             .and()
                             .eq("teacher", pair.getTeacher())
-                            .and()
-                            .eq("note", pair.getNote());
+                            //.and()
+                            //.eq("note", pair.getNote())
+                            ;
                     if (queryForFirst(queryBuilder.prepare()) == null) {
                         PairDAO.this.create(pair);
                     }
@@ -59,7 +58,7 @@ public class PairDAO extends BaseDaoImpl<Pair, Integer> {
     public List<Pair> loadListPairs(Thing thing, Date from, Date to) throws SQLException {
         QueryBuilder<Pair, Integer> queryBuilder = queryBuilder();
         queryBuilder.where()
-                .eq("groups", thing.getName())
+                .eq("thing_id", thing.getId())
                 .and()
                 .ge("date", from)
                 .and()

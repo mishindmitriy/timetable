@@ -11,6 +11,7 @@ import com.j256.ormlite.table.TableUtils;
 
 import java.sql.SQLException;
 
+import mishindmitriy.timetable.model.data.Config;
 import mishindmitriy.timetable.model.data.Pair;
 import mishindmitriy.timetable.model.data.Thing;
 
@@ -28,6 +29,7 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
     //ссылки на DAO соответсвующие сущностям, хранимым в БД
     private PairDAO pairDao = null;
     private ThingDAO thingGao = null;
+    private ConfigDAO configDAO = null;
 
     public DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -47,6 +49,7 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
         try {
             TableUtils.createTable(connectionSource, Pair.class);
             TableUtils.createTable(connectionSource, Thing.class);
+            TableUtils.createTable(connectionSource, Config.class);
         } catch (SQLException e) {
             Log.e(TAG, "error creating DB " + DATABASE_NAME);
             throw new RuntimeException(e);
@@ -61,6 +64,7 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
             //Так делают ленивые, гораздо предпочтительнее не удаляя БД аккуратно вносить изменения
             TableUtils.dropTable(connectionSource, Pair.class, true);
             TableUtils.dropTable(connectionSource, Thing.class, true);
+            TableUtils.dropTable(connectionSource, Config.class, true);
             onCreate(db, connectionSource);
         } catch (SQLException e) {
             Log.e(TAG, "error upgrading db " + DATABASE_NAME + "from ver " + oldVer);
@@ -83,11 +87,19 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
         return thingGao;
     }
 
+    public ConfigDAO getConfigDAO() throws SQLException {
+        if (configDAO == null) {
+            configDAO = new ConfigDAO(getConnectionSource(), Config.class);
+        }
+        return configDAO;
+    }
+
     //выполняется при закрытии приложения
     @Override
     public void close() {
         super.close();
         pairDao = null;
         thingGao = null;
+        configDAO = null;
     }
 }

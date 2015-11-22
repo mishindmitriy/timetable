@@ -1,6 +1,12 @@
 package mishindmitriy.timetable.app.shedule;
 
+import android.content.Context;
 import android.content.res.Configuration;
+import android.graphics.Color;
+import android.graphics.Typeface;
+import android.graphics.drawable.ShapeDrawable;
+import android.graphics.drawable.shapes.RoundRectShape;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
@@ -10,7 +16,10 @@ import android.support.v4.widget.SwipeRefreshLayout.OnRefreshListener;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.DisplayMetrics;
+import android.util.TypedValue;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
@@ -19,20 +28,22 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 import org.androidannotations.annotations.AfterViews;
+import org.androidannotations.annotations.Click;
 import org.androidannotations.annotations.EActivity;
 import org.androidannotations.annotations.Extra;
 import org.androidannotations.annotations.FragmentByTag;
 import org.androidannotations.annotations.InstanceState;
+import org.androidannotations.annotations.ItemClick;
 import org.androidannotations.annotations.OptionsItem;
 import org.androidannotations.annotations.OptionsMenu;
 import org.androidannotations.annotations.ViewById;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 import mishindmitriy.timetable.R;
 import mishindmitriy.timetable.app.casething.CaseActivity_;
-import mishindmitriy.timetable.model.SheduleListAdapter;
 import mishindmitriy.timetable.model.SheduleModel;
 import mishindmitriy.timetable.model.SheduleWorkerFragment;
 import mishindmitriy.timetable.model.data.Pair;
@@ -57,17 +68,19 @@ public class SheduleActivity extends AppCompatActivity
     @ViewById(R.id.sheduleLayout)
     protected DrawerLayout mDrawerLayout;
     @ViewById(R.id.list_favorites_thing)
-    protected ListView mDrawerList;
+    protected ListView favoritesListView;
     @ViewById(R.id.dayPairsLayoutInActivity)
     protected StickyListHeadersListView mListShedule;
-    @ViewById(R.id.title)
-    protected TextView mViewTitle;
+    @ViewById(R.id.current_thing_title)
+    protected TextView currentThingTextView;
     @ViewById(R.id.spinner)
     protected Spinner spinner;
     @ViewById(R.id.scrollView)
     protected ScrollView scrollView;
     @ViewById(R.id.nvView)
     protected NavigationView navigationView;
+    @ViewById(R.id.add_to_favorites)
+    protected TextView addToFavoritesTextView;
     @FragmentByTag(TAG_WORKER)
     protected SheduleWorkerFragment sheduleWorkerFragment;
     @InstanceState
@@ -96,9 +109,25 @@ public class SheduleActivity extends AppCompatActivity
         return (new Date().getTime()-lastUpdate.getTime())>3600000.0; //one hour
     }
 
+    public int px(int dip) {
+
+        DisplayMetrics metrics = getResources().getDisplayMetrics();
+        return Math.round(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dip, metrics));
+    }
+
     @AfterViews
     protected void init() {
         this.getWindow().setBackgroundDrawable(null);
+
+        float r = px(20);
+        RoundRectShape shape = new RoundRectShape(new float[] { r, r, r, r, r, r, r, r}, null, null);
+        ShapeDrawable shapeDrawable = new ShapeDrawable(shape);
+        shapeDrawable.getPaint().setColor(Color.WHITE);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+            addToFavoritesTextView.setBackground(shapeDrawable);
+        } else addToFavoritesTextView.setBackgroundDrawable(shapeDrawable);
+        currentThingTextView.setTypeface(Typeface.create("sans-serif-light", Typeface.NORMAL));
+
 
         {
             // setThing toolbar
@@ -134,7 +163,7 @@ public class SheduleActivity extends AppCompatActivity
             }
         }
 
-        mViewTitle.setText(mTitle);
+        currentThingTextView.setText(mTitle);
 
         {
             this.mSwipeLayout.setSoundEffectsEnabled(true);
@@ -166,8 +195,10 @@ public class SheduleActivity extends AppCompatActivity
             spinner.setSelection(mSheduleModel.getPeriodPosition());
         }
 
-        mSheduleAdapter = new SheduleListAdapter(this, mSheduleModel.getShedule(), mSheduleModel.getWhatThing());
+        mSheduleAdapter = new SheduleListAdapter(this, mSheduleModel.getShedule());
         mListShedule.setAdapter(mSheduleAdapter);
+
+        refreshFavorites();
 
         if (mSheduleModel.isWorking()) onLoadStarted();
     }
@@ -201,20 +232,21 @@ public class SheduleActivity extends AppCompatActivity
                 SheduleActivity.this.mSwipeLayout.setRefreshing(true);
             }
         });
+        setFavoritesButtonTitle();
     }
 
     @Override
     public void onLoadFinished(List<Pair> shedule,boolean isCache) {
         if (mSheduleModel.getPeriodPosition()>0) mSheduleAdapter.setSetToday(true);
         else mSheduleAdapter.setSetToday(false);
-        mSheduleAdapter.setData(shedule, mSheduleModel.getWhatThing());
+        mSheduleAdapter.setData(shedule);
         mSwipeLayout.post(new Runnable() {
             @Override
             public void run() {
                 mSwipeLayout.setRefreshing(false);
             }
         });
-        if (isCache) Snackbar.make(mSwipeLayout, "Ошибка загрузки. Отображены локальные данные.", Snackbar.LENGTH_LONG).show();
+        if (isCache) Snackbar.make(mSwipeLayout, "Ошибка загрузки", Snackbar.LENGTH_LONG).show();
         mListShedule.setSelection(0);
         lastUpdate=new Date();
     }
@@ -238,10 +270,58 @@ public class SheduleActivity extends AppCompatActivity
     @Override
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
         mSheduleModel.setPeriod(position);
+        mSheduleModel.loadData();
+    }
+
+    @Click(R.id.add_to_favorites)
+    void addToFavorites()
+    {
+        mSheduleModel.setFavorites(!mSheduleModel.isFavorites());
+        refreshFavorites();
+    }
+
+    private void setFavoritesButtonTitle() {
+        if (mSheduleModel.isFavorites()) {
+            addToFavoritesTextView.setText("Удалить из избранного");
+        } else addToFavoritesTextView.setText("Добавить в избранное");
+    }
+
+    private void refreshFavorites() {
+        favoritesListView.setAdapter(new FavoritesAdapter(this,R.layout.item_thing,mSheduleModel.getFavoritesThings()));
+        setFavoritesButtonTitle();
+    }
+
+    @ItemClick(R.id.list_favorites_thing)
+    protected void favoritesClick(Thing thing)
+    {
+        if (thing.getId()!=mSheduleModel.getCurrentThing().getId()) {
+            mSheduleModel.setThing(thing);
+            currentThingTextView.setText(thing.getName());
+            mSheduleAdapter.setData(new ArrayList<Pair>());
+            mSheduleModel.loadData();
+        }
+        mDrawerLayout.closeDrawers();
     }
 
     @Override
     public void onNothingSelected(AdapterView<?> parent) {
 
+    }
+
+    private class FavoritesAdapter extends ArrayAdapter<Thing>
+    {
+        public FavoritesAdapter(Context context, int resource, List<Thing> objects) {
+            super(context, resource, objects);
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            View v=super.getView(position, convertView, parent);
+            if (getItem(position).getId()==mSheduleModel.getCurrentThing().getId())
+            {
+                favoritesListView.setItemChecked(position,true);
+            }
+            return v;
+        }
     }
 }

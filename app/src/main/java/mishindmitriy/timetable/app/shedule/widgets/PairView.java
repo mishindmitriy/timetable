@@ -10,7 +10,6 @@ import org.androidannotations.annotations.ViewById;
 import mishindmitriy.timetable.R;
 import mishindmitriy.timetable.model.data.Pair;
 import mishindmitriy.timetable.model.data.PairsTimeConverter;
-import mishindmitriy.timetable.model.data.ThingType;
 import mishindmitriy.timetable.utils.DateUtils;
 
 /**
@@ -39,18 +38,18 @@ public class PairView extends RelativeLayout {
         super(context);
     }
 
-    public void setPair(ThingType thing, Pair pair) {
-        switch (thing) {
+    public void setPair(Pair pair) {
+        switch (pair.getThing().getType()) {
             case GROUP:
                 classroomTextView.setText(pair.getClassroom());
                 teacherTextView.setText(pair.getTeacher());
                 break;
             case TEACHER:
                 classroomTextView.setText(pair.getClassroom());
-                teacherTextView.setText(pair.getGroups());
+                teacherTextView.setText(pair.getGroup());
                 break;
             case CLASSROOM:
-                classroomTextView.setText(pair.getGroups());
+                classroomTextView.setText(pair.getGroup());
                 teacherTextView.setText(pair.getTeacher());
                 break;
         }

@@ -4,9 +4,6 @@ import android.content.Context;
 import android.content.res.Configuration;
 import android.graphics.Color;
 import android.graphics.Typeface;
-import android.graphics.drawable.ShapeDrawable;
-import android.graphics.drawable.shapes.RoundRectShape;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
@@ -16,12 +13,11 @@ import android.support.v4.widget.SwipeRefreshLayout.OnRefreshListener;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.DisplayMetrics;
-import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.ScrollView;
 import android.widget.Spinner;
@@ -58,9 +54,6 @@ public class SheduleActivity extends AppCompatActivity
     private static final String TAG = "SheduleActivity";
     private static final String TAG_WORKER = "SheduleModelWorkerTAG";
 
-    @Extra
-    protected Thing thing;
-
     @ViewById(R.id.toolbar)
     protected Toolbar toolbar;
     @ViewById(R.id.sheduleSwipeRefresh)
@@ -79,8 +72,11 @@ public class SheduleActivity extends AppCompatActivity
     protected ScrollView scrollView;
     @ViewById(R.id.nvView)
     protected NavigationView navigationView;
-    @ViewById(R.id.add_to_favorites)
-    protected TextView addToFavoritesTextView;
+    @ViewById(R.id.icon_add_favorite)
+    protected ImageView iconAddFavorive;
+
+    @Extra
+    protected Thing thing;
     @FragmentByTag(TAG_WORKER)
     protected SheduleWorkerFragment sheduleWorkerFragment;
     @InstanceState
@@ -109,25 +105,13 @@ public class SheduleActivity extends AppCompatActivity
         return (new Date().getTime()-lastUpdate.getTime())>3600000.0; //one hour
     }
 
-    public int px(int dip) {
-
-        DisplayMetrics metrics = getResources().getDisplayMetrics();
-        return Math.round(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dip, metrics));
-    }
-
     @AfterViews
     protected void init() {
         this.getWindow().setBackgroundDrawable(null);
 
-        float r = px(20);
-        RoundRectShape shape = new RoundRectShape(new float[] { r, r, r, r, r, r, r, r}, null, null);
-        ShapeDrawable shapeDrawable = new ShapeDrawable(shape);
-        shapeDrawable.getPaint().setColor(Color.WHITE);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-            addToFavoritesTextView.setBackground(shapeDrawable);
-        } else addToFavoritesTextView.setBackgroundDrawable(shapeDrawable);
-        currentThingTextView.setTypeface(Typeface.create("sans-serif-light", Typeface.NORMAL));
-
+        {   //init favorites
+            currentThingTextView.setTypeface(Typeface.create("sans-serif-light", Typeface.NORMAL));
+        }
 
         {
             // setThing toolbar
@@ -232,13 +216,11 @@ public class SheduleActivity extends AppCompatActivity
                 SheduleActivity.this.mSwipeLayout.setRefreshing(true);
             }
         });
-        setFavoritesButtonTitle();
+        setFavoritesIcon();
     }
 
     @Override
     public void onLoadFinished(List<Pair> shedule,boolean isCache) {
-        if (mSheduleModel.getPeriodPosition()>0) mSheduleAdapter.setSetToday(true);
-        else mSheduleAdapter.setSetToday(false);
         mSheduleAdapter.setData(shedule);
         mSwipeLayout.post(new Runnable() {
             @Override
@@ -246,7 +228,7 @@ public class SheduleActivity extends AppCompatActivity
                 mSwipeLayout.setRefreshing(false);
             }
         });
-        if (isCache) Snackbar.make(mSwipeLayout, "Ошибка загрузки", Snackbar.LENGTH_LONG).show();
+        if (isCache) Snackbar.make(mSwipeLayout, getString(R.string.load_error), Snackbar.LENGTH_LONG).show();
         mListShedule.setSelection(0);
         lastUpdate=new Date();
     }
@@ -273,22 +255,26 @@ public class SheduleActivity extends AppCompatActivity
         mSheduleModel.loadData();
     }
 
-    @Click(R.id.add_to_favorites)
+    @Click(R.id.icon_add_favorite)
     void addToFavorites()
     {
         mSheduleModel.setFavorites(!mSheduleModel.isFavorites());
         refreshFavorites();
     }
 
-    private void setFavoritesButtonTitle() {
+    private void setFavoritesIcon() {
         if (mSheduleModel.isFavorites()) {
-            addToFavoritesTextView.setText("Удалить из избранного");
-        } else addToFavoritesTextView.setText("Добавить в избранное");
+            iconAddFavorive.setImageResource(R.drawable.ic_remove_circle_outline_white_48dp);
+            iconAddFavorive.setColorFilter(Color.WHITE);
+        } else {
+            iconAddFavorive.setImageResource(R.drawable.ic_add_circle_outline_white_48dp);
+            iconAddFavorive.setColorFilter(getResources().getColor(R.color.select));
+        }
     }
 
     private void refreshFavorites() {
         favoritesListView.setAdapter(new FavoritesAdapter(this,R.layout.item_thing,mSheduleModel.getFavoritesThings()));
-        setFavoritesButtonTitle();
+        setFavoritesIcon();
     }
 
     @ItemClick(R.id.list_favorites_thing)

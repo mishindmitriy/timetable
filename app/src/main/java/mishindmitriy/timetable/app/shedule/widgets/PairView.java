@@ -4,6 +4,7 @@ import android.content.Context;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.EViewGroup;
 import org.androidannotations.annotations.ViewById;
 
@@ -38,6 +39,12 @@ public class PairView extends RelativeLayout {
         super(context);
     }
 
+    @AfterViews
+    void init()
+    {
+        //subjectTextView.setTypeface(Typeface.create("sans-serif-light", Typeface.NORMAL));
+    }
+
     public void setPair(Pair pair) {
         switch (pair.getThing().getType()) {
             case GROUP:
@@ -53,6 +60,11 @@ public class PairView extends RelativeLayout {
                 teacherTextView.setText(pair.getTeacher());
                 break;
         }
+
+        if (teacherTextView.getText().equals(""))
+        {
+            teacherTextView.setVisibility(GONE);
+        } else teacherTextView.setVisibility(VISIBLE);
 
         pairTypeTextView.setText(pair.getType());
         subjectTextView.setText(pair.getSubject());

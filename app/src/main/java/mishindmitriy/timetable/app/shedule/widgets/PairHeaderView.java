@@ -1,7 +1,6 @@
 package mishindmitriy.timetable.app.shedule.widgets;
 
 import android.content.Context;
-import android.view.View;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
@@ -21,28 +20,22 @@ import mishindmitriy.timetable.utils.DateUtils;
 public class PairHeaderView extends RelativeLayout {
     @ViewById(R.id.day_of_week)
     protected TextView dayOfWeekTextView;
-    @ViewById(R.id.today)
-    protected TextView todayTextView;
     @ViewById(R.id.date)
     protected TextView dateTextView;
+    @ViewById(R.id.layout)
+    protected RelativeLayout layout;
 
     public PairHeaderView(Context context) {
         super(context);
     }
 
-    public void setDate(Date date, boolean setToday) {
-        dateTextView.setText(DateFormatter.DateToString(date));
+    public void setDate(Date date) {
         String dayOfWeek = DateUtils.getDayOfWeek(date);
         String today = DateFormatter.DateToString(new Date());
-        if (//!setToday ||
-             !today.equals(DateFormatter.DateToString(date)))
-        {
-            todayTextView.setVisibility(View.GONE);
-        } else {
-            setBackgroundResource(R.color.select);
-            requestLayout();
-            todayTextView.setVisibility(View.VISIBLE);
-        }
         dayOfWeekTextView.setText(dayOfWeek);
+        dateTextView.setText(DateFormatter.DateToString(date));
+        if (today.equals(DateFormatter.DateToString(date))) {
+            layout.setBackgroundColor(getResources().getColor(R.color.select));
+        }
     }
 }

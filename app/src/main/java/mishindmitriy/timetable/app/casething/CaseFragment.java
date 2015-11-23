@@ -1,14 +1,19 @@
 package mishindmitriy.timetable.app.casething;
 
+import android.content.Context;
+import android.graphics.PorterDuff;
+import android.graphics.drawable.Drawable;
 import android.support.v4.app.Fragment;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 
 import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.Click;
@@ -65,13 +70,15 @@ public class CaseFragment extends Fragment implements CaseThingModel.Observer {
 
     @AfterViews
     public void init() {
-        switch (mWhatCase)
-        {
-            case GROUP: filterText.setHint("Введите номер группы");
+        switch (mWhatCase) {
+            case GROUP:
+                filterText.setHint("Введите номер группы");
                 break;
-            case TEACHER:filterText.setHint("Введите фамилию преподавателя");
+            case TEACHER:
+                filterText.setHint("Введите фамилию преподавателя");
                 break;
-            case CLASSROOM: filterText.setHint("Введите номер аудитории");
+            case CLASSROOM:
+                filterText.setHint("Введите номер аудитории");
                 break;
         }
         setRetainInstance(true);
@@ -95,7 +102,7 @@ public class CaseFragment extends Fragment implements CaseThingModel.Observer {
 
     @Override
     public void onLoadFinished(List<Thing> listThings) {
-        this.adapter = new ArrayAdapter<>(this.getActivity(), R.layout.item_thing, listThings);
+        this.adapter = new CaseAdapter(this.getActivity(), R.layout.item_thing, listThings);
         this.adapter.getFilter().filter(this.filterText.getText());
         listView.setAdapter(adapter);
         this.mProgressBar.setVisibility(View.INVISIBLE);
@@ -123,5 +130,30 @@ public class CaseFragment extends Fragment implements CaseThingModel.Observer {
         this.mCaseModel.stopLoad();
         this.mCaseModel.unregisterObserver(this);
         super.onDestroy();
+    }
+
+    private class CaseAdapter extends ArrayAdapter<Thing> {
+        public CaseAdapter(Context context, int resource, List<Thing> objects) {
+            super(context, resource, objects);
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            TextView t = (TextView) super.getView(position, convertView, parent);
+            if (getItem(position).isFavorite()) {
+                Drawable grade;
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+                    grade = getResources().getDrawable(R.drawable.ic_grade_white_48dp, getActivity().getTheme());
+                    if (grade!=null) grade.setColorFilter(getResources().getColor(R.color.select), PorterDuff.Mode.MULTIPLY);
+                } else {
+                    grade = getResources().getDrawable(R.drawable.ic_grade_white_48dp);
+                    if (grade!=null) grade.setColorFilter(getResources().getColor(R.color.select), PorterDuff.Mode.MULTIPLY);
+                }
+                t.setCompoundDrawablesWithIntrinsicBounds(grade,null,null,null);
+            } else {
+                t.setCompoundDrawablesWithIntrinsicBounds(null,null,null,null);
+            }
+            return t;
+        }
     }
 }

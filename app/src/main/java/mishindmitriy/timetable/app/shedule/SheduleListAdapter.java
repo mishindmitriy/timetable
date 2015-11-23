@@ -21,15 +21,10 @@ import se.emilsjolander.stickylistheaders.StickyListHeadersAdapter;
 public class SheduleListAdapter extends BaseAdapter implements StickyListHeadersAdapter {
     private final Activity mContext;
     private List<Pair> shedule;
-    private boolean setToday=false;
 
     public SheduleListAdapter(Activity context, List<Pair> shedule) {
         this.mContext = context;
         this.shedule = shedule;
-    }
-
-    public void setSetToday(boolean setToday) {
-        this.setToday = setToday;
     }
 
     public void setData(List<Pair> shedule) {
@@ -66,7 +61,7 @@ public class SheduleListAdapter extends BaseAdapter implements StickyListHeaders
     @Override
     public View getHeaderView(int position, View convertView, ViewGroup parent) {
         PairHeaderView headerView=PairHeaderView_.build(mContext);
-        headerView.setDate(this.shedule.get(position).getDate(),setToday);
+        headerView.setDate(this.shedule.get(position).getDate());
         return headerView;
     }
 

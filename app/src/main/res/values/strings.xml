@@ -13,6 +13,7 @@
     <string name="CaseGroup">Выбрать группу</string>
     <string name="Refresh">Обновить</string>
     <string name="congratulations">Поздравляем! На выбранный период занятий нет</string>
+    <string name="load_error">"Ошибка загрузки"</string>
 
     <string name="title_activity_case">CaseActivity</string>
 

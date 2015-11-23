@@ -4,5 +4,5 @@
     <item name="teal500" type="color">#009688</item>
     <item name="teal800" type="color">#00695C</item>
     <item name="teal50" type="color">#E0F2F1</item>
-    <item name="select" type="color">#beffbb33</item>
+    <item name="select" type="color">#ffbb33</item>
 </resources>

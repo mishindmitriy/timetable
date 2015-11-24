@@ -10,8 +10,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.concurrent.Callable;
 
-import mishindmitriy.timetable.model.data.Pair;
-import mishindmitriy.timetable.model.data.Thing;
+import mishindmitriy.timetable.model.data.entity.Pair;
+import mishindmitriy.timetable.model.data.entity.Thing;
 
 /**
  * Created by mishindmitriy on 21.11.2015.

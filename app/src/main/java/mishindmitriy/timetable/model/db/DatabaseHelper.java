@@ -11,9 +11,9 @@ import com.j256.ormlite.table.TableUtils;
 
 import java.sql.SQLException;
 
-import mishindmitriy.timetable.model.data.Config;
-import mishindmitriy.timetable.model.data.Pair;
-import mishindmitriy.timetable.model.data.Thing;
+import mishindmitriy.timetable.model.data.entity.Config;
+import mishindmitriy.timetable.model.data.entity.Pair;
+import mishindmitriy.timetable.model.data.entity.Thing;
 
 /**
  * Created by mishindmitriy on 21.11.2015.

@@ -1,8 +1,10 @@
-package mishindmitriy.timetable.model.data;
+package mishindmitriy.timetable.model.data.entity;
 
 import com.j256.ormlite.field.DataType;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
+
+import mishindmitriy.timetable.model.data.PeriodType;
 
 /**
  * Created by mishindmitriy on 22.11.2015.

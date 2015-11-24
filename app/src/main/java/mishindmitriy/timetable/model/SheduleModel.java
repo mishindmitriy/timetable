@@ -10,12 +10,12 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
-import mishindmitriy.timetable.model.data.Config;
-import mishindmitriy.timetable.model.data.Pair;
 import mishindmitriy.timetable.model.data.PeriodType;
 import mishindmitriy.timetable.model.data.PeriodTypeConverter;
-import mishindmitriy.timetable.model.data.Thing;
 import mishindmitriy.timetable.model.data.ThingType;
+import mishindmitriy.timetable.model.data.entity.Config;
+import mishindmitriy.timetable.model.data.entity.Pair;
+import mishindmitriy.timetable.model.data.entity.Thing;
 import mishindmitriy.timetable.model.db.ConfigDAO;
 import mishindmitriy.timetable.model.db.DatabaseHelper;
 import mishindmitriy.timetable.model.db.PairDAO;

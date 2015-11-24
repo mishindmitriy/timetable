@@ -5,7 +5,7 @@ import com.j256.ormlite.support.ConnectionSource;
 
 import java.sql.SQLException;
 
-import mishindmitriy.timetable.model.data.Config;
+import mishindmitriy.timetable.model.data.entity.Config;
 
 /**
  * Created by mishindmitriy on 22.11.2015.

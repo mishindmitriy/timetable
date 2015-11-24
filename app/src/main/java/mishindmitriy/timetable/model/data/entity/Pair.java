@@ -1,4 +1,4 @@
-package mishindmitriy.timetable.model.data;
+package mishindmitriy.timetable.model.data.entity;
 
 import com.j256.ormlite.field.DataType;
 import com.j256.ormlite.field.DatabaseField;

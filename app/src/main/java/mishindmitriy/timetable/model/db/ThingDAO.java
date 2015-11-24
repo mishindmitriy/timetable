@@ -9,8 +9,8 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.concurrent.Callable;
 
-import mishindmitriy.timetable.model.data.Thing;
 import mishindmitriy.timetable.model.data.ThingType;
+import mishindmitriy.timetable.model.data.entity.Thing;
 
 /**
  * Created by mishindmitriy on 22.11.2015.

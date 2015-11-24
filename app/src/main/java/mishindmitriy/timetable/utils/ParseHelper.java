@@ -12,7 +12,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.util.ArrayList;
@@ -25,10 +24,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import mishindmitriy.timetable.model.data.DateFormatter;
-import mishindmitriy.timetable.model.data.Pair;
-import mishindmitriy.timetable.model.data.Thing;
 import mishindmitriy.timetable.model.data.ThingType;
 import mishindmitriy.timetable.model.data.ThingTypeConverter;
+import mishindmitriy.timetable.model.data.entity.Pair;
+import mishindmitriy.timetable.model.data.entity.Thing;
 
 /**
  * Created by dmitriy on 21.05.15.

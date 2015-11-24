@@ -49,8 +49,8 @@ import mishindmitriy.timetable.R;
 import mishindmitriy.timetable.app.casething.CaseActivity_;
 import mishindmitriy.timetable.model.SheduleModel;
 import mishindmitriy.timetable.model.SheduleWorkerFragment;
-import mishindmitriy.timetable.model.data.Pair;
-import mishindmitriy.timetable.model.data.Thing;
+import mishindmitriy.timetable.model.data.entity.Pair;
+import mishindmitriy.timetable.model.data.entity.Thing;
 import mishindmitriy.timetable.utils.FrendlyDeviceNameUtil;
 import se.emilsjolander.stickylistheaders.StickyListHeadersListView;
 
@@ -107,8 +107,8 @@ public class SheduleActivity extends AppCompatActivity
     }
 
     private boolean canUpdate() {
-        if (lastUpdate==null) return true;
-        return (new Date().getTime()-lastUpdate.getTime())>3600000.0; //one hour
+        if (lastUpdate == null) return true;
+        return (new Date().getTime() - lastUpdate.getTime()) > 3600000.0; //one hour
     }
 
     @AfterViews
@@ -181,8 +181,8 @@ public class SheduleActivity extends AppCompatActivity
         {
             // setThing spinner
             spinner.setAdapter(ArrayAdapter.createFromResource(this, R.array.menu_array, R.layout.spinner_item));
-            spinner.setOnItemSelectedListener(this);
             spinner.setSelection(mSheduleModel.getPeriodPosition());
+            spinner.setOnItemSelectedListener(this);
         }
 
         mSheduleAdapter = new SheduleListAdapter(this, mSheduleModel.getShedule());
@@ -191,11 +191,12 @@ public class SheduleActivity extends AppCompatActivity
         refreshFavorites();
 
         if (mSheduleModel.isWorking()) onLoadStarted();
+
+        loadDataWithChecks();
     }
 
     @OptionsItem(R.id.case_button)
-    void caseClick()
-    {
+    void caseClick() {
         CaseActivity_.intent(this).start();
         mDrawerLayout.closeDrawers();
     }
@@ -226,7 +227,7 @@ public class SheduleActivity extends AppCompatActivity
     }
 
     @Override
-    public void onLoadFinished(List<Pair> shedule,boolean isCache) {
+    public void onLoadFinished(List<Pair> shedule, boolean isCache) {
         mSheduleAdapter.setData(shedule);
         mSwipeLayout.post(new Runnable() {
             @Override
@@ -234,14 +235,14 @@ public class SheduleActivity extends AppCompatActivity
                 mSwipeLayout.setRefreshing(false);
             }
         });
-        if (isCache) Snackbar.make(mSwipeLayout, getString(R.string.load_error), Snackbar.LENGTH_LONG).show();
+        if (isCache)
+            Snackbar.make(mSwipeLayout, getString(R.string.load_error), Snackbar.LENGTH_LONG).show();
         mListShedule.setSelection(0);
-        lastUpdate=new Date();
+        lastUpdate = new Date();
     }
 
     @OptionsItem(R.id.refresh_icon)
-    void refreshIconClick()
-    {
+    void refreshIconClick() {
         mSheduleModel.loadData();
     }
 
@@ -257,20 +258,20 @@ public class SheduleActivity extends AppCompatActivity
 
     @Override
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-        mSheduleModel.setPeriod(position);
-        loadDataWithChecks();
+        if (position != mSheduleModel.getPeriodPosition()) {
+            mSheduleModel.setPeriod(position);
+            mSheduleModel.loadData();
+        }
     }
 
-    private void loadDataWithChecks()
-    {
+    private void loadDataWithChecks() {
         if (!mSheduleModel.isWorking() && canUpdate()) {
             mSheduleModel.loadData();
         }
     }
 
     @Click(R.id.icon_add_favorite)
-    void addToFavorites()
-    {
+    void addToFavorites() {
         mSheduleModel.setFavorites(!mSheduleModel.isFavorites());
         refreshFavorites();
     }
@@ -286,14 +287,13 @@ public class SheduleActivity extends AppCompatActivity
     }
 
     private void refreshFavorites() {
-        favoritesListView.setAdapter(new FavoritesAdapter(this,R.layout.item_thing,mSheduleModel.getFavoritesThings()));
+        favoritesListView.setAdapter(new FavoritesAdapter(this, R.layout.item_thing, mSheduleModel.getFavoritesThings()));
         setFavoritesIcon();
     }
 
     @ItemClick(R.id.list_favorites_thing)
-    protected void favoritesClick(Thing thing)
-    {
-        if (thing.getId()!=mSheduleModel.getCurrentThing().getId()) {
+    protected void favoritesClick(Thing thing) {
+        if (thing.getId() != mSheduleModel.getCurrentThing().getId()) {
             mSheduleModel.setThing(thing);
             currentThingTextView.setText(thing.getName());
             mSheduleAdapter.setData(new ArrayList<Pair>());
@@ -307,23 +307,6 @@ public class SheduleActivity extends AppCompatActivity
 
     }
 
-    private class FavoritesAdapter extends ArrayAdapter<Thing>
-    {
-        public FavoritesAdapter(Context context, int resource, List<Thing> objects) {
-            super(context, resource, objects);
-        }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            View v=super.getView(position, convertView, parent);
-            if (getItem(position).getId()==mSheduleModel.getCurrentThing().getId())
-            {
-                favoritesListView.setItemChecked(position,true);
-            }
-            return v;
-        }
-    }
-
     @Override
     public void onBackPressed() {
         if (mDrawerLayout.isDrawerOpen(GravityCompat.START)) {
@@ -334,13 +317,12 @@ public class SheduleActivity extends AppCompatActivity
     }
 
     @Click(R.id.feedback)
-    void feedbackClick()
-    {
+    void feedbackClick() {
         try {
             final Intent emailIntent = new Intent(android.content.Intent.ACTION_SEND);
             emailIntent.setType("plain/text");
-            emailIntent.putExtra(android.content.Intent.EXTRA_EMAIL, new String[]{"info@clutchpoints.com"});
-            emailIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, getResources().getString(R.string.title_feedback_email));
+            emailIntent.putExtra(android.content.Intent.EXTRA_EMAIL, new String[]{"mishin.dmitriy@gmail.com"});
+            emailIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, "Отзыв по приложению расписание ПВГУС");
             emailIntent.putExtra(
                     Intent.EXTRA_TEXT,
                     String.format("\n\n\n %s \n Android %s \n Расписание ПВГУС %d",
@@ -354,8 +336,7 @@ public class SheduleActivity extends AppCompatActivity
     }
 
     @Click(R.id.rate)
-    void rateClick()
-    {
+    void rateClick() {
         try {
             startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + getPackageName())));
         } catch (ActivityNotFoundException e) {
@@ -367,6 +348,21 @@ public class SheduleActivity extends AppCompatActivity
             } catch (ActivityNotFoundException ex) {
                 Toast.makeText(this, String.valueOf(R.string.action_not_possible), Toast.LENGTH_LONG).show();
             }
+        }
+    }
+
+    private class FavoritesAdapter extends ArrayAdapter<Thing> {
+        public FavoritesAdapter(Context context, int resource, List<Thing> objects) {
+            super(context, resource, objects);
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            View v = super.getView(position, convertView, parent);
+            if (getItem(position).getId() == mSheduleModel.getCurrentThing().getId()) {
+                favoritesListView.setItemChecked(position, true);
+            }
+            return v;
         }
     }
 }

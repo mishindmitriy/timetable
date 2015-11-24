@@ -8,8 +8,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import mishindmitriy.timetable.model.data.Thing;
 import mishindmitriy.timetable.model.data.ThingType;
+import mishindmitriy.timetable.model.data.entity.Thing;
 import mishindmitriy.timetable.model.db.DatabaseHelper;
 import mishindmitriy.timetable.model.db.ThingDAO;
 import mishindmitriy.timetable.utils.ParseHelper;

@@ -9,8 +9,8 @@ import org.androidannotations.annotations.EViewGroup;
 import org.androidannotations.annotations.ViewById;
 
 import mishindmitriy.timetable.R;
-import mishindmitriy.timetable.model.data.Pair;
 import mishindmitriy.timetable.model.data.PairsTimeConverter;
+import mishindmitriy.timetable.model.data.entity.Pair;
 import mishindmitriy.timetable.utils.DateUtils;
 
 /**

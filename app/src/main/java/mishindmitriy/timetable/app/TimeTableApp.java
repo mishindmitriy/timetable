@@ -3,6 +3,8 @@ package mishindmitriy.timetable.app;
 import android.app.Application;
 import android.os.StrictMode;
 
+import com.j256.ormlite.android.apptools.OpenHelperManager;
+
 import mishindmitriy.timetable.BuildConfig;
 import mishindmitriy.timetable.model.db.DatabaseHelper;
 import mishindmitriy.timetable.utils.AnalyticsTrackers;
@@ -26,7 +28,14 @@ public class TimeTableApp extends Application {
                     .build());
         }
         AnalyticsTrackers.initialize(this);
-        super.onCreate();
         DatabaseHelper.init(getApplicationContext());
+        super.onCreate();
+    }
+
+    @Override
+    public void onTerminate() {
+        super.onTerminate();
+        DatabaseHelper.getInstance().close();
+        OpenHelperManager.releaseHelper();
     }
 }

@@ -27,8 +27,8 @@ import java.util.List;
 import mishindmitriy.timetable.R;
 import mishindmitriy.timetable.app.shedule.SheduleActivity_;
 import mishindmitriy.timetable.model.CaseThingModel;
-import mishindmitriy.timetable.model.data.Thing;
 import mishindmitriy.timetable.model.data.ThingType;
+import mishindmitriy.timetable.model.data.entity.Thing;
 
 /**
  * Created by mishindmitriy on 14.09.2015.

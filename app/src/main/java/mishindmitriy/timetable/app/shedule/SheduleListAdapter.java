@@ -11,7 +11,7 @@ import mishindmitriy.timetable.app.shedule.widgets.PairHeaderView;
 import mishindmitriy.timetable.app.shedule.widgets.PairHeaderView_;
 import mishindmitriy.timetable.app.shedule.widgets.PairView;
 import mishindmitriy.timetable.app.shedule.widgets.PairView_;
-import mishindmitriy.timetable.model.data.Pair;
+import mishindmitriy.timetable.model.data.entity.Pair;
 import se.emilsjolander.stickylistheaders.StickyListHeadersAdapter;
 
 /**
@@ -34,6 +34,7 @@ public class SheduleListAdapter extends BaseAdapter implements StickyListHeaders
 
     @Override
     public int getCount() {
+        if (shedule==null) return 0;
         return this.shedule.size();
     }
 

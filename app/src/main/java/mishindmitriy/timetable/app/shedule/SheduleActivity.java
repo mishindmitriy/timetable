@@ -1,12 +1,17 @@
 package mishindmitriy.timetable.app.shedule;
 
+import android.content.ActivityNotFoundException;
 import android.content.Context;
+import android.content.Intent;
 import android.content.res.Configuration;
 import android.graphics.Color;
 import android.graphics.Typeface;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
+import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v4.widget.SwipeRefreshLayout.OnRefreshListener;
@@ -22,6 +27,7 @@ import android.widget.ListView;
 import android.widget.ScrollView;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.Click;
@@ -38,12 +44,14 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import mishindmitriy.timetable.BuildConfig;
 import mishindmitriy.timetable.R;
 import mishindmitriy.timetable.app.casething.CaseActivity_;
 import mishindmitriy.timetable.model.SheduleModel;
 import mishindmitriy.timetable.model.SheduleWorkerFragment;
 import mishindmitriy.timetable.model.data.Pair;
 import mishindmitriy.timetable.model.data.Thing;
+import mishindmitriy.timetable.utils.FrendlyDeviceNameUtil;
 import se.emilsjolander.stickylistheaders.StickyListHeadersListView;
 
 @EActivity(R.layout.activity_shedule)
@@ -95,9 +103,7 @@ public class SheduleActivity extends AppCompatActivity
     @Override
     protected void onResume() {
         super.onResume();
-        if (!mSheduleModel.isWorking() && canUpdate()) {
-            mSheduleModel.loadData();
-        }
+        loadDataWithChecks();
     }
 
     private boolean canUpdate() {
@@ -252,7 +258,14 @@ public class SheduleActivity extends AppCompatActivity
     @Override
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
         mSheduleModel.setPeriod(position);
-        mSheduleModel.loadData();
+        loadDataWithChecks();
+    }
+
+    private void loadDataWithChecks()
+    {
+        if (!mSheduleModel.isWorking() && canUpdate()) {
+            mSheduleModel.loadData();
+        }
     }
 
     @Click(R.id.icon_add_favorite)
@@ -308,6 +321,52 @@ public class SheduleActivity extends AppCompatActivity
                 favoritesListView.setItemChecked(position,true);
             }
             return v;
+        }
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (mDrawerLayout.isDrawerOpen(GravityCompat.START)) {
+            mDrawerLayout.closeDrawers();
+        } else {
+            super.onBackPressed();
+        }
+    }
+
+    @Click(R.id.feedback)
+    void feedbackClick()
+    {
+        try {
+            final Intent emailIntent = new Intent(android.content.Intent.ACTION_SEND);
+            emailIntent.setType("plain/text");
+            emailIntent.putExtra(android.content.Intent.EXTRA_EMAIL, new String[]{"info@clutchpoints.com"});
+            emailIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, getResources().getString(R.string.title_feedback_email));
+            emailIntent.putExtra(
+                    Intent.EXTRA_TEXT,
+                    String.format("\n\n\n %s \n Android %s \n Расписание ПВГУС %d",
+                            FrendlyDeviceNameUtil.getDeviceName(),
+                            Build.VERSION.RELEASE,
+                            BuildConfig.VERSION_CODE));
+            startActivity(Intent.createChooser(emailIntent, getResources().getString(R.string.title_intent_send_mail)));
+        } catch (ActivityNotFoundException e) {
+            Toast.makeText(this, String.valueOf(R.string.action_not_possible), Toast.LENGTH_LONG).show();
+        }
+    }
+
+    @Click(R.id.rate)
+    void rateClick()
+    {
+        try {
+            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + getPackageName())));
+        } catch (ActivityNotFoundException e) {
+            try {
+                String url = "https://play.google.com/store/apps/details?id=" + getPackageName();
+                Intent i = new Intent(Intent.ACTION_VIEW);
+                i.setData(Uri.parse(url));
+                startActivity(i);
+            } catch (ActivityNotFoundException ex) {
+                Toast.makeText(this, String.valueOf(R.string.action_not_possible), Toast.LENGTH_LONG).show();
+            }
         }
     }
 }

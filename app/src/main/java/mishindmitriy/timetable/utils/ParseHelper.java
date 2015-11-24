@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.util.ArrayList;
@@ -36,54 +37,74 @@ public class ParseHelper {
     public static final String URL = "http://www.tolgas.ru/services/raspisanie/";
     private static final String TAG = "TolgasModel";
 
-    private static String doQuery(String inpupUrl, @Nullable Map<String, String> valuesPairs) throws IOException {
-        URL url = new URL(inpupUrl);
-        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-        connection.setConnectTimeout(5000);
-        connection.setReadTimeout(5000);
-        if (valuesPairs != null) //значит делаем POST запрос
-        {
-            connection.setDoOutput(true);
-            PrintWriter out = new PrintWriter(connection.getOutputStream());
-            boolean first = true; //чтобы & не поставить перед переменными
-            for (Map.Entry<String, String> pair : valuesPairs.entrySet()) {
-                if (first) first = false;
-                else out.print('&');
-                String name = pair.getKey();
-                String value = pair.getValue();
-                out.print(name);
-                out.print('=');
-                out.print(URLEncoder.encode(value, "windows-1251"));
+    private static String doQuery(String inpupUrl, @Nullable Map<String, String> valuesPairs) throws IOException{
+
+        String html="";
+        HttpURLConnection connection=null;
+        try {
+            URL url = new URL(inpupUrl);
+            connection = (HttpURLConnection) url.openConnection();
+            connection.setConnectTimeout(5000);
+            connection.setReadTimeout(5000);
+            if (valuesPairs != null) //значит делаем POST запрос
+            {
+                connection.setDoOutput(true);
+                PrintWriter out = new PrintWriter(connection.getOutputStream());
+                boolean first = true; //чтобы & не поставить перед переменными
+                for (Map.Entry<String, String> pair : valuesPairs.entrySet()) {
+                    if (first) first = false;
+                    else out.print('&');
+                    String name = pair.getKey();
+                    String value = pair.getValue();
+                    out.print(name);
+                    out.print('=');
+                    out.print(URLEncoder.encode(value, "windows-1251"));
+                }
+                out.close();
+                connection.getOutputStream().close();
             }
-            out.close();
-        }
-        connection.connect();
-        int status = connection.getResponseCode();
-        BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream(), "windows-1251"));
-        if (status != 200) {
-            throw new IOException("query failed with error code " + status);
-        }
+            connection.connect();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream(), "windows-1251"));
 
-        StringBuilder buf = new StringBuilder();
-        String line;
+            int status = connection.getResponseCode();
+            if (status != 200) {
+                throw new IOException("query failed with error code " + status);
+            }
 
-        while ((line = reader.readLine()) != null) {
-            buf.append(line);
+            StringBuilder buf = new StringBuilder();
+            String line;
+
+            while ((line = reader.readLine()) != null) {
+                buf.append(line);
+            }
+
+            reader.close();
+            connection.getInputStream().close();
+
+
+            html = buf.toString();
         }
-
-        reader.close();
-        connection.disconnect();
-        String html=buf.toString();
-        validateHtml(html);
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+        finally {
+            if (connection!=null) connection.disconnect();
+            validateHtml(html);
+        }
         return html;
     }
 
     private static List<Pair> mappingListPairs(String html,Thing thing)
     {
-        Document doc = Jsoup.parse(html);
-        Element table = doc.select("table[class=table][id=send]").first();
-        Iterator<Element> iterator = table.select("td[class=hours]").iterator();
         List<Pair> pairs=new ArrayList<>();
+        if (html==null || html.length()==0) return pairs;
+        Document doc = Jsoup.parse(html);
+        if (doc==null) return pairs;
+        Element table = doc.select("table[class=table][id=send]").first();
+        if (table==null) return pairs;
+        Iterator<Element> iterator = table.select("td[class=hours]").iterator();
+        if (iterator==null) return pairs;
         Date date=null;
         while (iterator.hasNext())
         {
@@ -121,9 +142,9 @@ public class ParseHelper {
 
     private static void validateHtml(String html) throws IOException {
         CharSequence uniqueString="Вопросы по телефону: 22-13-97 – отдел организации учебного процесса";
-        if (!html.contains(uniqueString)) throw new IOException("html code was replaced");
+        if (!html.contains(uniqueString)) throw new IOException("html code not correct");
         uniqueString="Выберите диапазон даты для отображения расписания";
-        if (!html.contains(uniqueString)) throw new IOException("html code was replaced");
+        if (!html.contains(uniqueString)) throw new IOException("html code not correct");
     }
 
     private static String sendPostToGetShedule(String thingTypeId, String thingId,

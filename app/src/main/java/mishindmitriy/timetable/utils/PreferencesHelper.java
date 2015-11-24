@@ -8,6 +8,7 @@ import mishindmitriy.timetable.model.data.PeriodTypeConverter;
 /**
  * Created by mishindmitriy on 12.11.2015.
  */
+@Deprecated
 public class PreferencesHelper {
 
     public static final String APP_PREFERENCES = "timetable";

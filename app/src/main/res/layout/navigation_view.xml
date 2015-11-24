@@ -13,14 +13,13 @@
         <TextView
             android:id="@+id/current_thing_title"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="?attr/actionBarSize"
             android:layout_alignParentEnd="true"
             android:layout_alignParentRight="true"
             android:layout_gravity="center"
             android:layout_marginEnd="20dp"
             android:layout_marginRight="20dp"
             android:gravity="center"
-            android:minHeight="?attr/actionBarSize"
             android:padding="10dp"
             android:text="Номер группы"
             android:textColor="@android:color/white"
@@ -29,8 +28,8 @@
 
         <ImageView
             android:id="@+id/icon_add_favorite"
-            android:layout_width="60dp"
-            android:layout_height="60dp"
+            android:layout_width="?attr/actionBarSize"
+            android:layout_height="?attr/actionBarSize"
             android:layout_alignParentLeft="true"
             android:layout_alignParentStart="true"
             android:layout_centerVertical="true"
@@ -42,8 +41,23 @@
     <ListView
         android:id="@+id/list_favorites_thing"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_gravity="center"
+        android:layout_height="0px"
+        android:layout_weight="1"
         android:foregroundGravity="center" />
-
+    <TextView
+        android:id="@+id/rate"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:text="Оценить"
+        android:gravity="center"
+        android:textColor="@android:color/white"
+        android:background="@color/teal500"/>
+    <TextView
+        android:id="@+id/feedback"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:text="Отправить отзыв"
+        android:gravity="center"
+        android:textColor="@android:color/white"
+        android:background="@color/teal500"/>
 </LinearLayout>

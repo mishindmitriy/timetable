@@ -19,7 +19,7 @@ android {
         applicationId "mishindmitriy.timetable.phone"
         minSdkVersion 10
         targetSdkVersion 23
-        versionCode 7
+        versionCode 10
         versionName '1.2'
     }
     buildTypes {

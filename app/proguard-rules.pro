@@ -61,3 +61,15 @@ public *;
 -keepclassmembers enum com.j256.** { *; }
 -keep interface com.j256.**
 -keepclassmembers interface com.j256.** { *; }
+
+#We are not done yet, add the following as well.
+-keepclassmembers class * {
+    public <init>(android.content.Context);
+ }
+
+-keepattributes *Annotation*
+
+#Only if the above haven't fixed then, go with keeping your db class files and its members.
+#In your case, that would be
+-keep class mishindmitriy.timetable.model.data.entity.**
+-keepclassmembers class mishindmitriy.timetable.model.data.entity.** { *; }

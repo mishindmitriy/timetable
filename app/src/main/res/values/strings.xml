@@ -17,7 +17,6 @@
 
     <string name="title_activity_case">CaseActivity</string>
     <string name="action_not_possible">Действие не возможно</string>
-    <string name="title_feedback_email">mishin.dmitriy@gmail.com</string>
     <string name="title_intent_send_mail">Отправка отзыва</string>
 
     <string-array name="menu_array">

@@ -19,6 +19,7 @@ import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.Click;
 import org.androidannotations.annotations.EFragment;
 import org.androidannotations.annotations.FragmentArg;
+import org.androidannotations.annotations.InstanceState;
 import org.androidannotations.annotations.ItemClick;
 import org.androidannotations.annotations.ViewById;
 
@@ -48,6 +49,8 @@ public class CaseFragment extends Fragment implements CaseThingModel.Observer {
     protected ProgressBar mProgressBar;
     @ViewById(R.id.listView)
     protected ListView listView;
+    @InstanceState
+    boolean instanceState;
 
     private CaseThingModel mCaseModel;
     private ArrayAdapter<Thing> adapter;
@@ -85,8 +88,11 @@ public class CaseFragment extends Fragment implements CaseThingModel.Observer {
         this.mCaseModel = new CaseThingModel(mWhatCase);
         this.mCaseModel.registerObserver(this);
         if (mCaseModel.isWorking()) onLoadStarted();
-        else this.mCaseModel.loadData();
+        else {
+            if (!instanceState) this.mCaseModel.loadData();
+        }
         this.filterText.addTextChangedListener(this.filterTextWatcher);
+        instanceState=true;
     }
 
     @ItemClick(R.id.listView)

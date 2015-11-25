@@ -3,8 +3,10 @@ package mishindmitriy.timetable.app;
 import android.app.Application;
 import android.os.StrictMode;
 
+import com.crashlytics.android.Crashlytics;
 import com.j256.ormlite.android.apptools.OpenHelperManager;
 
+import io.fabric.sdk.android.Fabric;
 import mishindmitriy.timetable.BuildConfig;
 import mishindmitriy.timetable.model.db.DatabaseHelper;
 import mishindmitriy.timetable.utils.AnalyticsTrackers;
@@ -17,6 +19,9 @@ public class TimeTableApp extends Application {
 
     @Override
     public void onCreate() {
+        if (!BuildConfig.DEBUG) {
+            Fabric.with(this, new Crashlytics());
+        }
         if (BuildConfig.DEBUG) {
             StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder()
                     .detectAll()

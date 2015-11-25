@@ -29,6 +29,9 @@
             android:name=".app.casething.CaseActivity_"
             android:label="@string/title_activity_case">
         </activity>
+        <meta-data
+            android:name="io.fabric.ApiKey"
+            android:value="2d22a494fc2ac3e93047f01c673d690fd1948c2b" />
     </application>
 
 </manifest>

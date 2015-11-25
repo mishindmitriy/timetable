@@ -287,7 +287,9 @@ public class SheduleActivity extends AppCompatActivity
     }
 
     private void refreshFavorites() {
-        favoritesListView.setAdapter(new FavoritesAdapter(this, R.layout.item_thing, mSheduleModel.getFavoritesThings()));
+        List<Thing> favorites=mSheduleModel.getFavoritesThings();
+        if (favorites==null) favorites=new ArrayList<>();
+        favoritesListView.setAdapter(new FavoritesAdapter(this, R.layout.item_thing, favorites));
         setFavoritesIcon();
     }
 

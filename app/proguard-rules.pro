@@ -54,6 +54,10 @@
 public *;
 }
 
+# fabric
+-keep class com.crashlytics.** { *; }
+-keep class com.crashlytics.android.**
+
 # OrmLite uses reflection
 -keep class com.j256.**
 -keepclassmembers class com.j256.** { *; }
@@ -63,13 +67,15 @@ public *;
 -keepclassmembers interface com.j256.** { *; }
 
 #We are not done yet, add the following as well.
--keepclassmembers class * {
-    public <init>(android.content.Context);
- }
+#-keepclassmembers class * {
+#    public <init>(android.content.Context);
+# }
 
--keepattributes *Annotation*
+#-keepattributes *Annotation*
 
 #Only if the above haven't fixed then, go with keeping your db class files and its members.
 #In your case, that would be
--keep class mishindmitriy.timetable.model.data.entity.**
--keepclassmembers class mishindmitriy.timetable.model.data.entity.** { *; }
+#-keep class mishindmitriy.timetable.model.data.entity.**
+#-keepclassmembers class mishindmitriy.timetable.model.data.entity.** { *; }
+
+

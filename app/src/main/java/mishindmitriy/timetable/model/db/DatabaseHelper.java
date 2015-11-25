@@ -25,7 +25,7 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
     private static final String DATABASE_NAME = "tolgas.db";
     //с каждым увеличением версии, при нахождении в устройстве БД с предыдущей версией будет выполнен метод onUpgrade();
     private static final int DATABASE_VERSION = 1;
-    private static DatabaseHelper instance;
+
     //ссылки на DAO соответсвующие сущностям, хранимым в БД
     private PairDAO pairDao = null;
     private ThingDAO thingGao = null;
@@ -33,14 +33,6 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
 
     public DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
-    }
-
-    public static void init(Context context) {
-        instance = OpenHelperManager.getHelper(context, DatabaseHelper.class);
-    }
-
-    public static DatabaseHelper getInstance() {
-        return instance;
     }
 
     //Выполняется, когда файл с БД не найден на устройстве

@@ -18,6 +18,7 @@ import mishindmitriy.timetable.model.data.entity.Pair;
 import mishindmitriy.timetable.model.data.entity.Thing;
 import mishindmitriy.timetable.model.db.ConfigDAO;
 import mishindmitriy.timetable.model.db.DatabaseHelper;
+import mishindmitriy.timetable.model.db.HelperFactory;
 import mishindmitriy.timetable.model.db.PairDAO;
 import mishindmitriy.timetable.utils.ParseHelper;
 
@@ -52,7 +53,7 @@ public class SheduleModel {
     public void setFavorites(boolean flag) {
         config.getCurrentThing().setFavorite(flag);
         try {
-            DatabaseHelper.getInstance().getThingGAO().update(config.getCurrentThing());
+            HelperFactory.getInstance().getThingGAO().update(config.getCurrentThing());
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -61,7 +62,7 @@ public class SheduleModel {
     private void loadConfig()
     {
         try {
-            config=DatabaseHelper.getInstance().getConfigDAO().queryForId(1);
+            config=HelperFactory.getInstance().getConfigDAO().queryForId(1);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -69,7 +70,7 @@ public class SheduleModel {
         {
             config=new Config();
             try {
-                ConfigDAO dao=DatabaseHelper.getInstance().getConfigDAO();
+                ConfigDAO dao=HelperFactory.getInstance().getConfigDAO();
                 dao.create(config);
             } catch (SQLException e) {
                 e.printStackTrace();
@@ -79,7 +80,7 @@ public class SheduleModel {
 
     private void updateConfig() {
         try {
-            ConfigDAO dao=DatabaseHelper.getInstance().getConfigDAO();
+            ConfigDAO dao=HelperFactory.getInstance().getConfigDAO();
             dao.update(config);
         } catch (SQLException e) {
             e.printStackTrace();
@@ -218,7 +219,7 @@ public class SheduleModel {
     }
 
     private void saveCache() {
-        DatabaseHelper helper= DatabaseHelper.getInstance();
+        DatabaseHelper helper= HelperFactory.getInstance();
         try {
             helper.getPairDAO().saveListPairs(mShedule);
         } catch (SQLException e) {
@@ -229,7 +230,7 @@ public class SheduleModel {
     private void loadCache() {
         List<Pair> pairs=null;
         try {
-            PairDAO dao= DatabaseHelper.getInstance().getPairDAO();
+            PairDAO dao= HelperFactory.getInstance().getPairDAO();
             pairs=dao.loadListPairs(config.getCurrentThing(), getFromDate(), getToDate());
         } catch (SQLException e) {
             e.printStackTrace();
@@ -240,7 +241,7 @@ public class SheduleModel {
     public List<Thing> getFavoritesThings() {
         List<Thing> list=null;
         try {
-            list=DatabaseHelper.getInstance().getThingGAO().loadFavorites();
+            list=HelperFactory.getInstance().getThingGAO().loadFavorites();
         } catch (SQLException e) {
             e.printStackTrace();
         }

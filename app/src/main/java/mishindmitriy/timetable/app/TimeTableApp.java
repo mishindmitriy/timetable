@@ -9,6 +9,7 @@ import com.j256.ormlite.android.apptools.OpenHelperManager;
 import io.fabric.sdk.android.Fabric;
 import mishindmitriy.timetable.BuildConfig;
 import mishindmitriy.timetable.model.db.DatabaseHelper;
+import mishindmitriy.timetable.model.db.HelperFactory;
 import mishindmitriy.timetable.utils.AnalyticsTrackers;
 
 /**
@@ -16,7 +17,6 @@ import mishindmitriy.timetable.utils.AnalyticsTrackers;
  * TimeTable Application Class
  */
 public class TimeTableApp extends Application {
-
     @Override
     public void onCreate() {
         if (!BuildConfig.DEBUG) {
@@ -33,14 +33,13 @@ public class TimeTableApp extends Application {
                     .build());
         }
         AnalyticsTrackers.initialize(this);
-        DatabaseHelper.init(getApplicationContext());
+        HelperFactory.init(getApplicationContext());
         super.onCreate();
     }
 
     @Override
     public void onTerminate() {
+        HelperFactory.release();
         super.onTerminate();
-        DatabaseHelper.getInstance().close();
-        OpenHelperManager.releaseHelper();
     }
 }

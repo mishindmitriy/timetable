@@ -11,6 +11,7 @@ import java.util.List;
 import mishindmitriy.timetable.model.data.ThingType;
 import mishindmitriy.timetable.model.data.entity.Thing;
 import mishindmitriy.timetable.model.db.DatabaseHelper;
+import mishindmitriy.timetable.model.db.HelperFactory;
 import mishindmitriy.timetable.model.db.ThingDAO;
 import mishindmitriy.timetable.utils.ParseHelper;
 
@@ -63,7 +64,7 @@ public class CaseThingModel {
 
     private void saveCache() {
         try {
-            DatabaseHelper.getInstance().getThingGAO().saveListThings(mListThings);
+            HelperFactory.getInstance().getThingGAO().saveListThings(mListThings);
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -72,7 +73,7 @@ public class CaseThingModel {
     private void loadCache() {
         List<Thing> things=null;
         try {
-            ThingDAO dao= DatabaseHelper.getInstance().getThingGAO();
+            ThingDAO dao= HelperFactory.getInstance().getThingGAO();
             things=dao.loadListThings(mThingType);
         } catch (SQLException e) {
             e.printStackTrace();

@@ -1,5 +1,7 @@
 package mishindmitriy.timetable.model.db;
 
+import android.util.Log;
+
 import com.j256.ormlite.dao.BaseDaoImpl;
 import com.j256.ormlite.misc.TransactionManager;
 import com.j256.ormlite.stmt.QueryBuilder;
@@ -16,7 +18,7 @@ import mishindmitriy.timetable.model.data.entity.Thing;
  * Created by mishindmitriy on 22.11.2015.
  */
 public class ThingDAO extends BaseDaoImpl<Thing, Integer> {
-
+    private final static String TAG=ThingDAO.class.getSimpleName();
     protected ThingDAO(ConnectionSource connectionSource,
                        Class<Thing> dataClass) throws SQLException {
         super(connectionSource, dataClass);
@@ -27,15 +29,21 @@ public class ThingDAO extends BaseDaoImpl<Thing, Integer> {
         TransactionManager transactionManager = new TransactionManager(getConnectionSource());
         Callable transaction = new Callable() {
             @Override
-            public Void call() throws Exception {
+            public Void call() {
                 for (Thing thing : things) {
                     QueryBuilder<Thing, Integer> queryBuilder = queryBuilder();
-                    queryBuilder.where()
-                            .eq("serverId", thing.getServerId())
-                            .and()
-                            .eq("type", thing.getType());
-                    if (queryForFirst(queryBuilder.prepare()) == null) {
-                        ThingDAO.this.create(thing);
+                    try {
+                        queryBuilder.where()
+                                .eq("serverId", thing.getServerId())
+                                .and()
+                                .eq("type", thing.getType());
+
+                        if (queryForFirst(queryBuilder.prepare()) == null) {
+                            ThingDAO.this.create(thing);
+                        }
+                    } catch (SQLException e) {
+                        Log.e(TAG, "error select or insert thing " + thing.toString());
+                        throw new RuntimeException(e);
                     }
                 }
                 return null;

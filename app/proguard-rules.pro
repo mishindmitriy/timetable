@@ -16,27 +16,6 @@
 #   public *;
 #}
 
--keep public class * extends android.app.Activity
--keep public class * extends android.app.Application
--keep public class * extends android.app.Service
--keep public class * extends android.content.BroadcastReceiver
--keep public class * extends android.content.ContentProvider
--keep public class * extends android.app.backup.BackupAgentHelper
--keep public class * extends android.preference.Preference {
-    *;
-}
-
--keep public class * extends android.support.v4.app.Fragment
--keep public class * extends android.support.v7.preference.Preference {
-    *;
-}
--keep class android.support.** { *; }
-
--keepclassmembers enum * {
-    public static **[] values();
-    public static ** valueOf(java.lang.String);
-}
-
 # androidannotations
 -dontwarn org.springframework.**
 
@@ -65,17 +44,8 @@ public *;
 -keepclassmembers enum com.j256.** { *; }
 -keep interface com.j256.**
 -keepclassmembers interface com.j256.** { *; }
-
-#We are not done yet, add the following as well.
-#-keepclassmembers class * {
-#    public <init>(android.content.Context);
-# }
-
-#-keepattributes *Annotation*
-
-#Only if the above haven't fixed then, go with keeping your db class files and its members.
-#In your case, that would be
-#-keep class mishindmitriy.timetable.model.data.entity.**
-#-keepclassmembers class mishindmitriy.timetable.model.data.entity.** { *; }
-
-
+# my classes for ormlite
+-keep class mishindmitriy.timetable.model.db.** { *; }
+-keepclasseswithmembers class mishindmitriy.timetable.model.db.** { *; }
+-keep class mishindmitriy.timetable.model.data.entity.** { *; }
+-keepclasseswithmembers class mishindmitriy.timetable.model.data.entity.** { *; }

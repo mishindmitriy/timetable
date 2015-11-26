@@ -25,7 +25,7 @@ android {
         applicationId "mishindmitriy.timetable.phone"
         minSdkVersion 10
         targetSdkVersion 23
-        versionCode 12
+        versionCode 13
         versionName '1.2'
     }
     buildTypes {
@@ -41,10 +41,8 @@ dependencies {
     //compile fileTree(include: ['*.jar'], dir: 'libs')
     apt "org.androidannotations:androidannotations:$AAVersion"
     compile "org.androidannotations:androidannotations-api:$AAVersion"
-    compile 'com.android.support:appcompat-v7:23.1.1'
     compile 'com.google.android.gms:play-services-analytics:8.3.0'
     compile 'com.android.support:design:23.1.1'
-    compile 'com.android.support:support-v4:23.1.1'
     compile 'org.jsoup:jsoup:1.8.3'
     compile 'se.emilsjolander:stickylistheaders:2.7.0'
     compile 'com.j256.ormlite:ormlite-android:4.48'

@@ -2,6 +2,7 @@ package mishindmitriy.timetable.app;
 
 import android.app.Application;
 import android.os.StrictMode;
+import android.provider.ContactsContract;
 
 import com.crashlytics.android.Crashlytics;
 import com.j256.ormlite.android.apptools.OpenHelperManager;
@@ -19,6 +20,7 @@ import mishindmitriy.timetable.utils.AnalyticsTrackers;
 public class TimeTableApp extends Application {
     @Override
     public void onCreate() {
+        super.onCreate();
         if (!BuildConfig.DEBUG) {
             Fabric.with(this, new Crashlytics());
         }
@@ -32,9 +34,9 @@ public class TimeTableApp extends Application {
                     .penaltyLog()
                     .build());
         }
-        AnalyticsTrackers.initialize(this);
+        //AnalyticsTrackers.initialize(this);
+        //OpenHelperManager.setOpenHelperClass(DatabaseHelper.class);
         HelperFactory.init(getApplicationContext());
-        super.onCreate();
     }
 
     @Override

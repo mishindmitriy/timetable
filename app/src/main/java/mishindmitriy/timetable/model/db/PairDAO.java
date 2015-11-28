@@ -31,8 +31,8 @@ public class PairDAO extends BaseDaoImpl<Pair, Integer> {
                 for (Pair pair : pairs) {
                     QueryBuilder<Pair, Integer> queryBuilder = queryBuilder();
                     queryBuilder.where()
-                            //.eq("date", pair.getDate())
-                            //.and()
+                            .eq("date", pair.getDate())
+                            .and()
                             .eq("classroom", pair.getClassroom())
                             .and()
                             .eq("number", pair.getNumber())

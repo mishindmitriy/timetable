@@ -1,12 +1,10 @@
 <resources>
-    <string name="app_name">Расписание ПВГУС</string>
+    <string name="app_name">Расписание
+        ПВГУС</string>
 
     <string name="wait">Подождите</string>
     <string name="connToServ">Загрузка</string>
     <string name="action_caseGroup">Выбрать группу</string>
-    <string name="caseGroup">Выберите группу</string>
-    <string name="todayShedule">Расписание на сегодня</string>
-    <string name="title_activity_shedule">Расписание ПВГУС</string>
 
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
@@ -16,8 +14,11 @@
     <string name="load_error">"Ошибка загрузки"</string>
 
     <string name="title_activity_case">CaseActivity</string>
+    <string name="title_activity_shedule">Расписание ПВГУС</string>
     <string name="action_not_possible">Действие не возможно</string>
     <string name="title_intent_send_mail">Отправка отзыва</string>
+    <string name="rate">Оценить</string>
+    <string name="feedback">Отправить отзыв</string>
 
     <string-array name="menu_array">
         <item>Сегодня</item>

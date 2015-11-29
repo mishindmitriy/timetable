@@ -14,7 +14,8 @@
         android:theme="@style/AppTheme" >
         <activity
             android:name=".app.shedule.SheduleActivity_"
-            android:label="@string/title_activity_shedule">
+            android:label="@string/title_activity_shedule"
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -27,7 +28,8 @@
 
         <activity
             android:name=".app.casething.CaseActivity_"
-            android:label="@string/title_activity_case">
+            android:label="@string/title_activity_case"
+            android:screenOrientation="portrait">
         </activity>
         <meta-data
             android:name="io.fabric.ApiKey"

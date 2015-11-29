@@ -3,11 +3,11 @@
     android:id="@android:id/text1"
     style="?attr/spinnerDropDownItemStyle"
     android:layout_width="match_parent"
-    android:layout_height="?attr/dropdownListPreferredItemHeight"
-    android:background="@color/teal500"
+    android:layout_height="wrap_content"
+    android:background="@android:color/white"
     android:ellipsize="marquee"
     android:gravity="center_vertical"
-    android:paddingRight="20dp"
+    android:padding="15dp"
     android:singleLine="true"
-    android:textColor="@android:color/white"
-    android:textSize="18dp" />
+    android:textColor="@android:color/secondary_text_light"
+    android:textSize="16sp" />

@@ -12,7 +12,6 @@ import java.util.List;
 
 import mishindmitriy.timetable.model.data.PeriodType;
 import mishindmitriy.timetable.model.data.PeriodTypeConverter;
-import mishindmitriy.timetable.model.data.ThingType;
 import mishindmitriy.timetable.model.data.entity.Config;
 import mishindmitriy.timetable.model.data.entity.Pair;
 import mishindmitriy.timetable.model.data.entity.Thing;
@@ -36,27 +35,23 @@ public class SheduleModel {
 
     public SheduleModel() {
         loadConfig();
+        if (config != null && config.getCurrentThing() == null) {
+            setCurrentFirstOfFavorites();
+        }
+    }
+
+    private void setCurrentFirstOfFavorites() {
+        List<Thing> favorites = getFavoritesThings();
+        if (favorites != null && favorites.size() > 0) setThing(favorites.get(0));
     }
 
     public void setThing(Thing thing)
     {
-        if (thing==null) return;
+        //if (thing==null) return;
         config.setCurrentThing(thing);
         updateConfig();
-    }
-
-    public boolean isFavorites()
-    {
-        return config.getCurrentThing().isFavorite();
-    }
-
-    public void setFavorites(boolean flag) {
-        config.getCurrentThing().setFavorite(flag);
-        try {
-            HelperFactory.getInstance().getThingGAO().update(config.getCurrentThing());
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        loadData();
+        mObservable.notifyCurrentThingChange();
     }
 
     private void loadConfig()
@@ -119,18 +114,17 @@ public class SheduleModel {
         return this.mShedule;
     }
 
-    public ThingType getWhatThing() {
-        if (config.getCurrentThing()== null) return null;
-        return config.getCurrentThing().getType();
-    }
-
     public void loadData() {
         if (this.mIsWorking) stopLoad();
+
         if (!isThingAvailable()
                 ||config==null
                 ||config.getCurrentThing()==null
                 ||config.getCurrentThing().getServerId()==null
-                ||config.getPeriodType()==null) throw new IllegalArgumentException("some agrument is null");
+                || config.getPeriodType() == null) return;
+
+        loadCache();
+        mObservable.notifyCacheLoad();
 
         this.mObservable.notifyStarted();
 
@@ -229,6 +223,7 @@ public class SheduleModel {
 
     private void loadCache() {
         List<Pair> pairs=null;
+        if (config == null || config.getCurrentThing() == null) return;
         try {
             PairDAO dao= HelperFactory.getInstance().getPairDAO();
             pairs=dao.loadListPairs(config.getCurrentThing(), getFromDate(), getToDate());
@@ -252,10 +247,27 @@ public class SheduleModel {
         return config.getCurrentThing();
     }
 
+    public void checkCurrentThing() {
+        try {
+            HelperFactory.getInstance().getThingGAO().refresh(config.getCurrentThing());
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        if (config.getCurrentThing() != null && !config.getCurrentThing().isFavorite())
+            setThing(null);
+        if (config.getCurrentThing() == null) setCurrentFirstOfFavorites();
+    }
+
     public interface Observer {
         void onLoadStarted();
 
-        void onLoadFinished(List<Pair> shedule, boolean isCache);
+        void onLoadFinished(List<Pair> shedule);
+
+        void onCacheLoad(List<Pair> shedule);
+
+        void onLoadFail();
+
+        void onCurrentThingChange(Thing thing);
     }
 
     private class LoadDataTask extends AsyncTask<Void, Void, Boolean> {
@@ -266,6 +278,7 @@ public class SheduleModel {
                 SheduleModel.this.mShedule = ParseHelper.getShedule(config.getCurrentThing(), SheduleModel.this.getFromDate(),SheduleModel.this.getToDate());
             } catch (final IOException e) {
                 SheduleModel.this.mShedule = new ArrayList<>();
+                return false;
             }
             if (SheduleModel.this.mShedule == null) {
                 SheduleModel.this.mShedule = new ArrayList<>();
@@ -295,13 +308,25 @@ public class SheduleModel {
 
         public void notifySucceeded() {
             for (final Observer observer : this.mObservers) {
-                observer.onLoadFinished(SheduleModel.this.getShedule(),false);
+                observer.onLoadFinished(SheduleModel.this.getShedule());
             }
         }
 
         public void notifyFailed() {
             for (final Observer observer : this.mObservers) {
-                observer.onLoadFinished(SheduleModel.this.getShedule(),true);
+                observer.onLoadFail();
+            }
+        }
+
+        public void notifyCacheLoad() {
+            for (final Observer observer : this.mObservers) {
+                observer.onCacheLoad(SheduleModel.this.getShedule());
+            }
+        }
+
+        public void notifyCurrentThingChange() {
+            for (final Observer observer : this.mObservers) {
+                observer.onCurrentThingChange(SheduleModel.this.config.getCurrentThing());
             }
         }
     }

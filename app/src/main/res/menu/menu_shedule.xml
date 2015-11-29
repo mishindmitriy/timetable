@@ -11,4 +11,12 @@
         android:id="@+id/case_button"
         android:title="@string/CaseGroup"
         app:showAsAction="withText" />
+    <item
+        android:id="@+id/rate"
+        android:title="@string/rate"
+        app:showAsAction="withText" />
+    <item
+        android:id="@+id/feedback"
+        android:title="@string/feedback"
+        app:showAsAction="withText" />
 </menu>

@@ -1,35 +1,36 @@
 package mishindmitriy.timetable.app.casething;
 
-import android.content.Context;
-import android.graphics.PorterDuff;
-import android.graphics.drawable.Drawable;
 import android.support.v4.app.Fragment;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Filter;
+import android.widget.Filterable;
 import android.widget.ListView;
 import android.widget.ProgressBar;
-import android.widget.TextView;
 
 import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.Click;
 import org.androidannotations.annotations.EFragment;
 import org.androidannotations.annotations.FragmentArg;
-import org.androidannotations.annotations.InstanceState;
 import org.androidannotations.annotations.ItemClick;
 import org.androidannotations.annotations.ViewById;
 
+import java.sql.SQLException;
 import java.util.List;
 
 import mishindmitriy.timetable.R;
-import mishindmitriy.timetable.app.shedule.SheduleActivity_;
+import mishindmitriy.timetable.app.ObjectAdapter;
+import mishindmitriy.timetable.app.casething.widget.ViewItemThing;
+import mishindmitriy.timetable.app.casething.widget.ViewItemThing_;
 import mishindmitriy.timetable.model.CaseThingModel;
 import mishindmitriy.timetable.model.data.ThingType;
 import mishindmitriy.timetable.model.data.entity.Thing;
+import mishindmitriy.timetable.model.db.HelperFactory;
 
 /**
  * Created by mishindmitriy on 14.09.2015.
@@ -42,19 +43,17 @@ public class CaseFragment extends Fragment implements CaseThingModel.Observer {
     protected ThingType mWhatCase;
 
     @ViewById(R.id.editText)
-    protected EditText filterText;
+    protected EditText filterEditText;
     @ViewById(R.id.buttonRefresh)
     protected Button mButton;
     @ViewById(R.id.progressBar)
     protected ProgressBar mProgressBar;
     @ViewById(R.id.listView)
     protected ListView listView;
-    @InstanceState
-    boolean instanceState;
 
     private CaseThingModel mCaseModel;
-    private ArrayAdapter<Thing> adapter;
-    private final TextWatcher filterTextWatcher = new TextWatcher() {
+    private CaseAdapter adapter;
+    private final TextWatcher textWatcher = new TextWatcher() {
 
         public void afterTextChanged(Editable s) {
         }
@@ -65,8 +64,8 @@ public class CaseFragment extends Fragment implements CaseThingModel.Observer {
 
         public void onTextChanged(CharSequence s, int start, int before,
                                   int count) {
-            if (CaseFragment.this.adapter != null) {
-                CaseFragment.this.adapter.getFilter().filter(s);
+            if (adapter != null) {
+                adapter.getFilter().filter(s);
             }
         }
     };
@@ -75,29 +74,50 @@ public class CaseFragment extends Fragment implements CaseThingModel.Observer {
     public void init() {
         switch (mWhatCase) {
             case GROUP:
-                filterText.setHint("Введите номер группы");
+                filterEditText.setHint("Введите номер группы");
                 break;
             case TEACHER:
-                filterText.setHint("Введите фамилию преподавателя");
+                filterEditText.setHint("Введите фамилию преподавателя");
                 break;
             case CLASSROOM:
-                filterText.setHint("Введите номер аудитории");
+                filterEditText.setHint("Введите номер аудитории");
                 break;
         }
-        setRetainInstance(true);
-        this.mCaseModel = new CaseThingModel(mWhatCase);
-        this.mCaseModel.registerObserver(this);
+        mCaseModel = new CaseThingModel(mWhatCase);
+        mCaseModel.registerObserver(this);
         if (mCaseModel.isWorking()) onLoadStarted();
         else {
-            if (!instanceState) this.mCaseModel.loadData();
+            mCaseModel.loadData();
         }
-        this.filterText.addTextChangedListener(this.filterTextWatcher);
-        instanceState=true;
+        filterEditText.addTextChangedListener(textWatcher);
+
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Thing thing = adapter.getItem(position);
+                ViewItemThing v = (ViewItemThing) view;
+                boolean newState = !thing.isFavorite();
+                thing.setFavorite(newState);
+                v.setThing(thing);
+                try {
+                    HelperFactory.getInstance().getThingGAO().update(thing);
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+                CaseActivity activity = (CaseActivity) getActivity();
+                activity.forwardUpdate();
+            }
+        });
     }
 
     @ItemClick(R.id.listView)
     protected void itemClick(Thing thing) {
-        SheduleActivity_.intent(this.getActivity()).thing(thing).start();
+
+
+        /*Intent resultIntent=new Intent();
+        resultIntent.putExtra("thing", thing);
+        getActivity().setResult(0);
+        getActivity().finish();*/
     }
 
     @Override
@@ -108,21 +128,34 @@ public class CaseFragment extends Fragment implements CaseThingModel.Observer {
 
     @Override
     public void onLoadFinished(List<Thing> listThings) {
-        this.adapter = new CaseAdapter(this.getActivity(), R.layout.item_thing, listThings);
-        this.adapter.getFilter().filter(this.filterText.getText());
+        setThingList(listThings);
+        if (adapter.getCount() == 0) mButton.setVisibility(View.VISIBLE);
+        else mButton.setVisibility(View.INVISIBLE);
+    }
+
+    private void setThingList(List<Thing> listThings) {
+        adapter = new CaseAdapter(listThings);
+        adapter.getFilter().filter(filterEditText.getText());
         listView.setAdapter(adapter);
-        this.mProgressBar.setVisibility(View.INVISIBLE);
-        if (adapter.getCount() == 0) this.mButton.setVisibility(View.VISIBLE);
-        else this.mButton.setVisibility(View.INVISIBLE);
+        mProgressBar.setVisibility(View.INVISIBLE);
+    }
+
+    @Override
+    public void onCacheLoad(List<Thing> listThings) {
+        if (listThings != null && listThings.size() > 0) {
+            setThingList(listThings);
+        }
     }
 
     @Override
     public void onLoadFailed() {
-        if (this.mProgressBar != null) {
-            this.mProgressBar.setVisibility(View.INVISIBLE);
-        }
-        if (this.mButton != null) {
-            this.mButton.setVisibility(View.VISIBLE);
+        if (listView.getCount() == 0) {
+            if (this.mProgressBar != null) {
+                this.mProgressBar.setVisibility(View.INVISIBLE);
+            }
+            if (this.mButton != null) {
+                this.mButton.setVisibility(View.VISIBLE);
+            }
         }
     }
 
@@ -138,28 +171,34 @@ public class CaseFragment extends Fragment implements CaseThingModel.Observer {
         super.onDestroy();
     }
 
-    private class CaseAdapter extends ArrayAdapter<Thing> {
-        public CaseAdapter(Context context, int resource, List<Thing> objects) {
-            super(context, resource, objects);
+    private class CaseAdapter extends ObjectAdapter<Thing> implements Filterable {
+        public CaseAdapter(List<Thing> list) {
+            super(list);
         }
 
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
-            TextView t = (TextView) super.getView(position, convertView, parent);
-            if (getItem(position).isFavorite()) {
-                Drawable grade;
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-                    grade = getResources().getDrawable(R.drawable.ic_grade_white_48dp, getActivity().getTheme());
-                    if (grade!=null) grade.setColorFilter(getResources().getColor(R.color.select), PorterDuff.Mode.MULTIPLY);
-                } else {
-                    grade = getResources().getDrawable(R.drawable.ic_grade_white_48dp);
-                    if (grade!=null) grade.setColorFilter(getResources().getColor(R.color.select), PorterDuff.Mode.MULTIPLY);
-                }
-                t.setCompoundDrawablesWithIntrinsicBounds(grade,null,null,null);
-            } else {
-                t.setCompoundDrawablesWithIntrinsicBounds(null,null,null,null);
+            if (convertView == null) {
+                convertView = ViewItemThing_.build(parent.getContext());
             }
-            return t;
+            ViewItemThing view = (ViewItemThing) convertView;
+            view.setThing(getItem(position));
+            return view;
+        }
+
+        @Override
+        public Filter getFilter() {
+            return new Filter() {
+                @Override
+                protected FilterResults performFiltering(CharSequence constraint) {
+                    return new FilterResults();
+                }
+
+                @Override
+                protected void publishResults(CharSequence constraint, FilterResults results) {
+
+                }
+            };
         }
     }
 }

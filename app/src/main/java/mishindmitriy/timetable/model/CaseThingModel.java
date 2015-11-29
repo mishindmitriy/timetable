@@ -10,7 +10,6 @@ import java.util.List;
 
 import mishindmitriy.timetable.model.data.ThingType;
 import mishindmitriy.timetable.model.data.entity.Thing;
-import mishindmitriy.timetable.model.db.DatabaseHelper;
 import mishindmitriy.timetable.model.db.HelperFactory;
 import mishindmitriy.timetable.model.db.ThingDAO;
 import mishindmitriy.timetable.utils.ParseHelper;
@@ -42,6 +41,8 @@ public class CaseThingModel {
         if (this.mIsWorking) return;
         this.mObservable.notifyStarted();
         this.mIsWorking = true;
+        loadCache();
+        mObservable.notifyCacheLoad();
         this.mLoadTask = new LoadDataTask();
         this.mLoadTask.execute();
     }
@@ -86,6 +87,8 @@ public class CaseThingModel {
 
         void onLoadFinished(List<Thing> listThings);
 
+        void onCacheLoad(List<Thing> listThings);
+
         void onLoadFailed();
     }
 
@@ -96,6 +99,7 @@ public class CaseThingModel {
                 mListThings =ParseHelper.getSomeThing(mThingType);
             } catch (IOException e) {
                 e.printStackTrace();
+                return false;
             }
             CaseThingModel.this.saveCache();
             CaseThingModel.this.loadCache();
@@ -116,20 +120,26 @@ public class CaseThingModel {
 
     private class LoadDataObservable extends Observable<Observer> {
         public void notifyStarted() {
-            for (final Observer observer : this.mObservers) {
+            for (final Observer observer : mObservers) {
                 observer.onLoadStarted();
             }
         }
 
         public void notifySucceeded() {
-            for (final Observer observer : this.mObservers) {
-                observer.onLoadFinished(CaseThingModel.this.mListThings);
+            for (final Observer observer : mObservers) {
+                observer.onLoadFinished(mListThings);
             }
         }
 
         public void notifyFailed() {
-            for (final Observer observer : this.mObservers) {
+            for (final Observer observer : mObservers) {
                 observer.onLoadFailed();
+            }
+        }
+
+        public void notifyCacheLoad() {
+            for (final Observer observer : mObservers) {
+                observer.onCacheLoad(mListThings);
             }
         }
     }

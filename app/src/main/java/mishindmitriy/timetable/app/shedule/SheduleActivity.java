@@ -1,10 +1,8 @@
 package mishindmitriy.timetable.app.shedule;
 
 import android.content.ActivityNotFoundException;
-import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
-import android.graphics.Color;
 import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Build;
@@ -22,7 +20,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.ScrollView;
 import android.widget.Spinner;
@@ -30,12 +27,12 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import org.androidannotations.annotations.AfterViews;
-import org.androidannotations.annotations.Click;
 import org.androidannotations.annotations.EActivity;
 import org.androidannotations.annotations.Extra;
 import org.androidannotations.annotations.FragmentByTag;
 import org.androidannotations.annotations.InstanceState;
 import org.androidannotations.annotations.ItemClick;
+import org.androidannotations.annotations.OnActivityResult;
 import org.androidannotations.annotations.OptionsItem;
 import org.androidannotations.annotations.OptionsMenu;
 import org.androidannotations.annotations.ViewById;
@@ -46,7 +43,10 @@ import java.util.List;
 
 import mishindmitriy.timetable.BuildConfig;
 import mishindmitriy.timetable.R;
+import mishindmitriy.timetable.app.ObjectAdapter;
 import mishindmitriy.timetable.app.casething.CaseActivity_;
+import mishindmitriy.timetable.app.shedule.widgets.ViewItemFavoriteThing;
+import mishindmitriy.timetable.app.shedule.widgets.ViewItemFavoriteThing_;
 import mishindmitriy.timetable.model.SheduleModel;
 import mishindmitriy.timetable.model.SheduleWorkerFragment;
 import mishindmitriy.timetable.model.data.entity.Pair;
@@ -59,9 +59,10 @@ import se.emilsjolander.stickylistheaders.StickyListHeadersListView;
 public class SheduleActivity extends AppCompatActivity
         implements SheduleModel.Observer, AdapterView.OnItemSelectedListener {
 
+    final static int CODE = 1;
     private static final String TAG = "SheduleActivity";
     private static final String TAG_WORKER = "SheduleModelWorkerTAG";
-
+    private static final long HOUR = 3600000;
     @ViewById(R.id.toolbar)
     protected Toolbar toolbar;
     @ViewById(R.id.sheduleSwipeRefresh)
@@ -80,19 +81,22 @@ public class SheduleActivity extends AppCompatActivity
     protected ScrollView scrollView;
     @ViewById(R.id.nvView)
     protected NavigationView navigationView;
-    @ViewById(R.id.icon_add_favorite)
-    protected ImageView iconAddFavorive;
-
     @Extra
     protected Thing thing;
     @FragmentByTag(TAG_WORKER)
     protected SheduleWorkerFragment sheduleWorkerFragment;
     @InstanceState
     protected Date lastUpdate;
-    private CharSequence mTitle;
     private SheduleModel mSheduleModel;
     private ActionBarDrawerToggle mDrawerToggle;
     private SheduleListAdapter mSheduleAdapter;
+
+    @OnActivityResult(CODE)
+    void onResult() {
+        mSheduleModel.checkCurrentThing();
+        refreshFavorites();
+        loadDataWithChecks();
+    }
 
     @Override
     protected void onPause() {
@@ -108,16 +112,12 @@ public class SheduleActivity extends AppCompatActivity
 
     private boolean canUpdate() {
         if (lastUpdate == null) return true;
-        return (new Date().getTime() - lastUpdate.getTime()) > 3600000.0; //one hour
+        return (new Date().getTime() - lastUpdate.getTime()) > HOUR; //one hour
     }
 
     @AfterViews
     protected void init() {
         this.getWindow().setBackgroundDrawable(null);
-
-        {   //init favorites
-            currentThingTextView.setTypeface(Typeface.create("sans-serif-light", Typeface.NORMAL));
-        }
 
         {
             // setThing toolbar
@@ -138,22 +138,15 @@ public class SheduleActivity extends AppCompatActivity
                 getSupportFragmentManager().beginTransaction()
                         .add(workerFragment, TAG_WORKER)
                         .commit();
-                this.mSheduleModel = workerFragment.getSheduleModel();
-                this.mSheduleModel.setThing(thing);
+                mSheduleModel = workerFragment.getSheduleModel();
+                if (thing != null) mSheduleModel.setThing(thing);
             }
             this.mSheduleModel.registerObserver(this);
 
-            if (mSheduleModel.isThingAvailable()) {
-                this.mTitle = this.mSheduleModel.getThingName();
-            } else {
-                this.finish();
-                CaseActivity_.intent(this).start();
-                finish();
-                return;
+            if (!mSheduleModel.isThingAvailable()) {
+                CaseActivity_.intent(this).firstTime(true).startForResult(CODE);
             }
         }
-
-        currentThingTextView.setText(mTitle);
 
         {
             this.mSwipeLayout.setSoundEffectsEnabled(true);
@@ -180,7 +173,9 @@ public class SheduleActivity extends AppCompatActivity
 
         {
             // setThing spinner
-            spinner.setAdapter(ArrayAdapter.createFromResource(this, R.array.menu_array, R.layout.spinner_item));
+            ArrayAdapter arrayAdapter = ArrayAdapter.createFromResource(this, R.array.menu_array, R.layout.spinner);
+            arrayAdapter.setDropDownViewResource(R.layout.spinner_item);
+            spinner.setAdapter(arrayAdapter);
             spinner.setSelection(mSheduleModel.getPeriodPosition());
             spinner.setOnItemSelectedListener(this);
         }
@@ -188,16 +183,21 @@ public class SheduleActivity extends AppCompatActivity
         mSheduleAdapter = new SheduleListAdapter(this, mSheduleModel.getShedule());
         mListShedule.setAdapter(mSheduleAdapter);
 
-        refreshFavorites();
+
+        {   //init favorites
+            currentThingTextView.setTypeface(Typeface.create("sans-serif-light", Typeface.NORMAL));
+            refreshFavorites();
+        }
+
+        onCurrentThingChange(mSheduleModel.getCurrentThing());
 
         if (mSheduleModel.isWorking()) onLoadStarted();
-
         loadDataWithChecks();
     }
 
     @OptionsItem(R.id.case_button)
     void caseClick() {
-        CaseActivity_.intent(this).start();
+        CaseActivity_.intent(this).startForResult(CODE);
         mDrawerLayout.closeDrawers();
     }
 
@@ -205,29 +205,51 @@ public class SheduleActivity extends AppCompatActivity
     protected void onPostCreate(final Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
         // Sync the toggle state after onRestoreInstanceState has occurred.
-        if (this.mDrawerToggle != null) this.mDrawerToggle.syncState();
+        if (this.mDrawerToggle != null) mDrawerToggle.syncState();
     }
 
     @Override
     public void onConfigurationChanged(final Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
         // Pass any configuration change to the drawer toggles
-        if (this.mDrawerToggle != null) this.mDrawerToggle.onConfigurationChanged(newConfig);
+        if (this.mDrawerToggle != null) mDrawerToggle.onConfigurationChanged(newConfig);
     }
 
     @Override
     public final void onLoadStarted() {
-        this.mSwipeLayout.post(new Runnable() {
+        mSwipeLayout.post(new Runnable() {
             @Override
             public void run() {
-                SheduleActivity.this.mSwipeLayout.setRefreshing(true);
+                mSwipeLayout.setRefreshing(true);
             }
         });
-        setFavoritesIcon();
+        //setFavoritesIcon();
     }
 
     @Override
-    public void onLoadFinished(List<Pair> shedule, boolean isCache) {
+    public void onCacheLoad(List<Pair> shedule) {
+        mSheduleAdapter.setData(shedule);
+    }
+
+    @Override
+    public void onLoadFail() {
+        mSwipeLayout.post(new Runnable() {
+            @Override
+            public void run() {
+                mSwipeLayout.setRefreshing(false);
+            }
+        });
+        Snackbar.make(mSwipeLayout, getString(R.string.load_error), Snackbar.LENGTH_LONG).show();
+    }
+
+    @Override
+    public void onCurrentThingChange(Thing thing) {
+        if (thing != null) currentThingTextView.setText(thing.getName());
+    }
+
+    @Override
+    public void onLoadFinished(List<Pair> shedule) {
+        if (mSheduleAdapter.getCount() != shedule.size()) mListShedule.setSelection(0);
         mSheduleAdapter.setData(shedule);
         mSwipeLayout.post(new Runnable() {
             @Override
@@ -235,25 +257,22 @@ public class SheduleActivity extends AppCompatActivity
                 mSwipeLayout.setRefreshing(false);
             }
         });
-        if (isCache)
-            Snackbar.make(mSwipeLayout, getString(R.string.load_error), Snackbar.LENGTH_LONG).show();
-        mListShedule.setSelection(0);
         lastUpdate = new Date();
     }
 
     @OptionsItem(R.id.refresh_icon)
-    void refreshIconClick() {
+    void refreshClick() {
         mSheduleModel.loadData();
     }
 
     @Override
     protected void onDestroy() {
-        super.onDestroy();
         if (this.mSheduleModel == null) return;
         if (this.isFinishing()) {
             this.mSheduleModel.stopLoad();
         }
         this.mSheduleModel.unregisterObserver(this);
+        super.onDestroy();
     }
 
     @Override
@@ -270,34 +289,15 @@ public class SheduleActivity extends AppCompatActivity
         }
     }
 
-    @Click(R.id.icon_add_favorite)
-    void addToFavorites() {
-        mSheduleModel.setFavorites(!mSheduleModel.isFavorites());
-        refreshFavorites();
-    }
-
-    private void setFavoritesIcon() {
-        if (mSheduleModel.isFavorites()) {
-            iconAddFavorive.setImageResource(R.drawable.ic_remove_circle_outline_white_48dp);
-            iconAddFavorive.setColorFilter(Color.WHITE);
-        } else {
-            iconAddFavorive.setImageResource(R.drawable.ic_add_circle_outline_white_48dp);
-            iconAddFavorive.setColorFilter(getResources().getColor(R.color.select));
-        }
-    }
-
     private void refreshFavorites() {
         List<Thing> favorites=mSheduleModel.getFavoritesThings();
-        if (favorites==null) favorites=new ArrayList<>();
-        favoritesListView.setAdapter(new FavoritesAdapter(this, R.layout.item_thing, favorites));
-        setFavoritesIcon();
+        favoritesListView.setAdapter(new FavoritesAdapter(favorites));
     }
 
     @ItemClick(R.id.list_favorites_thing)
     protected void favoritesClick(Thing thing) {
         if (thing.getId() != mSheduleModel.getCurrentThing().getId()) {
             mSheduleModel.setThing(thing);
-            currentThingTextView.setText(thing.getName());
             mSheduleAdapter.setData(new ArrayList<Pair>());
             mSheduleModel.loadData();
         }
@@ -318,13 +318,13 @@ public class SheduleActivity extends AppCompatActivity
         }
     }
 
-    @Click(R.id.feedback)
+    @OptionsItem(R.id.feedback)
     void feedbackClick() {
         try {
             final Intent emailIntent = new Intent(android.content.Intent.ACTION_SEND);
             emailIntent.setType("plain/text");
             emailIntent.putExtra(android.content.Intent.EXTRA_EMAIL, new String[]{"mishin.dmitriy@gmail.com"});
-            emailIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, "Отзыв по приложению расписание ПВГУС");
+            emailIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, "Отзыв по приложению Расписание ПВГУС");
             emailIntent.putExtra(
                     Intent.EXTRA_TEXT,
                     String.format("\n\n\n %s \n Android %s \n Расписание ПВГУС %d",
@@ -337,7 +337,7 @@ public class SheduleActivity extends AppCompatActivity
         }
     }
 
-    @Click(R.id.rate)
+    @OptionsItem(R.id.rate)
     void rateClick() {
         try {
             startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + getPackageName())));
@@ -353,18 +353,20 @@ public class SheduleActivity extends AppCompatActivity
         }
     }
 
-    private class FavoritesAdapter extends ArrayAdapter<Thing> {
-        public FavoritesAdapter(Context context, int resource, List<Thing> objects) {
-            super(context, resource, objects);
+    private class FavoritesAdapter extends ObjectAdapter<Thing> {
+
+        public FavoritesAdapter(List<Thing> list) {
+            super(list);
         }
 
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
-            View v = super.getView(position, convertView, parent);
-            if (getItem(position).getId() == mSheduleModel.getCurrentThing().getId()) {
-                favoritesListView.setItemChecked(position, true);
+            if (convertView == null) {
+                convertView = ViewItemFavoriteThing_.build(parent.getContext());
             }
-            return v;
+            ViewItemFavoriteThing view = (ViewItemFavoriteThing) convertView;
+            view.setThing(getItem(position));
+            return view;
         }
     }
 }

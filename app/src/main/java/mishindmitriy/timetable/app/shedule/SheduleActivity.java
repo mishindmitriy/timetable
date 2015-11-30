@@ -3,7 +3,9 @@ package mishindmitriy.timetable.app.shedule;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.content.res.Configuration;
+import android.graphics.PorterDuff;
 import android.graphics.Typeface;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -27,6 +29,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import org.androidannotations.annotations.AfterViews;
+import org.androidannotations.annotations.Click;
 import org.androidannotations.annotations.EActivity;
 import org.androidannotations.annotations.Extra;
 import org.androidannotations.annotations.FragmentByTag;
@@ -87,6 +90,8 @@ public class SheduleActivity extends AppCompatActivity
     protected SheduleWorkerFragment sheduleWorkerFragment;
     @InstanceState
     protected Date lastUpdate;
+    @ViewById(R.id.add_favorites)
+    TextView addFavorites;
     private SheduleModel mSheduleModel;
     private ActionBarDrawerToggle mDrawerToggle;
     private SheduleListAdapter mSheduleAdapter;
@@ -118,6 +123,13 @@ public class SheduleActivity extends AppCompatActivity
     @AfterViews
     protected void init() {
         this.getWindow().setBackgroundDrawable(null);
+
+        Drawable plus;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+            plus = getDrawable(R.drawable.ic_add_circle_white_24dp);
+        } else plus = getResources().getDrawable(R.drawable.ic_add_circle_white_24dp);
+        plus.setColorFilter(getResources().getColor(R.color.select), PorterDuff.Mode.MULTIPLY);
+        addFavorites.setCompoundDrawables(plus, null, null, null);
 
         {
             // setThing toolbar
@@ -195,8 +207,17 @@ public class SheduleActivity extends AppCompatActivity
         loadDataWithChecks();
     }
 
+    @Click(R.id.add_favorites)
+    void addFavoritesClick() {
+        addToFavorites();
+    }
+
     @OptionsItem(R.id.case_button)
     void caseClick() {
+        addToFavorites();
+    }
+
+    private void addToFavorites() {
         CaseActivity_.intent(this).startForResult(CODE);
         mDrawerLayout.closeDrawers();
     }

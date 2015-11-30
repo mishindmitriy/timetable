@@ -17,10 +17,10 @@ import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.Click;
 import org.androidannotations.annotations.EFragment;
 import org.androidannotations.annotations.FragmentArg;
-import org.androidannotations.annotations.ItemClick;
 import org.androidannotations.annotations.ViewById;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 import mishindmitriy.timetable.R;
@@ -110,16 +110,6 @@ public class CaseFragment extends Fragment implements CaseThingModel.Observer {
         });
     }
 
-    @ItemClick(R.id.listView)
-    protected void itemClick(Thing thing) {
-
-
-        /*Intent resultIntent=new Intent();
-        resultIntent.putExtra("thing", thing);
-        getActivity().setResult(0);
-        getActivity().finish();*/
-    }
-
     @Override
     public void onLoadStarted() {
         this.mProgressBar.setVisibility(View.VISIBLE);
@@ -142,7 +132,8 @@ public class CaseFragment extends Fragment implements CaseThingModel.Observer {
 
     @Override
     public void onCacheLoad(List<Thing> listThings) {
-        if (listThings != null && listThings.size() > 0) {
+        if (listThings != null && listThings.size() > 0
+                && listThings.size() != listView.getCount()) {
             setThingList(listThings);
         }
     }
@@ -172,6 +163,8 @@ public class CaseFragment extends Fragment implements CaseThingModel.Observer {
     }
 
     private class CaseAdapter extends ObjectAdapter<Thing> implements Filterable {
+        private List<Thing> originalObjects;
+        private ArrayFilter mFilter;
         public CaseAdapter(List<Thing> list) {
             super(list);
         }
@@ -188,17 +181,72 @@ public class CaseFragment extends Fragment implements CaseThingModel.Observer {
 
         @Override
         public Filter getFilter() {
-            return new Filter() {
-                @Override
-                protected FilterResults performFiltering(CharSequence constraint) {
-                    return new FilterResults();
+            if (mFilter == null) {
+                mFilter = new ArrayFilter();
+            }
+            return mFilter;
+        }
+
+        private class ArrayFilter extends Filter {
+            @Override
+            protected FilterResults performFiltering(CharSequence prefix) {
+                FilterResults results = new FilterResults();
+
+                if (originalObjects == null) {
+                    originalObjects = new ArrayList<>(objects);
                 }
 
-                @Override
-                protected void publishResults(CharSequence constraint, FilterResults results) {
+                if (prefix == null || prefix.length() == 0) {
+                    ArrayList<Thing> list = new ArrayList<>(originalObjects);
 
+                    results.values = list;
+                    results.count = list.size();
+                } else {
+                    String prefixString = prefix.toString().toLowerCase();
+
+                    ArrayList<Thing> values = new ArrayList<>(originalObjects);
+
+                    final int count = values.size();
+                    final ArrayList<Thing> newValues = new ArrayList<>();
+
+                    for (int i = 0; i < count; i++) {
+                        final Thing value = values.get(i);
+                        final String valueText = value.toString().toLowerCase();
+
+                        // First match against the whole, non-splitted value
+                        if (valueText.startsWith(prefixString)) {
+                            newValues.add(value);
+                        } else {
+                            final String[] words = valueText.split(" ");
+                            final int wordCount = words.length;
+
+                            // Start at index 0, in case valueText starts with space(s)
+                            for (int k = 0; k < wordCount; k++) {
+                                if (words[k].startsWith(prefixString)) {
+                                    newValues.add(value);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    results.values = newValues;
+                    results.count = newValues.size();
                 }
-            };
+
+                return results;
+            }
+
+            @Override
+            protected void publishResults(CharSequence constraint, FilterResults results) {
+                //noinspection unchecked
+                objects = (List<Thing>) results.values;
+                if (results.count > 0) {
+                    notifyDataSetChanged();
+                } else {
+                    notifyDataSetInvalidated();
+                }
+            }
         }
     }
 }

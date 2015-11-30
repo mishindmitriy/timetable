@@ -9,30 +9,30 @@ import java.util.List;
  * Created by mishindmitriy on 24.11.2015.
  */
 public abstract class ObjectAdapter<T> extends BaseAdapter {
-    private List<T> list = new ArrayList<>();
+    protected List<T> objects = new ArrayList<>();
 
     public ObjectAdapter(List<T> list) {
-        this.list = list;
+        this.objects = list;
     }
 
     @Override
     public int getCount() {
-        if (list != null)
-            return list.size();
+        if (objects != null)
+            return objects.size();
         return 0;
     }
 
     @Override
     public T getItem(int position) {
-        if (list != null)
-            return list.get(position);
+        if (objects != null)
+            return objects.get(position);
         return null;
     }
 
     @Override
     public long getItemId(int position) {
-        if (list != null && list.get(position) != null)
-            return list.get(position).hashCode();
+        if (objects != null && objects.get(position) != null)
+            return objects.get(position).hashCode();
         return 0;
     }
 }

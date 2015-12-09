@@ -116,20 +116,16 @@ public class SheduleActivity extends AppCompatActivity
     }
 
     private boolean canUpdate() {
-        if (lastUpdate == null) return true;
-        return (new Date().getTime() - lastUpdate.getTime()) > HOUR; //one hour
+        return lastUpdate == null || (new Date().getTime() - lastUpdate.getTime()) > HOUR;
     }
 
     @AfterViews
     protected void init() {
-        this.getWindow().setBackgroundDrawable(null);
+        getWindow().setBackgroundDrawable(null);
 
-        Drawable plus;
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-            plus = getDrawable(R.drawable.ic_add_circle_white_24dp);
-        } else plus = getResources().getDrawable(R.drawable.ic_add_circle_white_24dp);
-        plus.setColorFilter(getResources().getColor(R.color.select), PorterDuff.Mode.MULTIPLY);
-        addFavorites.setCompoundDrawables(plus, null, null, null);
+        Drawable plus = addFavorites.getCompoundDrawables()[0];
+        if (plus != null)
+            plus.setColorFilter(getResources().getColor(R.color.select), PorterDuff.Mode.MULTIPLY);
 
         {
             // setThing toolbar

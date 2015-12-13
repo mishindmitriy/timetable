@@ -16,10 +16,8 @@ import org.jsoup.select.Elements;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -36,18 +34,13 @@ import mishindmitriy.timetable.model.data.entity.Thing;
 public class ParseHelper {
     public static final String URL = "http://www.tolgas.ru/services/raspisanie/";
 
-    private static String doQuery(String inputUrl, @Nullable Map<String, String> valuesPairs) throws IOException {
+    private static String doQuery(String inputUrl, @Nullable RequestBody requestBody) throws IOException {
         OkHttpClient httpClient = new OkHttpClient();
         httpClient.setConnectTimeout(5, TimeUnit.SECONDS);
         httpClient.setReadTimeout(5, TimeUnit.SECONDS);
         Request request;
-        if (valuesPairs != null) //значит делаем POST запрос
+        if (requestBody != null) //значит делаем POST запрос
         {
-            FormEncodingBuilder builder = new FormEncodingBuilder();
-            for (Map.Entry<String, String> pair : valuesPairs.entrySet()) {
-                builder.addEncoded(pair.getKey(), pair.getValue());
-            }
-            RequestBody requestBody = builder.build();
             request = new Request.Builder()
                     .url(inputUrl)
                     .post(requestBody)
@@ -57,7 +50,6 @@ public class ParseHelper {
                     .url(inputUrl)
                     .build();
         }
-
         Response response = httpClient.newCall(request).execute();
         if (response.code() != 200) {
             throw new IOException("query failed with error code " + response.code());
@@ -118,16 +110,14 @@ public class ParseHelper {
     private static String sendPostToGetShedule(String thingTypeId, String thingId,
                                                String fromDate, String toDate)
             throws IOException {
-        final Map<String, String> valuesPairs = new HashMap<>();
-
-        valuesPairs.put("rel", thingTypeId);
-        valuesPairs.put("vr", thingId);
-        valuesPairs.put("from", fromDate);
-        valuesPairs.put("to", toDate);
-        valuesPairs.put("submit_button", "ПОКАЗАТЬ");//без этого вроде не возвращалась страница
-
-        //Загружаем html код сайта
-        return doQuery(URL, valuesPairs);
+        RequestBody requestBody = new FormEncodingBuilder()
+                .add("rel", thingTypeId)
+                .add("vr", thingId)
+                .add("from", fromDate)
+                .add("to", toDate)
+                .add("submit_button", "ПОКАЗАТЬ")//без этого вроде не возвращалась страница
+                .build();
+        return doQuery(URL, requestBody);
     }
 
     private static boolean validateParseDate(String s) {

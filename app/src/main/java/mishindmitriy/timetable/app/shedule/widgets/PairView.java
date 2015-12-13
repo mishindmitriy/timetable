@@ -47,7 +47,7 @@ public class PairView extends RelativeLayout {
     @AfterViews
     void init()
     {
-        subjectTextView.setTypeface(Typeface.create("sans-serif-light", Typeface.BOLD));
+        subjectTextView.setTypeface(Typeface.create("sans-serif-light", Typeface.NORMAL));
         teacherTextView.setTypeface(Typeface.create("sans-serif-light", Typeface.NORMAL));
         pairTypeTextView.setTypeface(Typeface.create("sans-serif-light", Typeface.NORMAL));
         Drawable drawable = classroomTextView.getCompoundDrawables()[0];

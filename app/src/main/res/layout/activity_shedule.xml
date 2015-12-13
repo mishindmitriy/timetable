@@ -45,15 +45,15 @@
 
         </android.support.v7.widget.Toolbar>
 
-        <android.support.v4.widget.SwipeRefreshLayout
-            android:id="@+id/sheduleSwipeRefresh"
+        <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@android:color/white">
+            android:layout_height="match_parent">
 
-            <FrameLayout
+            <android.support.v4.widget.SwipeRefreshLayout
+                android:id="@+id/sheduleSwipeRefresh"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent">
+                android:layout_height="wrap_content"
+                android:background="@android:color/white">
 
                 <se.emilsjolander.stickylistheaders.StickyListHeadersListView
                     android:id="@+id/dayPairsLayoutInActivity"
@@ -64,11 +64,10 @@
                     android:divider="@android:color/transparent"
                     android:dividerHeight="0px"
                     android:listSelector="@android:color/transparent" />
+            </android.support.v4.widget.SwipeRefreshLayout>
 
-                <include layout="@layout/empty_view" />
-            </FrameLayout>
-
-        </android.support.v4.widget.SwipeRefreshLayout>
+            <include layout="@layout/empty_view" />
+        </FrameLayout>
     </LinearLayout>
 
     <android.support.design.widget.NavigationView

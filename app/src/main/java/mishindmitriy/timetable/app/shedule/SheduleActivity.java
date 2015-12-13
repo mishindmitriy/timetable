@@ -130,7 +130,7 @@ public class SheduleActivity extends AppCompatActivity
     @AfterViews
     protected void init() {
         emptyText.setTypeface(Typeface.create("sans-serif-light", Typeface.NORMAL));
-        titleFavorites.setTypeface(Typeface.create("sans-serif-light", Typeface.BOLD));
+        titleFavorites.setTypeface(Typeface.create("sans-serif-light", Typeface.NORMAL));
         getWindow().setBackgroundDrawable(null);
 
         Drawable plus = addFavorites.getCompoundDrawables()[0];

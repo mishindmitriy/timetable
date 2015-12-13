@@ -2,24 +2,25 @@ package mishindmitriy.timetable.utils;
 
 import android.support.annotation.Nullable;
 
+import com.squareup.okhttp.FormEncodingBuilder;
+import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.Request;
+import com.squareup.okhttp.RequestBody;
+import com.squareup.okhttp.Response;
+
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -34,90 +35,57 @@ import mishindmitriy.timetable.model.data.entity.Thing;
  */
 public class ParseHelper {
     public static final String URL = "http://www.tolgas.ru/services/raspisanie/";
-    private static final String TAG = "TolgasModel";
 
-    private static String doQuery(String inpupUrl, @Nullable Map<String, String> valuesPairs) throws IOException{
-
-        String html="";
-        HttpURLConnection connection=null;
-        try {
-            URL url = new URL(inpupUrl);
-            connection = (HttpURLConnection) url.openConnection();
-            connection.setConnectTimeout(5000);
-            connection.setReadTimeout(5000);
-            if (valuesPairs != null) //значит делаем POST запрос
-            {
-                connection.setDoOutput(true);
-                PrintWriter out = new PrintWriter(connection.getOutputStream());
-                boolean first = true; //чтобы & не поставить перед переменными
-                for (Map.Entry<String, String> pair : valuesPairs.entrySet()) {
-                    if (first) first = false;
-                    else out.print('&');
-                    String name = pair.getKey();
-                    String value = pair.getValue();
-                    out.print(name);
-                    out.print('=');
-                    out.print(URLEncoder.encode(value, "windows-1251"));
-                }
-                out.close();
-                connection.getOutputStream().close();
-            }
-            connection.connect();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream(), "windows-1251"));
-
-            int status = connection.getResponseCode();
-            if (status != 200) {
-                throw new IOException("query failed with error code " + status);
-            }
-
-            StringBuilder buf = new StringBuilder();
-            String line;
-
-            while ((line = reader.readLine()) != null) {
-                buf.append(line);
-            }
-
-            reader.close();
-            connection.getInputStream().close();
-
-
-            html = buf.toString();
-        }
-        catch (IOException e)
+    private static String doQuery(String inputUrl, @Nullable Map<String, String> valuesPairs) throws IOException {
+        OkHttpClient httpClient = new OkHttpClient();
+        httpClient.setConnectTimeout(5, TimeUnit.SECONDS);
+        httpClient.setReadTimeout(5, TimeUnit.SECONDS);
+        Request request;
+        if (valuesPairs != null) //значит делаем POST запрос
         {
-            e.printStackTrace();
+            FormEncodingBuilder builder = new FormEncodingBuilder();
+            for (Map.Entry<String, String> pair : valuesPairs.entrySet()) {
+                builder.addEncoded(pair.getKey(), pair.getValue());
+            }
+            RequestBody requestBody = builder.build();
+            request = new Request.Builder()
+                    .url(inputUrl)
+                    .post(requestBody)
+                    .build();
+        } else {
+            request = new Request.Builder()
+                    .url(inputUrl)
+                    .build();
         }
-        finally {
-            if (connection!=null) connection.disconnect();
-            validateHtml(html);
+
+        Response response = httpClient.newCall(request).execute();
+        if (response.code() != 200) {
+            throw new IOException("query failed with error code " + response.code());
         }
+        String html = response.body().string();
+        validateHtml(html);
         return html;
     }
 
-    private static List<Pair> mappingListPairs(String html,Thing thing)
-    {
-        List<Pair> pairs=new ArrayList<>();
-        if (html==null || html.length()==0) return pairs;
+    private static List<Pair> mappingListPairs(String html, Thing thing) {
+        List<Pair> pairs = new ArrayList<>();
+        if (html == null || html.length() == 0) return pairs;
         Document doc = Jsoup.parse(html);
-        if (doc==null) return pairs;
+        if (doc == null) return pairs;
         Element table = doc.select("table[class=table][id=send]").first();
-        if (table==null) return pairs;
+        if (table == null) return pairs;
         Iterator<Element> iterator = table.select("td[class=hours]").iterator();
-        if (iterator==null) return pairs;
-        Date date=null;
-        while (iterator.hasNext())
-        {
-            Element element =iterator.next();
-            if (element.attr("colspan").equals("6") && element.text().equals("По данному запросу ничего не найдено!"))
-            {
+        if (iterator == null) return pairs;
+        Date date = null;
+        while (iterator.hasNext()) {
+            Element element = iterator.next();
+            if (element.attr("colspan").equals("6") && element.text().equals("По данному запросу ничего не найдено!")) {
                 break;
             }
-            if (element.attr("colspan").equals("7")&&validateParseDate(element.text()))
-            {
-                date=DateFormatter.parseDate(element.text());
-            }
-            else {
-                Pair p=parsePair(element,iterator,date);
+            if (element.attr("colspan").equals("7") && validateParseDate(element.text())) {
+                date = DateFormatter.parseDate(element.text());
+            } else {
+                Pair p = parsePair(element, iterator, date);
                 p.setThing(thing);
                 pairs.add(p);
             }
@@ -125,9 +93,8 @@ public class ParseHelper {
         return pairs;
     }
 
-    private static Pair parsePair(Element element,Iterator<Element> iterator,Date date)
-    {
-        Pair pair=new Pair();
+    private static Pair parsePair(Element element, Iterator<Element> iterator, Date date) {
+        Pair pair = new Pair();
         pair.setClassroom(element.text());
         pair.setNumber(Byte.parseByte(iterator.next().text()));
         pair.setTeacher(iterator.next().text());
@@ -140,14 +107,16 @@ public class ParseHelper {
     }
 
     private static void validateHtml(String html) throws IOException {
-        CharSequence uniqueString="Вопросы по телефону: 22-13-97 – отдел организации учебного процесса";
-        if (!html.contains(uniqueString)) throw new IOException("html code not correct");
-        uniqueString="Выберите диапазон даты для отображения расписания";
-        if (!html.contains(uniqueString)) throw new IOException("html code not correct");
+        CharSequence uniqueString = "Вопросы по телефону: 22-13-97 – отдел организации учебного процесса";
+        if (!html.contains(uniqueString))
+            throw new IOException("html code not contains tolgas schedule");
+        uniqueString = "Выберите диапазон даты для отображения расписания";
+        if (!html.contains(uniqueString))
+            throw new IOException("html code not contains tolgas schedule");
     }
 
     private static String sendPostToGetShedule(String thingTypeId, String thingId,
-                                                String fromDate, String toDate)
+                                               String fromDate, String toDate)
             throws IOException {
         final Map<String, String> valuesPairs = new HashMap<>();
 
@@ -161,8 +130,7 @@ public class ParseHelper {
         return doQuery(URL, valuesPairs);
     }
 
-    private static boolean validateParseDate(String s)
-    {
+    private static boolean validateParseDate(String s) {
         Pattern pattern = Pattern.compile("\\d\\d.\\d\\d.\\d\\d\\d\\d");
         Matcher matcher = pattern.matcher(s);
         return matcher.matches();
@@ -181,24 +149,22 @@ public class ParseHelper {
                 thing.getServerId(),
                 DateFormatter.DateToString(from),
                 DateFormatter.DateToString(to));
-        return mappingListPairs(html,thing);
+        return mappingListPairs(html, thing);
     }
 
-    private static List<Thing> mappingListThings(String html,ThingType type)
-    {
+    private static List<Thing> mappingListThings(String html, ThingType type) {
         Document doc = Jsoup.parse(html);
-        Element spinner=doc.select("select[id=vr][name=vr]").first();
+        Element spinner = doc.select("select[id=vr][name=vr]").first();
         Elements elements = spinner.select("option");
-        List<Thing> things=new ArrayList<>();
-        for (Element element:elements)
-        {
-            things.add(new Thing(element.attr("value"),element.text(),type));
+        List<Thing> things = new ArrayList<>();
+        for (Element element : elements) {
+            things.add(new Thing(element.attr("value"), element.text(), type));
         }
         return things;
     }
 
     public static List<Thing> getSomeThing(ThingType thingType) throws IOException {
-        String url=URL+"?id="+ThingTypeConverter.getPositionByPeriod(thingType);
-        return mappingListThings(doQuery(url, null),thingType);
+        String url = URL + "?id=" + ThingTypeConverter.getPositionByPeriod(thingType);
+        return mappingListThings(doQuery(url, null), thingType);
     }
 }

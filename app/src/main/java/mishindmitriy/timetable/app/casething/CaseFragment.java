@@ -13,6 +13,9 @@ import android.widget.Filterable;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 
+import com.crashlytics.android.answers.Answers;
+import com.crashlytics.android.answers.CustomEvent;
+
 import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.Background;
 import org.androidannotations.annotations.Click;
@@ -24,6 +27,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import mishindmitriy.timetable.BuildConfig;
 import mishindmitriy.timetable.R;
 import mishindmitriy.timetable.app.ObjectAdapter;
 import mishindmitriy.timetable.app.casething.widget.ViewItemThing;
@@ -98,6 +102,15 @@ public class CaseFragment extends Fragment implements CaseThingModel.Observer {
                 thing.setFavorite(newState);
                 v.setThing(thing);
                 thingUpdate(thing);
+                if (!BuildConfig.DEBUG) {
+                    if (newState) {
+                        Answers.getInstance().logCustom(new CustomEvent("Добавили в закладки")
+                                .putCustomAttribute("Группа", thing.toString()));
+                    } else {
+                        Answers.getInstance().logCustom(new CustomEvent("Убрали из закладок")
+                                .putCustomAttribute("Группа", thing.toString()));
+                    }
+                }
             }
         });
     }
@@ -168,6 +181,7 @@ public class CaseFragment extends Fragment implements CaseThingModel.Observer {
     private class CaseAdapter extends ObjectAdapter<Thing> implements Filterable {
         private List<Thing> originalObjects;
         private ArrayFilter mFilter;
+
         public CaseAdapter(List<Thing> list) {
             super(list);
         }

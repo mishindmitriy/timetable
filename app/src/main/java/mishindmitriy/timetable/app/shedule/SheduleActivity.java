@@ -28,6 +28,10 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.crashlytics.android.answers.Answers;
+import com.crashlytics.android.answers.ContentViewEvent;
+import com.crashlytics.android.answers.CustomEvent;
+
 import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.Click;
 import org.androidannotations.annotations.EActivity;
@@ -156,12 +160,23 @@ public class SheduleActivity extends AppCompatActivity
             }
         }
 
+        if (!BuildConfig.DEBUG) {
+            String[] periods = getResources().getStringArray(R.array.period_array);
+            Answers.getInstance().logContentView(new ContentViewEvent()
+                    .putContentName("Экран просмотра раписания")
+                    .putCustomAttribute("Период", periods[mSheduleModel.getPeriodPosition()]));
+        }
+
         {
             this.mSwipeLayout.setSoundEffectsEnabled(true);
             this.mSwipeLayout.setColorSchemeResources(R.color.teal500);
             this.mSwipeLayout.setOnRefreshListener(new OnRefreshListener() {
                 @Override
                 public void onRefresh() {
+                    if (!BuildConfig.DEBUG) {
+                        Answers.getInstance().logCustom(new CustomEvent("Обновление")
+                                .putCustomAttribute("Тип", "pull to refresh"));
+                    }
                     SheduleActivity.this.mSheduleModel.loadData();
                 }
             });
@@ -181,7 +196,7 @@ public class SheduleActivity extends AppCompatActivity
 
         {
             // setThing spinner
-            ArrayAdapter arrayAdapter = ArrayAdapter.createFromResource(this, R.array.menu_array, R.layout.spinner);
+            ArrayAdapter arrayAdapter = ArrayAdapter.createFromResource(this, R.array.period_array, R.layout.spinner);
             arrayAdapter.setDropDownViewResource(R.layout.spinner_item);
             spinner.setAdapter(arrayAdapter);
             spinner.setSelection(mSheduleModel.getPeriodPosition());
@@ -205,11 +220,17 @@ public class SheduleActivity extends AppCompatActivity
 
     @Click(R.id.add_favorites)
     void addFavoritesClick() {
+        if (!BuildConfig.DEBUG) {
+            Answers.getInstance().logCustom(new CustomEvent("Нажали +добавить в боковом меню"));
+        }
         addToFavorites();
     }
 
     @OptionsItem(R.id.case_button)
     void caseClick() {
+        if (!BuildConfig.DEBUG) {
+            Answers.getInstance().logCustom(new CustomEvent("Нажали выбрать группу"));
+        }
         addToFavorites();
     }
 
@@ -279,6 +300,10 @@ public class SheduleActivity extends AppCompatActivity
 
     @OptionsItem(R.id.refresh_icon)
     void refreshClick() {
+        if (!BuildConfig.DEBUG) {
+            Answers.getInstance().logCustom(new CustomEvent("Обновление")
+                    .putCustomAttribute("Тип", "кнопка в боковом меню"));
+        }
         mSheduleModel.loadData();
     }
 
@@ -294,6 +319,11 @@ public class SheduleActivity extends AppCompatActivity
 
     @Override
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+        if (!BuildConfig.DEBUG) {
+            String[] periods = getResources().getStringArray(R.array.period_array);
+            Answers.getInstance().logCustom(new CustomEvent("Смена периода")
+                    .putCustomAttribute("Период", periods[position]));
+        }
         if (position != mSheduleModel.getPeriodPosition()) {
             mSheduleModel.setPeriod(position);
             mSheduleModel.loadData();
@@ -307,12 +337,16 @@ public class SheduleActivity extends AppCompatActivity
     }
 
     private void refreshFavorites() {
-        List<Thing> favorites=mSheduleModel.getFavoritesThings();
+        List<Thing> favorites = mSheduleModel.getFavoritesThings();
         favoritesListView.setAdapter(new FavoritesAdapter(favorites));
     }
 
     @ItemClick(R.id.list_favorites_thing)
     protected void favoritesClick(Thing thing) {
+        if (!BuildConfig.DEBUG) {
+            Answers.getInstance().logCustom(new CustomEvent("Выбор группы из закладок")
+                    .putCustomAttribute("Группа", thing.toString()));
+        }
         if (thing.getId() != mSheduleModel.getCurrentThing().getId()) {
             mSheduleModel.setThing(thing);
             mSheduleAdapter.setData(new ArrayList<Pair>());
@@ -337,6 +371,9 @@ public class SheduleActivity extends AppCompatActivity
 
     @OptionsItem(R.id.feedback)
     void feedbackClick() {
+        if (!BuildConfig.DEBUG) {
+            Answers.getInstance().logCustom(new CustomEvent("Нажали отправить отзыв"));
+        }
         try {
             final Intent emailIntent = new Intent(android.content.Intent.ACTION_SEND);
             emailIntent.setType("plain/text");
@@ -356,6 +393,9 @@ public class SheduleActivity extends AppCompatActivity
 
     @OptionsItem(R.id.rate)
     void rateClick() {
+        if (!BuildConfig.DEBUG) {
+            Answers.getInstance().logCustom(new CustomEvent("Нажали оценить"));
+        }
         try {
             startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + getPackageName())));
         } catch (ActivityNotFoundException e) {

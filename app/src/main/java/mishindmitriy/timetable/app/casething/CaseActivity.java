@@ -8,6 +8,9 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
+import com.crashlytics.android.answers.Answers;
+import com.crashlytics.android.answers.ContentViewEvent;
+
 import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.Background;
 import org.androidannotations.annotations.EActivity;
@@ -18,6 +21,7 @@ import org.androidannotations.annotations.ViewById;
 import java.sql.SQLException;
 import java.util.List;
 
+import mishindmitriy.timetable.BuildConfig;
 import mishindmitriy.timetable.R;
 import mishindmitriy.timetable.model.data.entity.Thing;
 import mishindmitriy.timetable.model.db.HelperFactory;
@@ -55,6 +59,50 @@ public class CaseActivity extends AppCompatActivity implements Toolbar.OnMenuIte
         mViewPager.setAdapter(pagerAdapter);
         tabLayout.setupWithViewPager(mViewPager);
         mViewPager.setOffscreenPageLimit(2);
+
+        if (!BuildConfig.DEBUG){
+            Answers.getInstance().logContentView(new ContentViewEvent()
+                    .putContentName("Экран выбора групп"));
+            Answers.getInstance().logContentView(new ContentViewEvent()
+                    .putContentName("Просмотр списка групп"));
+        }
+
+        mViewPager.setOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+            @Override
+            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+
+            }
+
+            @Override
+            public void onPageSelected(int position) {
+                switch (position)
+                {
+                    case 0:
+                        if (!BuildConfig.DEBUG){
+                            Answers.getInstance().logContentView(new ContentViewEvent()
+                                    .putContentName("Просмотр списка групп"));
+                        }
+                        break;
+                    case 1:
+                        if (!BuildConfig.DEBUG){
+                            Answers.getInstance().logContentView(new ContentViewEvent()
+                                    .putContentName("Просмотр списка преподавателей"));
+                        }
+                        break;
+                    case 2:
+                        if (!BuildConfig.DEBUG){
+                            Answers.getInstance().logContentView(new ContentViewEvent()
+                                    .putContentName("Просмотр списка аудиторий"));
+                        }
+                        break;
+                }
+            }
+
+            @Override
+            public void onPageScrollStateChanged(int state) {
+
+            }
+        });
 
         forwardUpdate();
     }

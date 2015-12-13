@@ -48,8 +48,8 @@ import mishindmitriy.timetable.BuildConfig;
 import mishindmitriy.timetable.R;
 import mishindmitriy.timetable.app.ObjectAdapter;
 import mishindmitriy.timetable.app.casething.CaseActivity_;
-import mishindmitriy.timetable.app.shedule.widgets.ViewItemFavoriteThing;
-import mishindmitriy.timetable.app.shedule.widgets.ViewItemFavoriteThing_;
+import mishindmitriy.timetable.app.shedule.widgets.ItemFavoriteThingView;
+import mishindmitriy.timetable.app.shedule.widgets.ItemFavoriteThingView_;
 import mishindmitriy.timetable.model.SheduleModel;
 import mishindmitriy.timetable.model.SheduleWorkerFragment;
 import mishindmitriy.timetable.model.data.entity.Pair;
@@ -341,7 +341,7 @@ public class SheduleActivity extends AppCompatActivity
             final Intent emailIntent = new Intent(android.content.Intent.ACTION_SEND);
             emailIntent.setType("plain/text");
             emailIntent.putExtra(android.content.Intent.EXTRA_EMAIL, new String[]{"mishin.dmitriy@gmail.com"});
-            emailIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, "Отзыв по приложению Расписание ПВГУС");
+            emailIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, getResources().getString(R.string.feedback_title));
             emailIntent.putExtra(
                     Intent.EXTRA_TEXT,
                     String.format("\n\n\n %s \n Android %s \n Расписание ПВГУС %d",
@@ -379,9 +379,9 @@ public class SheduleActivity extends AppCompatActivity
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
             if (convertView == null) {
-                convertView = ViewItemFavoriteThing_.build(parent.getContext());
+                convertView = ItemFavoriteThingView_.build(parent.getContext());
             }
-            ViewItemFavoriteThing view = (ViewItemFavoriteThing) convertView;
+            ItemFavoriteThingView view = (ItemFavoriteThingView) convertView;
             view.setThing(getItem(position));
             return view;
         }

@@ -7,8 +7,8 @@ import android.widget.BaseAdapter;
 
 import java.util.List;
 
-import mishindmitriy.timetable.app.shedule.widgets.PairHeaderView;
-import mishindmitriy.timetable.app.shedule.widgets.PairHeaderView_;
+import mishindmitriy.timetable.app.shedule.widgets.HeaderPairView;
+import mishindmitriy.timetable.app.shedule.widgets.HeaderPairView_;
 import mishindmitriy.timetable.app.shedule.widgets.PairView;
 import mishindmitriy.timetable.app.shedule.widgets.PairView_;
 import mishindmitriy.timetable.model.data.entity.Pair;
@@ -61,7 +61,7 @@ public class SheduleListAdapter extends BaseAdapter implements StickyListHeaders
 
     @Override
     public View getHeaderView(int position, View convertView, ViewGroup parent) {
-        PairHeaderView headerView=PairHeaderView_.build(mContext);
+        HeaderPairView headerView = HeaderPairView_.build(mContext);
         headerView.setDate(this.shedule.get(position).getDate());
         return headerView;
     }

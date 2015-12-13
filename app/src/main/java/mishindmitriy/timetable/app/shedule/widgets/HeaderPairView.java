@@ -17,7 +17,7 @@ import mishindmitriy.timetable.utils.DateUtils;
  * Created by mishindmitriy on 13.11.2015.
  */
 @EViewGroup(R.layout.header_pair)
-public class PairHeaderView extends RelativeLayout {
+public class HeaderPairView extends RelativeLayout {
     @ViewById(R.id.day_of_week)
     protected TextView dayOfWeekTextView;
     @ViewById(R.id.date)
@@ -25,7 +25,7 @@ public class PairHeaderView extends RelativeLayout {
     @ViewById(R.id.layout)
     protected RelativeLayout layout;
 
-    public PairHeaderView(Context context) {
+    public HeaderPairView(Context context) {
         super(context);
     }
 

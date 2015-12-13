@@ -37,6 +37,13 @@ public *;
 -keep class com.crashlytics.** { *; }
 -keep class com.crashlytics.android.**
 
+# OkHttp
+-keepattributes Signature
+-keepattributes *Annotation*
+-keep class com.squareup.okhttp.** { *; }
+-keep interface com.squareup.okhttp.** { *; }
+-dontwarn com.squareup.okhttp.**
+
 # OrmLite uses reflection
 -keep class com.j256.**
 -keepclassmembers class com.j256.** { *; }

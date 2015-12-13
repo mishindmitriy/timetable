@@ -14,6 +14,7 @@ import android.widget.ListView;
 import android.widget.ProgressBar;
 
 import org.androidannotations.annotations.AfterViews;
+import org.androidannotations.annotations.Background;
 import org.androidannotations.annotations.Click;
 import org.androidannotations.annotations.EFragment;
 import org.androidannotations.annotations.FragmentArg;
@@ -37,11 +38,8 @@ import mishindmitriy.timetable.model.db.HelperFactory;
  */
 @EFragment(R.layout.fragment_case)
 public class CaseFragment extends Fragment implements CaseThingModel.Observer {
-    private static final String TAG = "GroupsFragment ";
-
     @FragmentArg
     protected ThingType mWhatCase;
-
     @ViewById(R.id.editText)
     protected EditText filterEditText;
     @ViewById(R.id.buttonRefresh)
@@ -74,13 +72,13 @@ public class CaseFragment extends Fragment implements CaseThingModel.Observer {
     public void init() {
         switch (mWhatCase) {
             case GROUP:
-                filterEditText.setHint("Введите номер группы");
+                filterEditText.setHint(R.string.input_group);
                 break;
             case TEACHER:
-                filterEditText.setHint("Введите фамилию преподавателя");
+                filterEditText.setHint(R.string.input_teacher);
                 break;
             case CLASSROOM:
-                filterEditText.setHint("Введите номер аудитории");
+                filterEditText.setHint(R.string.input_classroom);
                 break;
         }
         mCaseModel = new CaseThingModel(mWhatCase);
@@ -99,15 +97,20 @@ public class CaseFragment extends Fragment implements CaseThingModel.Observer {
                 boolean newState = !thing.isFavorite();
                 thing.setFavorite(newState);
                 v.setThing(thing);
-                try {
-                    HelperFactory.getInstance().getThingGAO().update(thing);
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
-                CaseActivity activity = (CaseActivity) getActivity();
-                activity.forwardUpdate();
+                thingUpdate(thing);
             }
         });
+    }
+
+    @Background
+    void thingUpdate(Thing thing) {
+        try {
+            HelperFactory.getInstance().getThingGAO().update(thing);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        CaseActivity activity = (CaseActivity) getActivity();
+        activity.forwardUpdate();
     }
 
     @Override

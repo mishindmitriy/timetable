@@ -1,6 +1,7 @@
 package mishindmitriy.timetable.app.shedule.widgets;
 
 import android.content.Context;
+import android.text.TextUtils;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
@@ -61,7 +62,7 @@ public class PairView extends RelativeLayout {
                 break;
         }
 
-        if (teacherTextView.getText().equals(""))
+        if (TextUtils.isEmpty(teacherTextView.getText()))
         {
             teacherTextView.setVisibility(GONE);
         } else teacherTextView.setVisibility(VISIBLE);
@@ -71,7 +72,7 @@ public class PairView extends RelativeLayout {
         noteTextView.setText(pair.getNote());
         pairNumberTextView.setText(String.valueOf(pair.getNumber()));
 
-        boolean isSaturday=DateUtils.getDayOfWeek(pair.getDate()).equals("Суббота");
+        boolean isSaturday = DateUtils.getDayOfWeek(pair.getDate()).equalsIgnoreCase("Суббота");
         pairStartTextView.setText(PairsTimeConverter.getPairStartTime(pair.getNumber(),isSaturday));
         pairEndTextView.setText(PairsTimeConverter.getPairEndTime(pair.getNumber(),isSaturday));
     }

@@ -9,14 +9,17 @@ import android.view.View;
 import android.widget.Toast;
 
 import org.androidannotations.annotations.AfterViews;
+import org.androidannotations.annotations.Background;
 import org.androidannotations.annotations.EActivity;
 import org.androidannotations.annotations.Extra;
+import org.androidannotations.annotations.UiThread;
 import org.androidannotations.annotations.ViewById;
 
 import java.sql.SQLException;
 import java.util.List;
 
 import mishindmitriy.timetable.R;
+import mishindmitriy.timetable.model.data.entity.Thing;
 import mishindmitriy.timetable.model.db.HelperFactory;
 
 @EActivity(R.layout.activity_case)
@@ -31,6 +34,7 @@ public class CaseActivity extends AppCompatActivity implements Toolbar.OnMenuIte
     Toolbar toolbar;
     @Extra
     boolean firstTime;
+    List<Thing> favorites;
 
     @AfterViews
     protected void init() {
@@ -57,30 +61,37 @@ public class CaseActivity extends AppCompatActivity implements Toolbar.OnMenuIte
 
     @Override
     public void onBackPressed() {
-        if (forwardUpdate()) {
+        if (favoritesAvailable()) {
             setResult(0);
             finish();
         } else {
-            //Snackbar.make(mViewPager, "Выберите хотя-бы одну группу", Snackbar.LENGTH_LONG).show();
-            Toast.makeText(this, "Выберите хотя-бы одну группу", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.case_least_one_group, Toast.LENGTH_SHORT).show();
         }
-        //super.onBackPressed();
     }
 
-    public boolean forwardUpdate() {
-        List favorites = null;
+    private boolean favoritesAvailable() {
+        return favorites!=null && favorites.size()>0;
+    }
+
+    @Background
+    public void forwardUpdate() {
         try {
             favorites = HelperFactory.getInstance().getThingGAO().loadFavorites();
         } catch (SQLException e) {
             e.printStackTrace();
         }
+        toolbarUpdate();
+    }
 
-        if (favorites != null && favorites.size() > 0) {
-            if (toolbar.getMenu().size() > 0) toolbar.getMenu().getItem(0).setVisible(true);
-            return true;
-        } else {
-            if (toolbar.getMenu().size() > 0) toolbar.getMenu().getItem(0).setVisible(false);
-            return false;
+    @UiThread
+    void toolbarUpdate()
+    {
+        if (toolbar.getMenu().size() > 0) {
+            if (favoritesAvailable()) {
+                toolbar.getMenu().getItem(0).setVisible(true);
+            } else {
+                toolbar.getMenu().getItem(0).setVisible(false);
+            }
         }
     }
 

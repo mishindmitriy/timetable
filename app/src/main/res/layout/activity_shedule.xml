@@ -51,15 +51,22 @@
             android:layout_height="wrap_content"
             android:background="@android:color/white">
 
-            <se.emilsjolander.stickylistheaders.StickyListHeadersListView
-                android:id="@+id/dayPairsLayoutInActivity"
+            <FrameLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:cacheColorHint="@android:color/transparent"
-                android:clickable="false"
-                android:divider="@android:color/transparent"
-                android:dividerHeight="0px"
-                android:listSelector="@android:color/transparent" />
+                android:layout_height="match_parent">
+
+                <se.emilsjolander.stickylistheaders.StickyListHeadersListView
+                    android:id="@+id/dayPairsLayoutInActivity"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:cacheColorHint="@android:color/transparent"
+                    android:clickable="false"
+                    android:divider="@android:color/transparent"
+                    android:dividerHeight="0px"
+                    android:listSelector="@android:color/transparent" />
+
+                <include layout="@layout/empty_view" />
+            </FrameLayout>
 
         </android.support.v4.widget.SwipeRefreshLayout>
     </LinearLayout>

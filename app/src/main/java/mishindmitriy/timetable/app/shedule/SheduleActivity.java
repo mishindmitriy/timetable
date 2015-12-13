@@ -94,6 +94,8 @@ public class SheduleActivity extends AppCompatActivity
     protected SheduleWorkerFragment sheduleWorkerFragment;
     @InstanceState
     protected Date lastUpdate;
+    @ViewById(R.id.empty)
+    TextView emptyText;
     @ViewById(R.id.add_favorites)
     TextView addFavorites;
     private SheduleModel mSheduleModel;
@@ -125,6 +127,7 @@ public class SheduleActivity extends AppCompatActivity
 
     @AfterViews
     protected void init() {
+        emptyText.setTypeface(Typeface.create("sans-serif-light", Typeface.NORMAL));
         getWindow().setBackgroundDrawable(null);
 
         Drawable plus = addFavorites.getCompoundDrawables()[0];
@@ -266,6 +269,8 @@ public class SheduleActivity extends AppCompatActivity
 
     @Override
     public void onCacheLoad(List<Pair> shedule) {
+        if (shedule != null || shedule.size() != 0)
+            emptyText.setVisibility(View.GONE);
         mSheduleAdapter.setData(shedule);
     }
 
@@ -287,7 +292,12 @@ public class SheduleActivity extends AppCompatActivity
 
     @Override
     public void onLoadFinished(List<Pair> shedule) {
-        if (mSheduleAdapter.getCount() != shedule.size()) mListShedule.setSelection(0);
+        if (shedule == null || shedule.size() == 0) {
+            emptyText.setVisibility(View.VISIBLE);
+        } else emptyText.setVisibility(View.GONE);
+        if (shedule != null && mSheduleAdapter.getCount() != shedule.size()) {
+            mListShedule.setSelection(0);
+        }
         mSheduleAdapter.setData(shedule);
         mSwipeLayout.post(new Runnable() {
             @Override

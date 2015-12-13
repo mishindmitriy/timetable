@@ -24,6 +24,7 @@
     <string name="input_teacher">Введите фамилию преподавателя</string>
     <string name="input_classroom">Введите номер аудитории</string>
     <string name="feedback_title">Отзыв по приложению Расписание ПВГУС</string>
+    <string name="empty_text">Занятия отсутствуют</string>
 
     <string-array name="period_array">
         <item>Сегодня</item>

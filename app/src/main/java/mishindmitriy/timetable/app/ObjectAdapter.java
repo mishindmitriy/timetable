@@ -12,7 +12,15 @@ public abstract class ObjectAdapter<T> extends BaseAdapter {
     protected List<T> objects = new ArrayList<>();
 
     public ObjectAdapter(List<T> list) {
-        this.objects = list;
+        if (list != null) this.objects = list;
+    }
+
+    public ObjectAdapter() {
+    }
+
+    public void setData(List<T> objects) {
+        this.objects = objects;
+        notifyDataSetChanged();
     }
 
     @Override

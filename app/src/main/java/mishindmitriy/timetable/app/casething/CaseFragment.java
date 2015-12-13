@@ -74,6 +74,8 @@ public class CaseFragment extends Fragment implements CaseThingModel.Observer {
 
     @AfterViews
     public void init() {
+        adapter = new CaseAdapter();
+        listView.setAdapter(adapter);
         switch (mWhatCase) {
             case GROUP:
                 filterEditText.setHint(R.string.input_group);
@@ -113,6 +115,7 @@ public class CaseFragment extends Fragment implements CaseThingModel.Observer {
                 }
             }
         });
+
     }
 
     @Background
@@ -134,24 +137,27 @@ public class CaseFragment extends Fragment implements CaseThingModel.Observer {
 
     @Override
     public void onLoadFinished(List<Thing> listThings) {
+        if (listThings == null || listThings.size() == 0) {
+            mButton.setVisibility(View.VISIBLE);
+            return;
+        } else mButton.setVisibility(View.INVISIBLE);
         setThingList(listThings);
-        if (adapter.getCount() == 0) mButton.setVisibility(View.VISIBLE);
-        else mButton.setVisibility(View.INVISIBLE);
     }
 
     private void setThingList(List<Thing> listThings) {
-        adapter = new CaseAdapter(listThings);
-        adapter.getFilter().filter(filterEditText.getText());
-        listView.setAdapter(adapter);
+        if (listThings == null || listThings.size() == 0) return;
         mProgressBar.setVisibility(View.INVISIBLE);
+        adapter.getFilter().filter(filterEditText.getText());
+        int index = listView.getFirstVisiblePosition();
+        View v = listView.getChildAt(0);
+        int top = (v == null) ? 0 : (v.getTop() - listView.getPaddingTop());
+        adapter.setData(listThings);
+        listView.setSelectionFromTop(index, top);
     }
 
     @Override
     public void onCacheLoad(List<Thing> listThings) {
-        if (listThings != null && listThings.size() > 0
-                && listThings.size() != listView.getCount()) {
-            setThingList(listThings);
-        }
+        setThingList(listThings);
     }
 
     @Override
@@ -184,6 +190,10 @@ public class CaseFragment extends Fragment implements CaseThingModel.Observer {
 
         public CaseAdapter(List<Thing> list) {
             super(list);
+        }
+
+        public CaseAdapter() {
+            super();
         }
 
         @Override

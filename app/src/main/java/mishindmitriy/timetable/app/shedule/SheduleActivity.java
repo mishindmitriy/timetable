@@ -98,6 +98,8 @@ public class SheduleActivity extends AppCompatActivity
     TextView emptyText;
     @ViewById(R.id.add_favorites)
     TextView addFavorites;
+    @ViewById(R.id.title_favorites)
+    TextView titleFavorites;
     private SheduleModel mSheduleModel;
     private ActionBarDrawerToggle mDrawerToggle;
     private SheduleListAdapter mSheduleAdapter;
@@ -128,6 +130,7 @@ public class SheduleActivity extends AppCompatActivity
     @AfterViews
     protected void init() {
         emptyText.setTypeface(Typeface.create("sans-serif-light", Typeface.NORMAL));
+        titleFavorites.setTypeface(Typeface.create("sans-serif-light", Typeface.BOLD));
         getWindow().setBackgroundDrawable(null);
 
         Drawable plus = addFavorites.getCompoundDrawables()[0];
@@ -211,7 +214,7 @@ public class SheduleActivity extends AppCompatActivity
 
 
         {   //init favorites
-            currentThingTextView.setTypeface(Typeface.create("sans-serif-light", Typeface.NORMAL));
+            currentThingTextView.setTypeface(Typeface.create("sans-serif-light", Typeface.BOLD));
             refreshFavorites();
         }
 

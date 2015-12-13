@@ -1,6 +1,10 @@
 package mishindmitriy.timetable.app.shedule.widgets;
 
 import android.content.Context;
+import android.graphics.Color;
+import android.graphics.PorterDuff;
+import android.graphics.Typeface;
+import android.graphics.drawable.Drawable;
 import android.text.TextUtils;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -43,7 +47,13 @@ public class PairView extends RelativeLayout {
     @AfterViews
     void init()
     {
-        //subjectTextView.setTypeface(Typeface.create("sans-serif-light", Typeface.NORMAL));
+        subjectTextView.setTypeface(Typeface.create("sans-serif-light", Typeface.BOLD));
+        teacherTextView.setTypeface(Typeface.create("sans-serif-light", Typeface.NORMAL));
+        pairTypeTextView.setTypeface(Typeface.create("sans-serif-light", Typeface.NORMAL));
+        Drawable drawable = classroomTextView.getCompoundDrawables()[0];
+        if (drawable != null) drawable.setColorFilter(Color.GRAY, PorterDuff.Mode.MULTIPLY);
+        drawable = noteTextView.getCompoundDrawables()[0];
+        if (drawable != null) drawable.setColorFilter(Color.GRAY, PorterDuff.Mode.MULTIPLY);
     }
 
     public void setPair(Pair pair) {
@@ -51,21 +61,30 @@ public class PairView extends RelativeLayout {
             case GROUP:
                 classroomTextView.setText(pair.getClassroom());
                 teacherTextView.setText(pair.getTeacher());
+                Drawable drawable = getResources().getDrawable(R.drawable.ic_face_white_18dp);
+                if (drawable != null) drawable.setColorFilter(Color.GRAY, PorterDuff.Mode.MULTIPLY);
+                teacherTextView.setCompoundDrawablesWithIntrinsicBounds(drawable, null, null, null);
                 break;
             case TEACHER:
                 classroomTextView.setText(pair.getClassroom());
                 teacherTextView.setText(pair.getGroup());
+                teacherTextView.setCompoundDrawables(null, null, null, null);
                 break;
             case CLASSROOM:
                 classroomTextView.setText(pair.getGroup());
                 teacherTextView.setText(pair.getTeacher());
+                teacherTextView.setCompoundDrawables(null, null, null, null);
                 break;
         }
 
-        if (TextUtils.isEmpty(teacherTextView.getText()))
+        if (TextUtils.isEmpty(pair.getTeacher()))
         {
             teacherTextView.setVisibility(GONE);
         } else teacherTextView.setVisibility(VISIBLE);
+
+        if (TextUtils.isEmpty(pair.getNote())) {
+            noteTextView.setVisibility(GONE);
+        } else noteTextView.setVisibility(VISIBLE);
 
         pairTypeTextView.setText(pair.getType());
         subjectTextView.setText(pair.getSubject());

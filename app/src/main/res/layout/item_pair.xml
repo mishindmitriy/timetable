@@ -20,9 +20,12 @@
         android:id="@+id/textNote"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentRight="true"
         android:layout_below="@+id/textViewSubject"
-        android:layout_toEndOf="@+id/textViewClassroom"
-        android:layout_toRightOf="@+id/textViewClassroom"
+        android:drawableLeft="@drawable/ic_error_outline_white_18dp"
+        android:drawablePadding="2dp"
+        android:drawableStart="@drawable/ic_error_outline_white_18dp"
         android:paddingLeft="5dp"
         android:paddingStart="5dp"
         android:text="Note"
@@ -36,6 +39,9 @@
         android:layout_alignLeft="@+id/textViewSubject"
         android:layout_alignStart="@+id/textViewSubject"
         android:layout_below="@+id/textViewSubject"
+        android:drawableLeft="@drawable/ic_location_on_white_18dp"
+        android:drawablePadding="2dp"
+        android:drawableStart="@drawable/ic_location_on_white_18dp"
         android:text="Classroom"
         android:textAppearance="?android:attr/textAppearanceMedium"
         android:textColor="@android:color/tertiary_text_light" />
@@ -93,6 +99,7 @@
         android:layout_alignParentRight="true"
         android:layout_alignStart="@+id/textViewClassroom"
         android:layout_below="@+id/textViewClassroom"
+        android:drawablePadding="2dp"
         android:text="Teacher"
         android:textAppearance="?android:attr/textAppearanceSmall"
         android:textColor="@android:color/tertiary_text_light" />
@@ -106,5 +113,6 @@
         android:paddingLeft="5dp"
         android:text="TypePair"
         android:textAppearance="?android:attr/textAppearanceMedium"
-        android:textColor="@android:color/tertiary_text_light"/>
+        android:textColor="@android:color/tertiary_text_light"
+        android:textSize="14sp" />
 </RelativeLayout>

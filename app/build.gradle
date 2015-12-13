@@ -25,8 +25,8 @@ android {
         applicationId "mishindmitriy.timetable.phone"
         minSdkVersion 10
         targetSdkVersion 23
-        versionCode 15
-        versionName '1.2.2'
+        versionCode 16
+        versionName '1.2.3'
     }
     buildTypes {
         release {
@@ -58,10 +58,4 @@ apt {
         androidManifestFile variant.outputs[0].processResources.manifestFile
         resourcePackageName "mishindmitriy.timetable"
     }
-}
-
-crashlytics {
-    enableNdk true
-    androidNdkOut 'src/main/obj'
-    androidNdkLibsOut 'src/main/libs'
 }

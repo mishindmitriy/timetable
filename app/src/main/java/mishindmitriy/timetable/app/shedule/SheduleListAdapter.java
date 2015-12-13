@@ -34,7 +34,7 @@ public class SheduleListAdapter extends BaseAdapter implements StickyListHeaders
 
     @Override
     public int getCount() {
-        if (shedule==null) return 0;
+        if (shedule == null) return 0;
         return this.shedule.size();
     }
 
@@ -45,14 +45,14 @@ public class SheduleListAdapter extends BaseAdapter implements StickyListHeaders
 
     @Override
     public long getItemId(int position) {
-        if (shedule!=null && shedule.size()>0) return shedule.get(position).hashCode();
+        if (shedule != null && shedule.size() > 0) return shedule.get(position).hashCode();
         else return 0;
     }
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        PairView pairView=(PairView) convertView;
-        if (pairView==null) {
+        PairView pairView = (PairView) convertView;
+        if (pairView == null) {
             pairView = PairView_.build(mContext);
         }
         pairView.setPair(shedule.get(position));

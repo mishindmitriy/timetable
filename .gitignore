@@ -3,4 +3,5 @@
 /.idea/
 .DS_Store
 /build
-TimeTable.iml
+*.iml
+*.apk

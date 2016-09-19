@@ -14,9 +14,8 @@ import org.androidannotations.annotations.EViewGroup;
 import org.androidannotations.annotations.ViewById;
 
 import mishindmitriy.timetable.R;
-import mishindmitriy.timetable.model.data.PairsTimeConverter;
-import mishindmitriy.timetable.model.data.entity.Pair;
-import mishindmitriy.timetable.utils.DateUtils;
+import mishindmitriy.timetable.model.Pair;
+import mishindmitriy.timetable.utils.PairsTimeConverter;
 
 /**
  * Created by mishindmitriy on 13.11.2015.
@@ -45,8 +44,7 @@ public class PairView extends RelativeLayout {
     }
 
     @AfterViews
-    void init()
-    {
+    void init() {
         subjectTextView.setTypeface(Typeface.create("sans-serif-light", Typeface.NORMAL));
         teacherTextView.setTypeface(Typeface.create("sans-serif-light", Typeface.NORMAL));
         pairTypeTextView.setTypeface(Typeface.create("sans-serif-light", Typeface.NORMAL));
@@ -61,7 +59,7 @@ public class PairView extends RelativeLayout {
             case GROUP:
                 classroomTextView.setText(pair.getClassroom());
                 teacherTextView.setText(pair.getTeacher());
-                Drawable drawable = getResources().getDrawable(R.drawable.ic_face_white_18dp);
+                Drawable drawable = getResources().getDrawable(R.drawable.ic_record_voice_over_white_18dp);
                 if (drawable != null) drawable.setColorFilter(Color.GRAY, PorterDuff.Mode.MULTIPLY);
                 teacherTextView.setCompoundDrawablesWithIntrinsicBounds(drawable, null, null, null);
                 break;
@@ -77,8 +75,7 @@ public class PairView extends RelativeLayout {
                 break;
         }
 
-        if (TextUtils.isEmpty(pair.getTeacher()))
-        {
+        if (TextUtils.isEmpty(pair.getTeacher())) {
             teacherTextView.setVisibility(GONE);
         } else teacherTextView.setVisibility(VISIBLE);
 
@@ -91,8 +88,8 @@ public class PairView extends RelativeLayout {
         noteTextView.setText(pair.getNote());
         pairNumberTextView.setText(String.valueOf(pair.getNumber()));
 
-        boolean isSaturday = DateUtils.getDayOfWeek(pair.getDate()).equalsIgnoreCase("Суббота");
-        pairStartTextView.setText(PairsTimeConverter.getPairStartTime(pair.getNumber(),isSaturday));
-        pairEndTextView.setText(PairsTimeConverter.getPairEndTime(pair.getNumber(),isSaturday));
+        boolean isSaturday = pair.getDate().getDayOfWeek() == 6;
+        pairStartTextView.setText(PairsTimeConverter.getPairStartTime(pair.getNumber(), isSaturday));
+        pairEndTextView.setText(PairsTimeConverter.getPairEndTime(pair.getNumber(), isSaturday));
     }
 }

@@ -6,12 +6,9 @@ import android.widget.TextView;
 
 import org.androidannotations.annotations.EViewGroup;
 import org.androidannotations.annotations.ViewById;
-
-import java.util.Date;
+import org.joda.time.LocalDate;
 
 import mishindmitriy.timetable.R;
-import mishindmitriy.timetable.model.data.DateFormatter;
-import mishindmitriy.timetable.utils.DateUtils;
 
 /**
  * Created by mishindmitriy on 13.11.2015.
@@ -29,12 +26,10 @@ public class HeaderPairView extends RelativeLayout {
         super(context);
     }
 
-    public void setDate(Date date) {
-        String dayOfWeek = DateUtils.getDayOfWeek(date);
-        String today = DateFormatter.DateToString(new Date());
-        dayOfWeekTextView.setText(dayOfWeek);
-        dateTextView.setText(DateFormatter.DateToString(date));
-        if (today.equals(DateFormatter.DateToString(date))) {
+    public void setDate(LocalDate date) {
+        dayOfWeekTextView.setText(date.toString("E"));
+        dateTextView.setText(date.toString("dd.MM.yyyy"));
+        if (LocalDate.now().isEqual(date)) {
             layout.setBackgroundColor(getResources().getColor(R.color.select));
         }
     }

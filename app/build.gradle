@@ -15,15 +15,16 @@ repositories {
 apply plugin: 'com.android.application'
 apply plugin: 'io.fabric'
 apply plugin: 'android-apt'
-def AAVersion = '3.3.2'
+apply plugin: 'realm-android'
+def AAVersion = '4.1.0'
 
 android {
-    compileSdkVersion 23
-    buildToolsVersion '23.0.2'
+    compileSdkVersion 24
+    buildToolsVersion '24.0.2'
 
     defaultConfig {
         applicationId "mishindmitriy.timetable.phone"
-        minSdkVersion 10
+        minSdkVersion 14
         targetSdkVersion 23
         versionCode 16
         versionName '1.2.3'
@@ -39,21 +40,21 @@ android {
     }
 }
 
-
 dependencies {
     //compile fileTree(include: ['*.jar'], dir: 'libs')
     apt "org.androidannotations:androidannotations:$AAVersion"
     compile "org.androidannotations:androidannotations-api:$AAVersion"
-    compile 'com.google.android.gms:play-services-analytics:8.3.0'
-    compile 'com.android.support:design:23.1.1'
+    compile 'com.android.support:design:24.2.1'
     compile 'org.jsoup:jsoup:1.8.3'
     compile 'se.emilsjolander:stickylistheaders:2.7.0'
     compile 'com.j256.ormlite:ormlite-android:4.48'
     compile 'com.j256.ormlite:ormlite-core:4.48'
-    compile('com.crashlytics.sdk.android:crashlytics:2.5.5@aar') {
+    compile('com.crashlytics.sdk.android:crashlytics:2.6.2@aar') {
         transitive = true;
     }
     compile 'com.squareup.okhttp:okhttp:2.6.0'
+    compile 'net.danlew:android.joda:2.9.4.1'
+    compile 'com.timehop.stickyheadersrecyclerview:library:0.4.3@aar'
 }
 
 apt {

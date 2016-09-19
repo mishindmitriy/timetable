@@ -6,11 +6,13 @@ import android.os.StrictMode;
 import com.crashlytics.android.Crashlytics;
 
 import io.fabric.sdk.android.Fabric;
+import io.realm.Realm;
+import io.realm.RealmConfiguration;
 import mishindmitriy.timetable.BuildConfig;
-import mishindmitriy.timetable.model.db.HelperFactory;
+import mishindmitriy.timetable.utils.Prefs;
 
 /**
- * Created by mishindmitriy on 25.08.2015.
+ * Created by mishindmitriy on 19.09.2016.
  * TimeTable Application Class
  */
 public class TimeTableApp extends Application {
@@ -30,12 +32,11 @@ public class TimeTableApp extends Application {
                     .penaltyLog()
                     .build());
         }
-        HelperFactory.init(getApplicationContext());
+        Realm.setDefaultConfiguration(new RealmConfiguration.Builder(this)
+                .schemaVersion(1)
+                .deleteRealmIfMigrationNeeded()
+                .build());
+        Prefs.init(this);
     }
 
-    @Override
-    public void onTerminate() {
-        HelperFactory.release();
-        super.onTerminate();
-    }
 }

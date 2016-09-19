@@ -5,23 +5,22 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <LinearLayout
+    <android.support.design.widget.CoordinatorLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:layout_height="match_parent">
 
-        <android.support.v7.widget.Toolbar
-            android:id="@+id/toolbar"
+        <android.support.design.widget.AppBarLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="?attr/colorPrimary"
-            android:minHeight="?attr/actionBarSize"
-            app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
-            app:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
+            android:layout_height="wrap_content">
 
-            <RelativeLayout
+            <android.support.v7.widget.Toolbar
+                android:id="@+id/toolbar"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent">
+                android:layout_height="wrap_content"
+                android:background="?attr/colorPrimary"
+                android:minHeight="?attr/actionBarSize"
+                app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
+                app:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
 
                 <TextView
                     android:id="@+id/current_thing_title"
@@ -32,43 +31,19 @@
                     android:textSize="16sp"
                     android:textStyle="bold" />
 
-                <Spinner
-                    android:id="@+id/spinner"
-                    style="@style/Widget.Spinner"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_below="@+id/current_thing_title"
-                    android:paddingBottom="5dp"
-                    android:paddingTop="2dp" />
+            </android.support.v7.widget.Toolbar>
 
-            </RelativeLayout>
-
-        </android.support.v7.widget.Toolbar>
-
-        <FrameLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent">
-
-            <android.support.v4.widget.SwipeRefreshLayout
-                android:id="@+id/sheduleSwipeRefresh"
+            <TableLayout
+                android:id="@+id/tabLayout"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@android:color/white">
+                android:layout_height="wrap_content" />
+        </android.support.design.widget.AppBarLayout>
 
-                <se.emilsjolander.stickylistheaders.StickyListHeadersListView
-                    android:id="@+id/dayPairsLayoutInActivity"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:cacheColorHint="@android:color/transparent"
-                    android:clickable="false"
-                    android:divider="@android:color/transparent"
-                    android:dividerHeight="0px"
-                    android:listSelector="@android:color/transparent" />
-            </android.support.v4.widget.SwipeRefreshLayout>
-
-            <include layout="@layout/empty_view" />
-        </FrameLayout>
-    </LinearLayout>
+        <android.support.v4.view.ViewPager
+            android:id="@+id/viewPager"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+    </android.support.design.widget.CoordinatorLayout>
 
     <android.support.design.widget.NavigationView
         android:id="@+id/nvView"

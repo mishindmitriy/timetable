@@ -3,20 +3,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:context="mishindmitriy.timetable.app.shedule.SheduleActivity">
     <item
-        android:id="@+id/refresh_icon"
-        android:icon="@drawable/ic_action_refresh"
-        android:title="@string/Refresh"
-        app:showAsAction="withText" />
-    <item
-        android:id="@+id/case_button"
-        android:title="@string/CaseGroup"
-        app:showAsAction="withText" />
-    <item
-        android:id="@+id/rate"
-        android:title="@string/rate"
-        app:showAsAction="withText" />
-    <item
-        android:id="@+id/feedback"
-        android:title="@string/feedback"
-        app:showAsAction="withText" />
+        android:id="@+id/case_date"
+        android:icon="@drawable/ic_event_white_24dp"
+        android:title="@string/choose_date"
+        app:showAsAction="always" />
 </menu>

@@ -18,17 +18,7 @@ public class Thing extends RealmObject implements Serializable {
     @PrimaryKey
     private long id;
     private int timesOpen = 0;
-    private boolean selected = false;
     private int rating;
-
-    public boolean isSelected() {
-        return selected;
-    }
-
-    public Thing setSelected(boolean selected) {
-        this.selected = selected;
-        return this;
-    }
 
     public String getName() {
         return name;
@@ -74,5 +64,9 @@ public class Thing extends RealmObject implements Serializable {
 
     public long getId() {
         return id;
+    }
+
+    public void incrementOpenTimes() {
+        timesOpen++;
     }
 }

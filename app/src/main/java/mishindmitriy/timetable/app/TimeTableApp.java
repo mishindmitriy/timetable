@@ -5,6 +5,8 @@ import android.os.StrictMode;
 
 import com.crashlytics.android.Crashlytics;
 
+import net.danlew.android.joda.JodaTimeAndroid;
+
 import io.fabric.sdk.android.Fabric;
 import io.realm.Realm;
 import io.realm.RealmConfiguration;
@@ -19,6 +21,7 @@ public class TimeTableApp extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+        JodaTimeAndroid.init(this);
         if (!BuildConfig.DEBUG) {
             Fabric.with(this, new Crashlytics());
         }

@@ -1,6 +1,5 @@
 <resources>
-    <string name="app_name">Расписание
-        ПВГУС</string>
+    <string name="app_name">Расписание ПВГУС</string>
 
     <string name="wait">Подождите</string>
     <string name="connToServ">Загрузка</string>
@@ -13,27 +12,9 @@
     <string name="congratulations">Поздравляем! На выбранный период занятий нет</string>
     <string name="load_error">"Ошибка загрузки"</string>
 
-    <string name="title_activity_case">CaseActivity</string>
     <string name="title_activity_shedule">Расписание ПВГУС</string>
     <string name="action_not_possible">Действие не возможно</string>
-    <string name="title_intent_send_mail">Отправка отзыва</string>
-    <string name="rate">Оценить</string>
-    <string name="feedback">Отправить отзыв</string>
-    <string name="case_least_one_group">Выберите хотя-бы одну группу</string>
-    <string name="input_group">Введите номер группы</string>
-    <string name="input_teacher">Введите фамилию преподавателя</string>
-    <string name="input_classroom">Введите номер аудитории</string>
-    <string name="feedback_title">Отзыв по приложению Расписание ПВГУС</string>
     <string name="empty_text">Занятия отсутствуют</string>
-
-    <string-array name="period_array">
-        <item>Сегодня</item>
-        <item>Завтра</item>
-        <item>7 дней</item>
-        <item>Текущая неделя</item>
-        <item>Следующая неделя</item>
-        <item>Текущий месяц</item>
-        <item>Следующий месяц</item>
-    </string-array>
-
+    <string name="choose_date">Выбрать дату</string>
+    <string name="choose_thing">Выбрать</string>
 </resources>

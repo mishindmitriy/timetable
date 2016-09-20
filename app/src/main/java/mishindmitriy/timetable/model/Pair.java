@@ -98,4 +98,8 @@ public class Pair extends RealmObject implements Serializable {
     public void setId() {
         id = date.hashCode() + number + subject.hashCode();
     }
+
+    public long getId() {
+        return id;
+    }
 }

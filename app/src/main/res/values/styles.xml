@@ -2,31 +2,17 @@
 
     <!-- Base application theme. -->
     <style name="AppTheme" parent="@style/Theme.AppCompat.Light.NoActionBar">
-        <!-- Customize your theme here. -->
-        <!-- colorPrimary is used for the default action bar background -->
         <item name="colorPrimary">@color/teal500</item>
-        <!-- colorPrimaryDark is used for the status bar -->
         <item name="colorPrimaryDark">@color/teal800</item>
-
-        <!-- colorAccent is used as the default value for colorControlActivated,
-             which is used to tint widgets -->
         <item name="colorAccent">@color/select</item>
-        <item name="android:colorBackground">@android:color/white</item>
-
-        <!-- You can also set colorControlNormal, colorControlActivated
-             colorControlHighlight, and colorSwitchThumbNormal. -->
+        <item name="android:textColor">@color/gray</item>
+        <item name="android:editTextColor">@android:color/white</item>
     </style>
 
-    <style name="TabLayoutApperance" parent="TextAppearance.AppCompat.Widget.ActionBar.Title.Inverse">
-        <item name="android:textSize">12sp</item>
-        <item name="android:textStyle">bold</item>
+    <style name="SearchTheme" parent="AppTheme">
+        <item name="android:colorControlActivated">@android:color/white</item>
         <item name="android:textColor">@android:color/white</item>
     </style>
 
-    <style name="Widget.Spinner" parent="Widget.AppCompat.Light.Spinner.DropDown.ActionBar">
-        <item name="android:background">?android:selectableItemBackground</item>
-        <item name="android:dropDownSelector">?android:selectableItemBackground</item>
-        <item name="android:divider">@null</item>
-        <item name="android:overlapAnchor">true</item>
-    </style>
+
 </resources>

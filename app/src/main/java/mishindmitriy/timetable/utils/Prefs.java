@@ -7,7 +7,7 @@ import android.content.SharedPreferences;
  * Created by dmitriy on 19.09.16.
  */
 public class Prefs {
-    private final static String KEY_SELECTED_THING_SERVER_ID = "selected_thing_server_id";
+    public final static String KEY_SELECTED_THING_SERVER_ID = "selected_thing_server_id";
     private static Prefs instance;
     final private SharedPreferences prefs;
 
@@ -31,5 +31,13 @@ public class Prefs {
         if (thingServerId == null || thingServerId.isEmpty()) return;
         prefs.edit().putString(KEY_SELECTED_THING_SERVER_ID, thingServerId)
                 .apply();
+    }
+
+    public void register(SharedPreferences.OnSharedPreferenceChangeListener listener) {
+        prefs.registerOnSharedPreferenceChangeListener(listener);
+    }
+
+    public void unregister(SharedPreferences.OnSharedPreferenceChangeListener listener) {
+        prefs.unregisterOnSharedPreferenceChangeListener(listener);
     }
 }

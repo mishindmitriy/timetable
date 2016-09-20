@@ -6,7 +6,6 @@ import io.realm.Case;
 import io.realm.Realm;
 import io.realm.Sort;
 import mishindmitriy.timetable.app.base.BaseAdapter;
-import mishindmitriy.timetable.app.things.widget.ViewItemThing_;
 import mishindmitriy.timetable.model.Thing;
 
 /**
@@ -15,10 +14,10 @@ import mishindmitriy.timetable.model.Thing;
 public class ThingAdapter extends BaseAdapter<Thing, ThingViewHolder> {
     public ThingAdapter() {
         setHasStableIds(true);
-        loadData();
+        loadAll();
     }
 
-    private void loadData() {
+    private void loadAll() {
         Realm realm = Realm.getDefaultInstance();
         setData(realm.where(Thing.class)
                 .findAllSortedAsync("rating", Sort.ASCENDING, "name", Sort.ASCENDING));
@@ -32,18 +31,19 @@ public class ThingAdapter extends BaseAdapter<Thing, ThingViewHolder> {
 
     @Override
     public ThingViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        return new ThingViewHolder(ViewItemThing_.build(parent.getContext()));
+        return new ThingViewHolder(parent);
     }
 
     public void filter(String phrase) {
         if (phrase == null || phrase.isEmpty()) {
-            loadData();
+            loadAll();
             return;
         }
         Realm realm = Realm.getDefaultInstance();
         setData(realm.where(Thing.class)
                 .contains("name", phrase, Case.INSENSITIVE)
                 .findAllSortedAsync("rating", Sort.ASCENDING, "name", Sort.ASCENDING));
+        // TODO: 20.09.2016 change this logic to new list and manual filter
         realm.close();
     }
 }

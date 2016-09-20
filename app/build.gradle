@@ -25,7 +25,7 @@ android {
     defaultConfig {
         applicationId "mishindmitriy.timetable.phone"
         minSdkVersion 14
-        targetSdkVersion 23
+        targetSdkVersion 24
         versionCode 16
         versionName '1.2.3'
     }
@@ -52,7 +52,8 @@ dependencies {
     compile('com.crashlytics.sdk.android:crashlytics:2.6.2@aar') {
         transitive = true;
     }
-    compile 'com.squareup.okhttp:okhttp:2.6.0'
+    compile 'com.squareup.okhttp3:okhttp:3.4.1'
+    compile 'com.squareup.okhttp3:logging-interceptor:3.4.1'
     compile 'net.danlew:android.joda:2.9.4.1'
     compile 'com.timehop.stickyheadersrecyclerview:library:0.4.3@aar'
 }

@@ -5,12 +5,14 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
+import android.view.View;
 
 import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.EActivity;
 import org.androidannotations.annotations.ViewById;
 
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.List;
 
 import io.realm.Realm;
@@ -23,7 +25,7 @@ import mishindmitriy.timetable.model.ThingType;
 import mishindmitriy.timetable.utils.DataHelper;
 import mishindmitriy.timetable.utils.Prefs;
 
-@EActivity(R.layout.activity_case)
+@EActivity(R.layout.activity_things)
 public class ThingsActivity extends BaseActivity {
     @ViewById(R.id.toolbar)
     protected Toolbar toolbar;
@@ -37,7 +39,17 @@ public class ThingsActivity extends BaseActivity {
 
     @AfterViews
     protected void init() {
+        if (Prefs.get().getSelectedThingServerId() != null) {
+            toolbar.setNavigationIcon(R.drawable.ic_arrow_back_white_24dp);
+            toolbar.setNavigationOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    onBackPressed();
+                }
+            });
+        }
         searchView.onActionViewExpanded();
+
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(thingAdapter);
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
@@ -59,6 +71,15 @@ public class ThingsActivity extends BaseActivity {
                 Prefs.get().setSelectedThingServerId(serverId);
                 SheduleActivity_.intent(ThingsActivity.this).start();
                 finish();
+                realm.executeTransactionAsync(new Realm.Transaction() {
+                    @Override
+                    public void execute(Realm realm) {
+                        Thing currentThing = realm.where(Thing.class)
+                                .equalTo("serverId", Prefs.get().getSelectedThingServerId())
+                                .findFirst();
+                        currentThing.incrementOpenTimes();
+                    }
+                });
             }
         });
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
@@ -72,13 +93,31 @@ public class ThingsActivity extends BaseActivity {
 
     private void loadThings() {
         swipeRefreshLayout.setRefreshing(true);
-        for (final ThingType thing : ThingType.values()) {
+        for (final ThingType thingType : ThingType.values()) {
             realm.executeTransactionAsync(new Realm.Transaction() {
                 @Override
                 public void execute(Realm realm) {
                     try {
-                        List<Thing> thingList = DataHelper.getSomeThing(thing);
+                        List<Thing> thingList = DataHelper.getSomeThing(thingType);
+                        HashSet<String> serverIds = new HashSet<String>();
+                        for (Thing t : thingList) {
+                            Thing existThing = realm.where(Thing.class)
+                                    .equalTo("serverId", t.getServerId())
+                                    .findFirst();
+                            if (existThing != null) {
+                                t.setTimesOpen(existThing.getTimesOpen());
+                            }
+                            serverIds.add(t.getServerId());
+                        }
                         realm.copyToRealmOrUpdate(thingList);
+
+                        for (Thing t : realm.where(Thing.class)
+                                .equalTo("type", thingType.toString())
+                                .findAll()) {
+                            if (!serverIds.contains(t.getServerId())) {
+                                t.deleteFromRealm();
+                            }
+                        }
                     } catch (IOException e) {
                         e.printStackTrace();
                     }

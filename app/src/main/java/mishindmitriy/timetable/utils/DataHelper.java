@@ -2,12 +2,6 @@ package mishindmitriy.timetable.utils;
 
 import android.support.annotation.Nullable;
 
-import com.squareup.okhttp.FormEncodingBuilder;
-import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.RequestBody;
-import com.squareup.okhttp.Response;
-
 import org.joda.time.LocalDate;
 import org.joda.time.format.DateTimeFormatterBuilder;
 import org.jsoup.Jsoup;
@@ -23,20 +17,32 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import io.realm.Realm;
 import mishindmitriy.timetable.model.Pair;
 import mishindmitriy.timetable.model.Thing;
 import mishindmitriy.timetable.model.ThingType;
+import okhttp3.FormBody;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+import okhttp3.logging.HttpLoggingInterceptor;
 
 /**
  * Created by dmitriy on 21.05.15.
  */
 public class DataHelper {
-    public static final String URL = "http://www.tolgas.ru/services/raspisanie/";
+    private static final String URL = "http://www.tolgas.ru/services/raspisanie/";
 
     private static String doQuery(String inputUrl, @Nullable RequestBody requestBody) throws IOException {
-        OkHttpClient httpClient = new OkHttpClient();
-        httpClient.setConnectTimeout(5, TimeUnit.SECONDS);
-        httpClient.setReadTimeout(5, TimeUnit.SECONDS);
+        HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor();
+        loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.HEADERS);
+        OkHttpClient httpClient = new OkHttpClient.Builder()
+                .addInterceptor(loggingInterceptor)
+                .connectTimeout(5, TimeUnit.SECONDS)
+                .writeTimeout(5, TimeUnit.SECONDS)
+                .readTimeout(5, TimeUnit.SECONDS)
+                .build();
         Request request;
         if (requestBody != null) //значит делаем POST запрос
         {
@@ -120,7 +126,7 @@ public class DataHelper {
     private static String sendPostToGetShedule(String thingTypeId, String thingId,
                                                String fromDate, String toDate)
             throws IOException {
-        RequestBody requestBody = new FormEncodingBuilder()
+        RequestBody requestBody = new FormBody.Builder()
                 .add("rel", thingTypeId)
                 .add("vr", thingId)
                 .add("from", fromDate)
@@ -172,5 +178,43 @@ public class DataHelper {
     public static List<Thing> getSomeThing(ThingType thingType) throws IOException {
         String url = URL + "?id=" + ThingType.getPositionByPeriod(thingType);
         return mappingListThings(doQuery(url, null), thingType);
+    }
+
+    public static void loadSchedule(final Runnable runnable) {
+        final Realm realm = Realm.getDefaultInstance();
+        realm.executeTransactionAsync(new Realm.Transaction() {
+            @Override
+            public void execute(Realm realm) {
+                String serverId = Prefs.get().getSelectedThingServerId();
+                Thing thing = realm.where(Thing.class)
+                        .equalTo("serverId", serverId)
+                        .findFirst();
+                try {
+                    List<Pair> pairs = DataHelper.getShedule(thing,
+                            LocalDate.now().minusDays(100),
+                            LocalDate.now().plusDays(100));
+                    realm.copyToRealmOrUpdate(pairs);
+                    // TODO: 19.09.16 add remove old pairs
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }, new Realm.Transaction.OnSuccess() {
+            @Override
+            public void onSuccess() {
+                realm.close();
+                if (runnable != null) {
+                    runnable.run();
+                }
+            }
+        }, new Realm.Transaction.OnError() {
+            @Override
+            public void onError(Throwable error) {
+                realm.close();
+                if (runnable != null) {
+                    runnable.run();
+                }
+            }
+        });
     }
 }

@@ -2,38 +2,16 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:paddingTop="100dp">
 
-    <TextView
-        android:id="@+id/title_favorites"
-        android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
-        android:layout_gravity="center"
-        android:background="@color/teal500"
-        android:gravity="center"
-        android:text="Закладки"
-        android:textColor="@android:color/white"
-        android:textSize="18sp"
-        android:textStyle="bold" />
+    <include
+        android:id="@+id/choose_thing"
+        layout="@layout/item_thing" />
 
-    <ListView
-        android:id="@+id/list_favorites_thing"
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/recyclerView"
         android:layout_width="match_parent"
         android:layout_height="0px"
-        android:layout_weight="1"
-        android:foregroundGravity="center" />
-
-    <TextView
-        android:id="@+id/add_favorites"
-        android:layout_width="wrap_content"
-        android:layout_height="?attr/actionBarSize"
-        android:layout_gravity="center"
-        android:drawableLeft="@drawable/ic_add_circle_white_24dp"
-        android:drawablePadding="10dp"
-        android:drawableStart="@drawable/ic_add_circle_white_24dp"
-        android:gravity="center"
-        android:text="Добавить"
-        android:textColor="@color/select"
-        android:textSize="16sp"
-        android:textStyle="bold" />
+        android:layout_weight="1" />
 </LinearLayout>

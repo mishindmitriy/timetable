@@ -7,7 +7,8 @@
 
     <android.support.design.widget.CoordinatorLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:fitsSystemWindows="true">
 
         <android.support.design.widget.AppBarLayout
             android:layout_width="match_parent"
@@ -16,9 +17,8 @@
             <android.support.v7.widget.Toolbar
                 android:id="@+id/toolbar"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="?attr/actionBarSize"
                 android:background="?attr/colorPrimary"
-                android:minHeight="?attr/actionBarSize"
                 app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
                 app:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
 
@@ -26,23 +26,27 @@
                     android:id="@+id/current_thing_title"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Номер группы"
                     android:textColor="@android:color/white"
                     android:textSize="16sp"
                     android:textStyle="bold" />
 
             </android.support.v7.widget.Toolbar>
 
-            <TableLayout
+            <android.support.design.widget.TabLayout
                 android:id="@+id/tabLayout"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                app:tabIndicatorColor="@android:color/white"
+                app:tabMode="scrollable"
+                app:tabSelectedTextColor="@android:color/white"
+                app:tabTextColor="@color/light_black" />
         </android.support.design.widget.AppBarLayout>
 
         <android.support.v4.view.ViewPager
             android:id="@+id/viewPager"
             android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+            android:layout_height="match_parent"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior" />
     </android.support.design.widget.CoordinatorLayout>
 
     <android.support.design.widget.NavigationView
@@ -50,7 +54,8 @@
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:layout_gravity="start"
-        android:background="@android:color/white">
+        android:background="@android:color/white"
+        android:fitsSystemWindows="false">
 
         <include layout="@layout/navigation_view" />
     </android.support.design.widget.NavigationView>

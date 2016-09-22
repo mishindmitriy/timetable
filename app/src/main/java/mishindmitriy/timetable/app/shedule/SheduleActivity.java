@@ -41,6 +41,7 @@ import mishindmitriy.timetable.utils.Prefs;
 
 @EActivity(R.layout.activity_shedule)
 public class SheduleActivity extends BaseActivity {
+    private final int pagesCount = 100;
     @ViewById(R.id.toolbar)
     protected Toolbar toolbar;
     @ViewById(R.id.sheduleLayout)
@@ -57,7 +58,6 @@ public class SheduleActivity extends BaseActivity {
     protected TabLayout tabLayout;
     @ViewById(R.id.choose_thing)
     protected TextView chooseThingText;
-
     @InstanceState
     protected DateTime lastUpdate;
     @InstanceState
@@ -156,10 +156,7 @@ public class SheduleActivity extends BaseActivity {
                                                             month + 1,
                                                             dayOfMonth)
                                             );
-                                            if (!startDate.isEqual(newDate)) {
-                                                startDate = newDate;
-                                                initPager();
-                                            }
+                                            onDateSelected(newDate);
                                         }
                                     },
                                     LocalDate.now().getYear(),
@@ -194,6 +191,15 @@ public class SheduleActivity extends BaseActivity {
         initPager();
     }
 
+    private void onDateSelected(LocalDate newDate) {
+        if (!startDate.isEqual(newDate)) {
+            startDate = newDate;
+            initPager();
+        } else {
+            viewPager.setCurrentItem(pagesCount / 2);
+        }
+    }
+
     private void setNewThing(final String serverId) {
         Prefs.get().setSelectedThingServerId(serverId);
         realm.executeTransactionAsync(new Realm.Transaction() {
@@ -208,7 +214,6 @@ public class SheduleActivity extends BaseActivity {
     }
 
     private void initPager() {
-        final int pagesCount = 100;
         final int initialItem = pagesCount / 2;
         viewPager.setAdapter(new FragmentPagerAdapter(getSupportFragmentManager()) {
             private LocalDate getLocalDate(int pos) {
@@ -244,38 +249,6 @@ public class SheduleActivity extends BaseActivity {
 
         tabLayout.setupWithViewPager(viewPager, true);
         viewPager.setCurrentItem(initialItem, false);
-        viewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
-            @Override
-            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-
-            }
-
-            @Override
-            public void onPageSelected(int position) {
-
-            }
-
-            @Override
-            public void onPageScrollStateChanged(int state) {
-
-            }
-        });
-        tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
-            @Override
-            public void onTabSelected(TabLayout.Tab tab) {
-
-            }
-
-            @Override
-            public void onTabUnselected(TabLayout.Tab tab) {
-
-            }
-
-            @Override
-            public void onTabReselected(TabLayout.Tab tab) {
-
-            }
-        });
     }
 
     @Override
@@ -292,7 +265,8 @@ public class SheduleActivity extends BaseActivity {
         final int tempPosition = viewPager.getCurrentItem();
         for (int i = 0; i < tabLayout.getTabCount(); i++) {
             if (tabLayout.getTabAt(i) != null) {
-                tabLayout.getTabAt(i).setText(viewPager.getAdapter().getPageTitle(i));
+                String s = String.valueOf(viewPager.getAdapter().getPageTitle(i));
+                tabLayout.getTabAt(i).setText(s);
             }
         }
         viewPager.setCurrentItem(tempPosition, false);

@@ -7,6 +7,8 @@ import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
 
+import com.timehop.stickyheadersrecyclerview.StickyRecyclerHeadersDecoration;
+
 import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.EActivity;
 import org.androidannotations.annotations.ViewById;
@@ -16,6 +18,7 @@ import java.util.HashSet;
 import java.util.List;
 
 import io.realm.Realm;
+import io.realm.Sort;
 import mishindmitriy.timetable.R;
 import mishindmitriy.timetable.app.base.BaseActivity;
 import mishindmitriy.timetable.app.base.BaseAdapter;
@@ -39,6 +42,9 @@ public class ThingsActivity extends BaseActivity {
 
     @AfterViews
     protected void init() {
+        thingAdapter.setData(realm.where(Thing.class)
+                .findAllSortedAsync("rating", Sort.ASCENDING, "name", Sort.ASCENDING));
+
         if (Prefs.get().getSelectedThingServerId() != null) {
             toolbar.setNavigationIcon(R.drawable.ic_arrow_back_white_24dp);
             toolbar.setNavigationOnClickListener(new View.OnClickListener() {
@@ -52,6 +58,14 @@ public class ThingsActivity extends BaseActivity {
 
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(thingAdapter);
+        final StickyRecyclerHeadersDecoration decoration = new StickyRecyclerHeadersDecoration(thingAdapter);
+        recyclerView.addItemDecoration(decoration);
+        thingAdapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
+            @Override
+            public void onChanged() {
+                decoration.invalidateHeaders();
+            }
+        });
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {

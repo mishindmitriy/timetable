@@ -17,4 +17,7 @@
     <string name="empty_text">Занятия отсутствуют</string>
     <string name="choose_date">Выбрать дату</string>
     <string name="choose_thing">Выбрать</string>
+    <string name="classrooms">Аудитории</string>
+    <string name="teachers">Преподаватели</string>
+    <string name="groups">Группы</string>
 </resources>

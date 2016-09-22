@@ -1,7 +1,5 @@
 package mishindmitriy.timetable.model;
 
-import com.j256.ormlite.table.DatabaseTable;
-
 import java.io.Serializable;
 
 import io.realm.RealmObject;
@@ -10,7 +8,6 @@ import io.realm.annotations.PrimaryKey;
 /**
  * Created by mishindmitriy on 05.06.2015.
  */
-@DatabaseTable
 public class Thing extends RealmObject implements Serializable {
     private String serverId;
     private String name;

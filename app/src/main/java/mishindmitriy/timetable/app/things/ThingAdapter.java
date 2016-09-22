@@ -1,28 +1,24 @@
 package mishindmitriy.timetable.app.things;
 
+import android.graphics.Color;
+import android.support.annotation.NonNull;
+import android.view.LayoutInflater;
+import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
-import io.realm.Case;
-import io.realm.Realm;
-import io.realm.Sort;
+import com.timehop.stickyheadersrecyclerview.StickyRecyclerHeadersAdapter;
+
+import mishindmitriy.timetable.R;
 import mishindmitriy.timetable.app.base.BaseAdapter;
+import mishindmitriy.timetable.app.base.BaseViewHolder;
 import mishindmitriy.timetable.model.Thing;
 
 /**
  * Created by dmitriy on 19.09.16.
  */
-public class ThingAdapter extends BaseAdapter<Thing, ThingViewHolder> {
-    public ThingAdapter() {
-        setHasStableIds(true);
-        loadAll();
-    }
-
-    private void loadAll() {
-        Realm realm = Realm.getDefaultInstance();
-        setData(realm.where(Thing.class)
-                .findAllSortedAsync("rating", Sort.ASCENDING, "name", Sort.ASCENDING));
-        realm.close();
-    }
+public class ThingAdapter extends BaseAdapter<Thing, ThingViewHolder>
+        implements StickyRecyclerHeadersAdapter<BaseViewHolder<String>> {
 
     @Override
     public long getItemId(int position) {
@@ -34,16 +30,59 @@ public class ThingAdapter extends BaseAdapter<Thing, ThingViewHolder> {
         return new ThingViewHolder(parent);
     }
 
-    public void filter(String phrase) {
-        if (phrase == null || phrase.isEmpty()) {
-            loadAll();
-            return;
+    @Override
+    public long getHeaderId(int position) {
+        switch (getItem(position).getType()) {
+            case CLASSROOM:
+                return 1;
+            case TEACHER:
+                return 2;
+            case GROUP:
+                return 3;
+            default:
+                return 0;
         }
-        Realm realm = Realm.getDefaultInstance();
-        setData(realm.where(Thing.class)
-                .contains("name", phrase, Case.INSENSITIVE)
-                .findAllSortedAsync("rating", Sort.ASCENDING, "name", Sort.ASCENDING));
-        // TODO: 20.09.2016 change this logic to new list and manual filter
-        realm.close();
+    }
+
+    @Override
+    public BaseViewHolder<String> onCreateHeaderViewHolder(ViewGroup parent) {
+        View view = LayoutInflater.from(parent.getContext())
+                .inflate(R.layout.item_thing, parent, false);
+        ((TextView) view.findViewById(R.id.text))
+                .setBackgroundColor(view.getContext().getResources()
+                        .getColor(R.color.teal500));
+        ((TextView) view.findViewById(R.id.text)).setTextColor(Color.WHITE);
+        return new BaseViewHolder<String>(view) {
+            @Override
+            public void update(@NonNull String item) {
+                ((TextView) itemView.findViewById(R.id.text)).setText(item);
+            }
+        };
+    }
+
+    @Override
+    public void onBindHeaderViewHolder(BaseViewHolder<String> holder, int position) {
+        switch (getItem(position).getType()) {
+            case CLASSROOM:
+                holder.update(holder.itemView.getContext().getResources()
+                        .getString(R.string.classrooms));
+                break;
+            case TEACHER:
+                holder.update(holder.itemView.getContext().getResources()
+                        .getString(R.string.teachers));
+                break;
+            case GROUP:
+                holder.update(holder.itemView.getContext().getResources()
+                        .getString(R.string.groups));
+                break;
+            default:
+                holder.update("");
+                break;
+        }
+    }
+
+    @Override
+    protected boolean contains(Thing t, String filterPhrase) {
+        return t.getName().toLowerCase().contains(filterPhrase.toLowerCase());
     }
 }

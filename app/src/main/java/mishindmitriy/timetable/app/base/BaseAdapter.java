@@ -3,6 +3,7 @@ package mishindmitriy.timetable.app.base;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import io.realm.RealmChangeListener;
@@ -16,18 +17,24 @@ public abstract class BaseAdapter<I extends RealmObject, VH extends BaseViewHold
         extends RecyclerView.Adapter<VH> {
     private RealmResults<I> items;
     private OnItemClickListener<I> itemClickListener = null;
+    private List<I> filteredList = new ArrayList<>();
+    private String filterPhrase = null;
 
     public RealmResults<I> getItems() {
         return items;
     }
 
+    public void setItems(RealmResults<I> items) {
+        this.items = items;
+    }
+
     @Override
     public int getItemCount() {
-        return items.size();
+        return filteredList.size();
     }
 
     public I getItem(int position) {
-        return items.get(position);
+        return filteredList.get(position);
     }
 
     @Override
@@ -47,19 +54,38 @@ public abstract class BaseAdapter<I extends RealmObject, VH extends BaseViewHold
         this.itemClickListener = itemOnClickListener;
     }
 
-    public List<I> getData() {
-        return items;
-    }
-
     public void setData(RealmResults<I> items) {
         this.items = items;
         items.addChangeListener(new RealmChangeListener<RealmResults<I>>() {
             @Override
             public void onChange(RealmResults<I> element) {
-                notifyDataSetChanged();
+                filterAndNotifyDataChanged();
             }
         });
+        filterAndNotifyDataChanged();
+    }
+
+    private void filterAndNotifyDataChanged() {
+        filteredList.clear();
+        if (filterPhrase == null || filterPhrase.isEmpty()) {
+            filteredList.addAll(items);
+        } else {
+            for (I t : items) {
+                if (contains(t, filterPhrase)) {
+                    filteredList.add(t);
+                }
+            }
+        }
         notifyDataSetChanged();
+    }
+
+    protected boolean contains(I t, String filterPhrase) {
+        return true;
+    }
+
+    public void filter(String phrase) {
+        filterPhrase = phrase;
+        filterAndNotifyDataChanged();
     }
 
     public interface OnItemClickListener<ITEM> {

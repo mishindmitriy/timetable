@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="mishindmitriy.timetable" >
+    package="mishindmitriy.timetable">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
@@ -11,7 +11,7 @@
         android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
-        android:theme="@style/AppTheme" >
+        android:theme="@style/AppTheme">
         <activity
             android:name=".app.shedule.SheduleActivity_"
             android:screenOrientation="portrait">
@@ -23,8 +23,10 @@
 
         <activity
             android:name=".app.things.ThingsActivity_"
-            android:screenOrientation="portrait">
-        </activity>
+            android:screenOrientation="portrait" />
+
+        <receiver android:name=".app.NotificationPublisher" />
+        <service android:name=".app.NotificationService" />
         <meta-data
             android:name="io.fabric.ApiKey"
             android:value="2d22a494fc2ac3e93047f01c673d690fd1948c2b" />

@@ -35,7 +35,7 @@ public class DayPairsFragment extends BaseFragment {
             = new SharedPreferences.OnSharedPreferenceChangeListener() {
         @Override
         public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-            if (key.equals(Prefs.KEY_SELECTED_THING_SERVER_ID)) {
+            if (key.equals(Prefs.KEY_SELECTED_THING_ID)) {
                 loadData();
             }
         }

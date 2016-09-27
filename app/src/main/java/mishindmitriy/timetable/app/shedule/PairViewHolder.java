@@ -12,13 +12,11 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 
 import mishindmitriy.timetable.R;
 import mishindmitriy.timetable.app.base.BaseViewHolder;
 import mishindmitriy.timetable.model.Pair;
-import mishindmitriy.timetable.utils.PairsTimeConverter;
 
 /**
  * Created by dmitriy on 19.09.16.
@@ -91,14 +89,11 @@ public class PairViewHolder extends BaseViewHolder<Pair> {
         noteTextView.setText(pair.getNote());
         pairNumberTextView.setText(String.valueOf(pair.getNumber()));
 
-        boolean isSaturday = pair.getDate().getDayOfWeek() == 6;
-        String startTime = PairsTimeConverter.getPairStartTime(pair.getNumber(), isSaturday).toString();
-        String endTime = PairsTimeConverter.getPairEndTime(pair.getNumber(), isSaturday).toString();
-        pairStartTextView.setText(startTime);
-        pairEndTextView.setText(endTime);
+        pairStartTextView.setText(pair.getStringStartTime());
+        pairEndTextView.setText(pair.getStringEndTime());
 
-        final DateTime startDateTime = getDateTime(pair.getDate(), startTime);
-        final DateTime endDateTime = getDateTime(pair.getDate(), endTime);
+        final DateTime startDateTime = pair.getStartDateTime();
+        final DateTime endDateTime = pair.getEndDateTime();
         final DateTime now = DateTime.now();
 
         if (now.isAfter(startDateTime) && now.isBefore(endDateTime)) {
@@ -141,13 +136,5 @@ public class PairViewHolder extends BaseViewHolder<Pair> {
     private void setBackgroundHeight(int height) {
         background.getLayoutParams().height = height;
         background.requestLayout();
-    }
-
-    private DateTime getDateTime(LocalDate localDate, String pairTime) {
-        int hour, minutes;
-        hour = Integer.valueOf(pairTime.substring(0, pairTime.indexOf(".")));
-        minutes = Integer.valueOf(pairTime.substring(pairTime.indexOf(".") + 1, pairTime.length()));
-        return localDate.toDateTimeAtStartOfDay(DateTimeZone.forOffsetHours(+4))
-                .withTime(hour, minutes, 0, 0);
     }
 }

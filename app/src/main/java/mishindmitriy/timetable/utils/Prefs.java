@@ -7,7 +7,8 @@ import android.content.SharedPreferences;
  * Created by dmitriy on 19.09.16.
  */
 public class Prefs {
-    public final static String KEY_SELECTED_THING_SERVER_ID = "selected_thing_server_id";
+    public final static String KEY_SELECTED_THING_ID = "selected_thing_id";
+    public final static String KEY_NOTIFICATIONS = "notifications";
     private static Prefs instance;
     final private SharedPreferences prefs;
 
@@ -24,12 +25,12 @@ public class Prefs {
     }
 
     public long getSelectedThingId() {
-        return prefs.getLong(KEY_SELECTED_THING_SERVER_ID, 0);
+        return prefs.getLong(KEY_SELECTED_THING_ID, 0);
     }
 
     public void setSelectedThingId(long thingId) {
         if (thingId == 0) return;
-        prefs.edit().putLong(KEY_SELECTED_THING_SERVER_ID, thingId)
+        prefs.edit().putLong(KEY_SELECTED_THING_ID, thingId)
                 .apply();
     }
 
@@ -39,5 +40,14 @@ public class Prefs {
 
     public void unregister(SharedPreferences.OnSharedPreferenceChangeListener listener) {
         prefs.unregisterOnSharedPreferenceChangeListener(listener);
+    }
+
+    public boolean isNotificationsEnabled() {
+        return prefs.getBoolean(KEY_NOTIFICATIONS, false);
+    }
+
+    public void setNotificationsEnabled(boolean enabled) {
+        prefs.edit().putBoolean(KEY_NOTIFICATIONS, enabled)
+                .apply();
     }
 }

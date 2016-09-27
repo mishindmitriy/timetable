@@ -71,7 +71,7 @@ public class SheduleActivity extends BaseActivity {
             = new SharedPreferences.OnSharedPreferenceChangeListener() {
         @Override
         public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-            if (key.equals(Prefs.KEY_SELECTED_THING_SERVER_ID)) {
+            if (key.equals(Prefs.KEY_SELECTED_THING_ID)) {
                 Thing currentThing = realm.where(Thing.class)
                         .equalTo("id", Prefs.get().getSelectedThingId())
                         .findFirst();

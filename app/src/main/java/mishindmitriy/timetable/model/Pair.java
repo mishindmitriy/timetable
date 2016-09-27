@@ -1,11 +1,14 @@
 package mishindmitriy.timetable.model;
 
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 
 import java.io.Serializable;
 
 import io.realm.RealmObject;
 import io.realm.annotations.PrimaryKey;
+import mishindmitriy.timetable.utils.PairsTimeConverter;
 
 /**
  * Created by mishindmitriy on 05.06.2015.
@@ -101,5 +104,33 @@ public class Pair extends RealmObject implements Serializable {
 
     public long getId() {
         return id;
+    }
+
+    private DateTime getDateTime(LocalDate localDate, String pairTime) {
+        int hour, minutes;
+        hour = Integer.valueOf(pairTime.substring(0, pairTime.indexOf(".")));
+        minutes = Integer.valueOf(pairTime.substring(pairTime.indexOf(".") + 1, pairTime.length()));
+        return localDate.toDateTimeAtStartOfDay(DateTimeZone.forOffsetHours(+4))
+                .withTime(hour, minutes, 0, 0);
+    }
+
+    private boolean isSaturday() {
+        return getDate().getDayOfWeek() == 6;
+    }
+
+    public DateTime getStartDateTime() {
+        return getDateTime(getDate(), getStringStartTime());
+    }
+
+    public String getStringStartTime() {
+        return PairsTimeConverter.getPairStartTime(getNumber(), isSaturday()).toString();
+    }
+
+    public DateTime getEndDateTime() {
+        return getDateTime(getDate(), getStringEndTime());
+    }
+
+    public String getStringEndTime() {
+        return PairsTimeConverter.getPairEndTime(getNumber(), isSaturday()).toString();
     }
 }

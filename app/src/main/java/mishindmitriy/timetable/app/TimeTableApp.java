@@ -1,6 +1,7 @@
 package mishindmitriy.timetable.app;
 
 import android.app.Application;
+import android.content.Intent;
 import android.os.StrictMode;
 
 import com.crashlytics.android.Crashlytics;
@@ -24,8 +25,7 @@ public class TimeTableApp extends Application {
         JodaTimeAndroid.init(this);
         if (!BuildConfig.DEBUG) {
             Fabric.with(this, new Crashlytics());
-        }
-        if (BuildConfig.DEBUG) {
+        } else {
             StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder()
                     .detectAll()
                     .penaltyLog()
@@ -40,6 +40,6 @@ public class TimeTableApp extends Application {
                 .deleteRealmIfMigrationNeeded()
                 .build());
         Prefs.init(this);
+        startService(new Intent(this, NotificationService.class));
     }
-
 }

@@ -3,12 +3,13 @@ package mishindmitriy.timetable.app.shedule;
 import android.app.DatePickerDialog;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
+import android.database.DataSetObserver;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.NavigationView;
-import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.app.FragmentStatePagerAdapter;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v4.widget.DrawerLayout;
@@ -20,6 +21,8 @@ import android.view.MenuItem;
 import android.widget.DatePicker;
 import android.widget.TextView;
 
+import com.nshmura.recyclertablayout.RecyclerTabLayout;
+
 import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.Click;
 import org.androidannotations.annotations.EActivity;
@@ -27,6 +30,8 @@ import org.androidannotations.annotations.InstanceState;
 import org.androidannotations.annotations.ViewById;
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
+
+import java.util.List;
 
 import io.realm.Realm;
 import io.realm.Sort;
@@ -55,7 +60,7 @@ public class SheduleActivity extends BaseActivity {
     @ViewById(R.id.viewPager)
     protected ViewPager viewPager;
     @ViewById(R.id.tabLayout)
-    protected TabLayout tabLayout;
+    protected RecyclerTabLayout tabLayout;
     @ViewById(R.id.choose_thing)
     protected TextView chooseThingText;
     @InstanceState
@@ -68,7 +73,7 @@ public class SheduleActivity extends BaseActivity {
         public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
             if (key.equals(Prefs.KEY_SELECTED_THING_SERVER_ID)) {
                 Thing currentThing = realm.where(Thing.class)
-                        .equalTo("serverId", Prefs.get().getSelectedThingServerId())
+                        .equalTo("id", Prefs.get().getSelectedThingId())
                         .findFirst();
                 if (currentThing != null) {
                     currentThingTextView.setText(currentThing.getName());
@@ -109,10 +114,10 @@ public class SheduleActivity extends BaseActivity {
         chooseThingText.setText(R.string.choose_thing);
 
         Thing currentThing = realm.where(Thing.class)
-                .equalTo("serverId", Prefs.get().getSelectedThingServerId())
+                .equalTo("id", Prefs.get().getSelectedThingId())
                 .findFirst();
 
-        if (Prefs.get().getSelectedThingServerId() == null
+        if (Prefs.get().getSelectedThingId() == 0
                 || currentThing == null) {
             ThingsActivity_.intent(this).start();
             finish();
@@ -127,9 +132,8 @@ public class SheduleActivity extends BaseActivity {
         thingAdapter.setOnItemClickListener(new BaseAdapter.OnItemClickListener<Thing>() {
             @Override
             public void onItemClick(Thing thing) {
-                final String serverId = thing.getServerId();
-                if (!serverId.equals(Prefs.get().getSelectedThingServerId())) {
-                    setNewThing(serverId);
+                if (thing.getId() != Prefs.get().getSelectedThingId()) {
+                    setNewThing(thing);
                 }
                 mDrawerLayout.closeDrawers();
             }
@@ -159,9 +163,9 @@ public class SheduleActivity extends BaseActivity {
                                             onDateSelected(newDate);
                                         }
                                     },
-                                    LocalDate.now().getYear(),
-                                    LocalDate.now().getMonthOfYear() - 1,
-                                    LocalDate.now().getDayOfMonth());
+                                    startDate.getYear(),
+                                    startDate.getMonthOfYear() - 1,
+                                    startDate.getDayOfMonth());
                         }
                         dialog.setCancelable(true);
                         dialog.show();
@@ -174,7 +178,7 @@ public class SheduleActivity extends BaseActivity {
 
         currentThingTextView.setText(currentThing.getName());
 
-        DataHelper.loadSchedule(null);
+        DataHelper.loadSchedule(null, startDate);
 
         {
             // setThing navigation drawer
@@ -194,19 +198,39 @@ public class SheduleActivity extends BaseActivity {
     private void onDateSelected(LocalDate newDate) {
         if (!startDate.isEqual(newDate)) {
             startDate = newDate;
-            initPager();
-        } else {
-            viewPager.setCurrentItem(pagesCount / 2);
+            DataHelper.loadSchedule(null, startDate);
+            clearFragments();
+            viewPager.getAdapter().notifyDataSetChanged();
+            lastUpdate = DateTime.now();
+        }
+        viewPager.setCurrentItem(pagesCount / 2, true);
+    }
+
+    private void clearFragments() {
+        List<Fragment> fragments = getSupportFragmentManager().getFragments();
+        if (fragments != null) {
+            FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+            try {
+                for (Fragment f : fragments) {
+                    if (f instanceof DayPairsFragment) {
+                        ft.remove(f);
+                    }
+                }
+            } finally {
+                ft.commitAllowingStateLoss();
+            }
         }
     }
 
-    private void setNewThing(final String serverId) {
-        Prefs.get().setSelectedThingServerId(serverId);
+    private void setNewThing(final Thing thing) {
+        if (thing == null) return;
+        Prefs.get().setSelectedThingId(thing.getId());
+        final Long id = thing.getId();
         realm.executeTransactionAsync(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
                 Thing currentThing = realm.where(Thing.class)
-                        .equalTo("serverId", serverId)
+                        .equalTo("id", id)
                         .findFirst();
                 currentThing.incrementOpenTimes();
             }
@@ -214,10 +238,14 @@ public class SheduleActivity extends BaseActivity {
     }
 
     private void initPager() {
-        final int initialItem = pagesCount / 2;
-        viewPager.setAdapter(new FragmentPagerAdapter(getSupportFragmentManager()) {
+        viewPager.setAdapter(new FragmentStatePagerAdapter(getSupportFragmentManager()) {
             private LocalDate getLocalDate(int pos) {
-                return startDate.plusDays(pos - initialItem);
+                return startDate.plusDays(pos - pagesCount / 2);
+            }
+
+            @Override
+            public int getItemPosition(Object object) {
+                return POSITION_NONE;
             }
 
             @Override
@@ -247,8 +275,16 @@ public class SheduleActivity extends BaseActivity {
             }
         });
 
-        tabLayout.setupWithViewPager(viewPager, true);
-        viewPager.setCurrentItem(initialItem, false);
+        tabLayout.setUpWithViewPager(viewPager);
+
+        viewPager.getAdapter().registerDataSetObserver(new DataSetObserver() {
+            @Override
+            public void onChanged() {
+                tabLayout.getAdapter().notifyDataSetChanged();
+            }
+        });
+
+        viewPager.setCurrentItem(pagesCount / 2, false);
     }
 
     @Override
@@ -256,22 +292,14 @@ public class SheduleActivity extends BaseActivity {
         super.onResume();
         updateTabs();
         if (canUpdate()) {
-            DataHelper.loadSchedule(null);
+            DataHelper.loadSchedule(null, startDate);
             lastUpdate = DateTime.now();
         }
     }
 
     private void updateTabs() {
-        final int tempPosition = viewPager.getCurrentItem();
-        for (int i = 0; i < tabLayout.getTabCount(); i++) {
-            if (tabLayout.getTabAt(i) != null) {
-                String s = String.valueOf(viewPager.getAdapter().getPageTitle(i));
-                tabLayout.getTabAt(i).setText(s);
-            }
-        }
-        viewPager.setCurrentItem(tempPosition, false);
+        tabLayout.getAdapter().notifyDataSetChanged();
     }
-
 
     @Override
     protected void onPostCreate(final Bundle savedInstanceState) {

@@ -5,14 +5,23 @@
         <item name="colorPrimary">@color/teal500</item>
         <item name="colorPrimaryDark">@color/teal800</item>
         <item name="colorAccent">@color/select</item>
-        <item name="android:textColor">@color/gray</item>
+        <item name="android:textColor">@android:color/tertiary_text_light</item>
         <item name="android:editTextColor">@android:color/white</item>
     </style>
 
     <style name="SearchTheme" parent="AppTheme">
-        <item name="android:colorControlActivated">@android:color/white</item>
         <item name="android:textColor">@android:color/white</item>
     </style>
 
+    <style name="TabTextAppearance" parent="rtl_RecyclerTabLayout.Tab">
+        <item name="android:textSize">12sp</item>
+    </style>
 
+    <style name="TabTheme" parent="@style/Theme.AppCompat.Light.NoActionBar">
+        <item name="colorAccent">@android:color/white</item>
+        <item name="android:textColor">@android:color/tertiary_text_light</item>
+        <item name="android:editTextColor">@android:color/white</item>
+        <item name="android:textColorPrimary">@android:color/white</item>
+        <item name="android:textColorSecondary">@color/light_black</item>
+    </style>
 </resources>

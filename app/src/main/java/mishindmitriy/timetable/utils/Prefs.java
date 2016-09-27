@@ -23,13 +23,13 @@ public class Prefs {
         instance = new Prefs(context.getSharedPreferences("tolgas.prefs", Context.MODE_PRIVATE));
     }
 
-    public String getSelectedThingServerId() {
-        return prefs.getString(KEY_SELECTED_THING_SERVER_ID, null);
+    public long getSelectedThingId() {
+        return prefs.getLong(KEY_SELECTED_THING_SERVER_ID, 0);
     }
 
-    public void setSelectedThingServerId(String thingServerId) {
-        if (thingServerId == null || thingServerId.isEmpty()) return;
-        prefs.edit().putString(KEY_SELECTED_THING_SERVER_ID, thingServerId)
+    public void setSelectedThingId(long thingId) {
+        if (thingId == 0) return;
+        prefs.edit().putLong(KEY_SELECTED_THING_SERVER_ID, thingId)
                 .apply();
     }
 

@@ -45,7 +45,7 @@ public class ThingsActivity extends BaseActivity {
         thingAdapter.setData(realm.where(Thing.class)
                 .findAllSortedAsync("rating", Sort.ASCENDING, "name", Sort.ASCENDING));
 
-        if (Prefs.get().getSelectedThingServerId() != null) {
+        if (Prefs.get().getSelectedThingId() != 0) {
             toolbar.setNavigationIcon(R.drawable.ic_arrow_back_white_24dp);
             toolbar.setNavigationOnClickListener(new View.OnClickListener() {
                 @Override
@@ -80,16 +80,17 @@ public class ThingsActivity extends BaseActivity {
         });
         thingAdapter.setOnItemClickListener(new BaseAdapter.OnItemClickListener<Thing>() {
             @Override
-            public void onItemClick(Thing thing) {
-                final String serverId = thing.getServerId();
-                Prefs.get().setSelectedThingServerId(serverId);
+            public void onItemClick(final Thing thing) {
+                if (thing == null) return;
+                Prefs.get().setSelectedThingId(thing.getId());
                 SheduleActivity_.intent(ThingsActivity.this).start();
                 finish();
+                final Long id = thing.getId();
                 realm.executeTransactionAsync(new Realm.Transaction() {
                     @Override
                     public void execute(Realm realm) {
                         Thing currentThing = realm.where(Thing.class)
-                                .equalTo("serverId", Prefs.get().getSelectedThingServerId())
+                                .equalTo("id", id)
                                 .findFirst();
                         currentThing.incrementOpenTimes();
                     }
@@ -117,6 +118,7 @@ public class ThingsActivity extends BaseActivity {
                         for (Thing t : thingList) {
                             Thing existThing = realm.where(Thing.class)
                                     .equalTo("serverId", t.getServerId())
+                                    .equalTo("type", t.getType().toString())
                                     .findFirst();
                             if (existThing != null) {
                                 t.setTimesOpen(existThing.getTimesOpen());

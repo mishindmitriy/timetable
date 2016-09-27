@@ -75,7 +75,7 @@ public class DayPairsFragment extends BaseFragment {
                             swipeRefreshLayout.setRefreshing(false);
                         }
                     }
-                });
+                }, localDate);
             }
         });
     }
@@ -96,8 +96,10 @@ public class DayPairsFragment extends BaseFragment {
 
     private void loadData() {
         adapter.setData(realm.where(Pair.class)
+                .beginGroup()
                 .equalTo("date", localDate.toString())
-                .equalTo("thing.serverId", Prefs.get().getSelectedThingServerId())
+                .equalTo("thing.id", Prefs.get().getSelectedThingId())
+                .endGroup()
                 .findAllSortedAsync("number"));
     }
 }

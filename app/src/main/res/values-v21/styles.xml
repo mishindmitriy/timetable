@@ -8,4 +8,11 @@
         <item name="android:textColor">@android:color/tertiary_text_light</item>
         <item name="android:editTextColor">@android:color/white</item>
     </style>
+
+    <style name="SearchTheme" parent="AppTheme">
+        <item name="android:colorControlActivated">@android:color/white</item>
+        <item name="android:textColor">@android:color/white</item>
+    </style>
+
+
 </resources>

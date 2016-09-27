@@ -180,19 +180,22 @@ public class DataHelper {
         return mappingListThings(doQuery(url, null), thingType);
     }
 
-    public static void loadSchedule(final Runnable runnable) {
+    public static void loadSchedule(final Runnable afterLoadRunnable, final LocalDate startDate) {
         final Realm realm = Realm.getDefaultInstance();
         realm.executeTransactionAsync(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
-                String serverId = Prefs.get().getSelectedThingServerId();
+                long id = Prefs.get().getSelectedThingId();
+                if (id == 0) return;
                 Thing thing = realm.where(Thing.class)
-                        .equalTo("serverId", serverId)
+                        .equalTo("id", id)
                         .findFirst();
                 try {
+                    LocalDate date = startDate;
+                    if (date == null) date = LocalDate.now();
                     List<Pair> pairs = DataHelper.getShedule(thing,
-                            LocalDate.now().minusDays(100),
-                            LocalDate.now().plusDays(100));
+                            date.minusDays(100),
+                            date.plusDays(100));
                     realm.copyToRealmOrUpdate(pairs);
                     // TODO: 19.09.16 add remove old pairs
                 } catch (IOException e) {
@@ -203,16 +206,16 @@ public class DataHelper {
             @Override
             public void onSuccess() {
                 realm.close();
-                if (runnable != null) {
-                    runnable.run();
+                if (afterLoadRunnable != null) {
+                    afterLoadRunnable.run();
                 }
             }
         }, new Realm.Transaction.OnError() {
             @Override
             public void onError(Throwable error) {
                 realm.close();
-                if (runnable != null) {
-                    runnable.run();
+                if (afterLoadRunnable != null) {
+                    afterLoadRunnable.run();
                 }
             }
         });

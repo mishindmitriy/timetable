@@ -53,6 +53,7 @@ dependencies {
     compile 'com.squareup.okhttp3:logging-interceptor:3.4.1'
     compile 'net.danlew:android.joda:2.9.4.1'
     compile 'com.timehop.stickyheadersrecyclerview:library:0.4.3@aar'
+    compile 'com.nshmura:recyclertablayout:1.0.2'
 }
 
 apt {

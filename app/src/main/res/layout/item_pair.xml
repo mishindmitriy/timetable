@@ -6,7 +6,8 @@
     <View
         android:id="@+id/background"
         android:layout_width="match_parent"
-        android:layout_height="0dp" />
+        android:layout_height="0dp"
+        android:background="#e6e6e6" />
 
     <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
         android:id="@+id/pairLayout"

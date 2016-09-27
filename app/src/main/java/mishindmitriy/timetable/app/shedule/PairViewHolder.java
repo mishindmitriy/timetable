@@ -46,7 +46,6 @@ public class PairViewHolder extends BaseViewHolder<Pair> {
         pairNumberTextView = (TextView) itemView.findViewById(R.id.textViewPairNumber);
         background = itemView.findViewById(R.id.background);
 
-        background.setBackgroundColor(Color.LTGRAY);
         subjectTextView.setTypeface(Typeface.create("sans-serif-light", Typeface.NORMAL));
         teacherTextView.setTypeface(Typeface.create("sans-serif-light", Typeface.NORMAL));
         pairTypeTextView.setTypeface(Typeface.create("sans-serif-light", Typeface.NORMAL));

@@ -32,14 +32,19 @@
 
             </android.support.v7.widget.Toolbar>
 
-            <android.support.design.widget.TabLayout
+            <com.nshmura.recyclertablayout.RecyclerTabLayout
                 android:id="@+id/tabLayout"
+                rtl_tabIndicatorColor="?attr/colorAccent"
+                rtl_tabIndicatorHeight="2dp"
+                rtl_tabPadding="0dp"
+                rtl_tabPaddingBottom="0dp"
+                rtl_tabPaddingEnd="12dp"
+                rtl_tabPaddingStart="12dp"
+                rtl_tabPaddingTop="0dp"
+                rtl_tabTextAppearance="@style/TabTextAppearance"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                app:tabIndicatorColor="@android:color/white"
-                app:tabMode="scrollable"
-                app:tabSelectedTextColor="@android:color/white"
-                app:tabTextColor="@color/light_black" />
+                android:layout_height="48dp"
+                app:theme="@style/TabTheme" />
         </android.support.design.widget.AppBarLayout>
 
         <android.support.v4.view.ViewPager

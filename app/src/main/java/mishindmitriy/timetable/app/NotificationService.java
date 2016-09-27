@@ -9,7 +9,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
-import android.util.Log;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
@@ -106,10 +105,8 @@ public class NotificationService extends Service {
         long tenMinutes = 1000 * 60 * 60 * 10;
 
         pendingIntentStack.add(pendingIntent);
-        alarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP,
-                p.getStartDateTime().getMillis() - tenMinutes, pendingIntent);
-        Log.d("testtt", "created notification, wait for "
-                + (p.getStartDateTime().getMillis() - tenMinutes - DateTime.now().getMillis()));
+        alarmManager.set(AlarmManager.RTC_WAKEUP,
+                p.getStartDateTime().getMillis() - tenMinutes - DateTime.now().getMillis(), pendingIntent);
     }
 
     @Nullable

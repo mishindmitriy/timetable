@@ -4,13 +4,18 @@ import android.app.AlarmManager;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
+import android.util.Log;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 
 import java.util.Stack;
@@ -32,6 +37,17 @@ public class NotificationService extends Service {
     private AlarmManager alarmManager;
     private Stack<PendingIntent> pendingIntentStack = new Stack<>();
     private RealmResults<Pair> todayPairs = getTodayPairs();
+    private final BroadcastReceiver timeChangedReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            final String action = intent.getAction();
+
+            if (action.equals(Intent.ACTION_TIME_CHANGED) ||
+                    action.equals(Intent.ACTION_TIMEZONE_CHANGED)) {
+                updateNotifications();
+            }
+        }
+    };
     private SharedPreferences.OnSharedPreferenceChangeListener listener
             = new SharedPreferences.OnSharedPreferenceChangeListener() {
         @Override
@@ -47,10 +63,22 @@ public class NotificationService extends Service {
     };
 
     @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        todayPairs = getTodayPairs();
+        updateNotifications();
+    }
+
+    @Override
     public void onCreate() {
         alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
         super.onCreate();
         Prefs.get().register(listener);
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(Intent.ACTION_TIME_TICK);
+        intentFilter.addAction(Intent.ACTION_TIMEZONE_CHANGED);
+        intentFilter.addAction(Intent.ACTION_TIME_CHANGED);
+        registerReceiver(timeChangedReceiver, intentFilter);
     }
 
     private RealmResults<Pair> getTodayPairs() {
@@ -87,7 +115,7 @@ public class NotificationService extends Service {
                 intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
         Intent notificationIntent = new Intent(this, NotificationPublisher.class);
-        notificationIntent.putExtra(NotificationPublisher.NOTIFICATION_ID, 1);
+        notificationIntent.putExtra(NotificationPublisher.NOTIFICATION_ID, p.getNumber());
         notificationIntent.putExtra(
                 NotificationPublisher.NOTIFICATION,
                 new Notification.Builder(getApplicationContext())
@@ -102,11 +130,23 @@ public class NotificationService extends Service {
         PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, notificationIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT);
 
-        long tenMinutes = 1000 * 60 * 60 * 10;
+        DateTime dateTime = p.getStartDateTime();
 
         pendingIntentStack.add(pendingIntent);
-        alarmManager.set(AlarmManager.RTC_WAKEUP,
-                p.getStartDateTime().getMillis() - tenMinutes - DateTime.now().getMillis(), pendingIntent);
+        alarmManager.set(
+                AlarmManager.RTC_WAKEUP,
+                dateTime.withZone(DateTimeZone.UTC).minusMinutes(10).getMillis(),
+                pendingIntent
+        );
+        if (dateTime.withZone(DateTimeZone.UTC).getMillis() < System.currentTimeMillis()) {
+            throw new IllegalStateException(dateTime.toString() + "already in past");
+        }
+
+        Log.d("testtt", "ms " + System.currentTimeMillis()
+                + " pair " + p.getNumber()
+                + " wake ms " + (dateTime.withZone(DateTimeZone.UTC).minusMinutes(10).getMillis())
+        );
+
     }
 
     @Nullable
@@ -121,6 +161,7 @@ public class NotificationService extends Service {
         if (realm != null && !realm.isClosed()) {
             realm.close();
         }
+        unregisterReceiver(timeChangedReceiver);
         super.onDestroy();
     }
 }

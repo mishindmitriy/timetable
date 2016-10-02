@@ -9,7 +9,6 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentStatePagerAdapter;
-import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v4.widget.DrawerLayout;
@@ -17,6 +16,7 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.MenuItem;
 import android.widget.DatePicker;
 import android.widget.TextView;
@@ -30,8 +30,6 @@ import org.androidannotations.annotations.InstanceState;
 import org.androidannotations.annotations.ViewById;
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
-
-import java.util.List;
 
 import io.realm.Realm;
 import io.realm.Sort;
@@ -72,6 +70,7 @@ public class SheduleActivity extends BaseActivity {
         @Override
         public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
             if (key.equals(Prefs.KEY_SELECTED_THING_ID)) {
+                refreshData();
                 Thing currentThing = realm.where(Thing.class)
                         .equalTo("id", Prefs.get().getSelectedThingId())
                         .findFirst();
@@ -199,27 +198,10 @@ public class SheduleActivity extends BaseActivity {
         if (!startDate.isEqual(newDate)) {
             startDate = newDate;
             DataHelper.loadSchedule(null, startDate);
-            clearFragments();
             viewPager.getAdapter().notifyDataSetChanged();
             lastUpdate = DateTime.now();
         }
         viewPager.setCurrentItem(pagesCount / 2, true);
-    }
-
-    private void clearFragments() {
-        List<Fragment> fragments = getSupportFragmentManager().getFragments();
-        if (fragments != null) {
-            FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-            try {
-                for (Fragment f : fragments) {
-                    if (f instanceof DayPairsFragment) {
-                        ft.remove(f);
-                    }
-                }
-            } finally {
-                ft.commitAllowingStateLoss();
-            }
-        }
     }
 
     private void setNewThing(final Thing thing) {
@@ -240,11 +222,14 @@ public class SheduleActivity extends BaseActivity {
     private void initPager() {
         viewPager.setAdapter(new FragmentStatePagerAdapter(getSupportFragmentManager()) {
             private LocalDate getLocalDate(int pos) {
-                return startDate.plusDays(pos - pagesCount / 2);
+                LocalDate date = startDate.plusDays(pos - pagesCount / 2);
+                Log.d("testtt", "startdate " + startDate.toString() + "; " + pos + " pos date " + date.toString());
+                return date;
             }
 
             @Override
             public int getItemPosition(Object object) {
+                // TODO: 02.10.2016 fragments just restarted, not creating new
                 return POSITION_NONE;
             }
 
@@ -291,6 +276,10 @@ public class SheduleActivity extends BaseActivity {
     public void onResume() {
         super.onResume();
         updateTabs();
+        refreshData();
+    }
+
+    private void refreshData() {
         if (canUpdate()) {
             DataHelper.loadSchedule(null, startDate);
             lastUpdate = DateTime.now();

@@ -6,10 +6,12 @@ import android.support.annotation.Nullable;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 
 import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.EFragment;
 import org.androidannotations.annotations.FragmentArg;
+import org.androidannotations.annotations.InstanceState;
 import org.androidannotations.annotations.ViewById;
 import org.joda.time.LocalDate;
 
@@ -28,6 +30,7 @@ public class DayPairsFragment extends BaseFragment {
     protected RecyclerView recyclerView;
     @ViewById(R.id.swipeRefreshLayout)
     protected SwipeRefreshLayout swipeRefreshLayout;
+    @InstanceState
     @FragmentArg
     protected LocalDate localDate = null;
     private PairAdapter adapter = new PairAdapter();
@@ -50,11 +53,13 @@ public class DayPairsFragment extends BaseFragment {
     @Override
     public void onDestroy() {
         Prefs.get().unregister(listener);
+        Log.d("testtt", "destroy " + localDate.toString());
         super.onDestroy();
     }
 
     @AfterViews
     protected void init() {
+        Log.d("testtt", "create " + localDate.toString());
         if (localDate == null) {
             throw new IllegalArgumentException("localdate must not be null");
         }

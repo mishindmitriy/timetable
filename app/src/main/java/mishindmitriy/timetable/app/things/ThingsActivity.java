@@ -107,7 +107,7 @@ public class ThingsActivity extends BaseActivity {
     }
 
     private void loadThings() {
-        swipeRefreshLayout.setRefreshing(true);
+        if (thingAdapter.getItemCount() == 0) swipeRefreshLayout.setRefreshing(true);
         for (final ThingType thingType : ThingType.values()) {
             realm.executeTransactionAsync(new Realm.Transaction() {
                 @Override
@@ -141,14 +141,14 @@ public class ThingsActivity extends BaseActivity {
             }, new Realm.Transaction.OnSuccess() {
                 @Override
                 public void onSuccess() {
-                    if (swipeRefreshLayout != null) {
+                    if (swipeRefreshLayout != null && swipeRefreshLayout.isRefreshing()) {
                         swipeRefreshLayout.setRefreshing(false);
                     }
                 }
             }, new Realm.Transaction.OnError() {
                 @Override
                 public void onError(Throwable error) {
-                    if (swipeRefreshLayout != null) {
+                    if (swipeRefreshLayout != null && swipeRefreshLayout.isRefreshing()) {
                         swipeRefreshLayout.setRefreshing(false);
                     }
                 }

@@ -40,6 +40,10 @@ android {
     }
 }
 
+realm {
+    syncEnabled false
+}
+
 dependencies {
     //compile fileTree(include: ['*.jar'], dir: 'libs')
     apt "org.androidannotations:androidannotations:$AAVersion"

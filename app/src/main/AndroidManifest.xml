@@ -14,6 +14,7 @@
         android:theme="@style/AppTheme">
         <activity
             android:name=".app.shedule.SheduleActivity_"
+            android:launchMode="singleInstance"
             android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -25,7 +26,7 @@
             android:name=".app.things.ThingsActivity_"
             android:screenOrientation="portrait" />
 
-        <receiver android:name=".app.NotificationPublisher" />
+        <receiver android:name=".app.NotificationService$NotificationPublisher" />
         <service android:name=".app.NotificationService" />
         <meta-data
             android:name="io.fabric.ApiKey"

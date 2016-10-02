@@ -2,6 +2,7 @@ package mishindmitriy.timetable.app;
 
 import android.app.AlarmManager;
 import android.app.Notification;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
@@ -10,12 +11,12 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
+import android.graphics.BitmapFactory;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
-import android.util.Log;
+import android.support.v7.app.NotificationCompat;
 
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 
 import java.util.Stack;
@@ -42,8 +43,10 @@ public class NotificationService extends Service {
         public void onReceive(Context context, Intent intent) {
             final String action = intent.getAction();
 
-            if (action.equals(Intent.ACTION_TIME_CHANGED) ||
-                    action.equals(Intent.ACTION_TIMEZONE_CHANGED)) {
+            if (action.equals(Intent.ACTION_TIME_CHANGED)
+                    || action.equals(Intent.ACTION_TIMEZONE_CHANGED)
+                    || action.equals(Intent.ACTION_DATE_CHANGED)
+                    || action.equals(Intent.ACTION_TIME_TICK)) {
                 updateNotifications();
             }
         }
@@ -53,10 +56,10 @@ public class NotificationService extends Service {
         @Override
         public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
             if (key.equals(Prefs.KEY_SELECTED_THING_ID)) {
-                todayPairs = getTodayPairs();
                 updateNotifications();
             } else if (key.equals(Prefs.KEY_NOTIFICATIONS)
                     && !Prefs.get().isNotificationsEnabled()) {
+                removeNotifications();
                 stopSelf();
             }
         }
@@ -65,7 +68,6 @@ public class NotificationService extends Service {
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
-        todayPairs = getTodayPairs();
         updateNotifications();
     }
 
@@ -78,7 +80,9 @@ public class NotificationService extends Service {
         intentFilter.addAction(Intent.ACTION_TIME_TICK);
         intentFilter.addAction(Intent.ACTION_TIMEZONE_CHANGED);
         intentFilter.addAction(Intent.ACTION_TIME_CHANGED);
+        intentFilter.addAction(Intent.ACTION_DATE_CHANGED);
         registerReceiver(timeChangedReceiver, intentFilter);
+        updateNotifications();
     }
 
     private RealmResults<Pair> getTodayPairs() {
@@ -99,13 +103,18 @@ public class NotificationService extends Service {
     }
 
     private void updateNotifications() {
-        while (pendingIntentStack.size() > 0) {
-            alarmManager.cancel(pendingIntentStack.pop());
-        }
+        todayPairs = getTodayPairs();
+        removeNotifications();
         for (Pair p : todayPairs) {
             if (p.getStartDateTime().isAfterNow()) {
                 createNotification(p);
             }
+        }
+    }
+
+    private void removeNotifications() {
+        while (pendingIntentStack.size() > 0) {
+            alarmManager.cancel(pendingIntentStack.pop());
         }
     }
 
@@ -115,38 +124,33 @@ public class NotificationService extends Service {
                 intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
         Intent notificationIntent = new Intent(this, NotificationPublisher.class);
-        notificationIntent.putExtra(NotificationPublisher.NOTIFICATION_ID, p.getNumber());
+        notificationIntent.putExtra(NotificationPublisher.NOTIFICATION_ID, (int) p.getId());
         notificationIntent.putExtra(
                 NotificationPublisher.NOTIFICATION,
-                new Notification.Builder(getApplicationContext())
+                new NotificationCompat.Builder(getApplicationContext())
                         .setContentTitle(p.getSubject())
-                        .setContentText(p.getStringStartTime()
-                                + " " + p.getClassroom())
+                        .setContentText("Через 10 минут, аудитория " + p.getClassroom())
                         .setContentIntent(contentIntent)
-                        .setSmallIcon(R.mipmap.ic_launcher)
+                        .setLargeIcon(
+                                BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher)
+                        )
+                        .setAutoCancel(true)
                         .build()
         );
 
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, notificationIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(
+                this, 0, notificationIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT
+        );
 
         DateTime dateTime = p.getStartDateTime();
 
         pendingIntentStack.add(pendingIntent);
         alarmManager.set(
                 AlarmManager.RTC_WAKEUP,
-                dateTime.withZone(DateTimeZone.UTC).minusMinutes(10).getMillis(),
+                dateTime.minusMinutes(10).getMillis(),
                 pendingIntent
         );
-        if (dateTime.withZone(DateTimeZone.UTC).getMillis() < System.currentTimeMillis()) {
-            throw new IllegalStateException(dateTime.toString() + "already in past");
-        }
-
-        Log.d("testtt", "ms " + System.currentTimeMillis()
-                + " pair " + p.getNumber()
-                + " wake ms " + (dateTime.withZone(DateTimeZone.UTC).minusMinutes(10).getMillis())
-        );
-
     }
 
     @Nullable
@@ -163,5 +167,18 @@ public class NotificationService extends Service {
         }
         unregisterReceiver(timeChangedReceiver);
         super.onDestroy();
+    }
+
+    public static class NotificationPublisher extends BroadcastReceiver {
+        public static String NOTIFICATION_ID = "notification-id";
+        public static String NOTIFICATION = "notification";
+
+        public void onReceive(Context context, Intent intent) {
+            NotificationManager notificationManager
+                    = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+            Notification notification = intent.getParcelableExtra(NOTIFICATION);
+            int id = intent.getIntExtra(NOTIFICATION_ID, 0);
+            notificationManager.notify(id, notification);
+        }
     }
 }

@@ -1,7 +1,6 @@
 package mishindmitriy.timetable.app;
 
 import android.app.AlarmManager;
-import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -12,9 +11,11 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.graphics.BitmapFactory;
+import android.os.Build;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.support.v7.app.NotificationCompat;
+import android.util.Log;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
@@ -24,6 +25,7 @@ import java.util.Stack;
 import io.realm.Realm;
 import io.realm.RealmChangeListener;
 import io.realm.RealmResults;
+import mishindmitriy.timetable.BuildConfig;
 import mishindmitriy.timetable.R;
 import mishindmitriy.timetable.app.shedule.SheduleActivity_;
 import mishindmitriy.timetable.model.Pair;
@@ -47,7 +49,10 @@ public class NotificationService extends Service {
                     || action.equals(Intent.ACTION_TIMEZONE_CHANGED)
                     || action.equals(Intent.ACTION_DATE_CHANGED)
                     || action.equals(Intent.ACTION_TIME_TICK)) {
-                updateNotifications();
+                if (BuildConfig.DEBUG) {
+                    Log.d("testtt", "time changed");
+                }
+                updateNotifications(true);
             }
         }
     };
@@ -56,7 +61,7 @@ public class NotificationService extends Service {
         @Override
         public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
             if (key.equals(Prefs.KEY_SELECTED_THING_ID)) {
-                updateNotifications();
+                updateNotifications(true);
             } else if (key.equals(Prefs.KEY_NOTIFICATIONS)
                     && !Prefs.get().isNotificationsEnabled()) {
                 removeNotifications();
@@ -68,7 +73,7 @@ public class NotificationService extends Service {
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
-        updateNotifications();
+        updateNotifications(false);
     }
 
     @Override
@@ -82,10 +87,13 @@ public class NotificationService extends Service {
         intentFilter.addAction(Intent.ACTION_TIME_CHANGED);
         intentFilter.addAction(Intent.ACTION_DATE_CHANGED);
         registerReceiver(timeChangedReceiver, intentFilter);
-        updateNotifications();
+        updateNotifications(true);
     }
 
     private RealmResults<Pair> getTodayPairs() {
+        if (BuildConfig.DEBUG) {
+            Log.d("testtt", "getTodayPairs");
+        }
         if (todayPairs != null) {
             todayPairs.removeChangeListeners();
         }
@@ -96,61 +104,74 @@ public class NotificationService extends Service {
         results.addChangeListener(new RealmChangeListener<RealmResults<Pair>>() {
             @Override
             public void onChange(RealmResults<Pair> element) {
-                updateNotifications();
+                updateNotifications(false);
             }
         });
         return results;
     }
 
-    private void updateNotifications() {
-        todayPairs = getTodayPairs();
+    private void updateNotifications(boolean loadFromRealm) {
+        if (BuildConfig.DEBUG) {
+            Log.d("testtt", "updateNotifications");
+        }
+        if (loadFromRealm) todayPairs = getTodayPairs();
         removeNotifications();
         for (Pair p : todayPairs) {
-            if (p.getStartDateTime().isAfterNow()) {
+            if (!p.isNotified() && p.getStartDateTime().isAfterNow()) {
                 createNotification(p);
             }
         }
     }
 
     private void removeNotifications() {
+        if (BuildConfig.DEBUG) {
+            Log.d("testtt", "removeNotifications");
+        }
         while (pendingIntentStack.size() > 0) {
             alarmManager.cancel(pendingIntentStack.pop());
         }
     }
 
-    private void createNotification(Pair p) {
-        Intent intent = new Intent(this, SheduleActivity_.class);
-        PendingIntent contentIntent = PendingIntent.getActivity(getApplicationContext(), 0,
-                intent, PendingIntent.FLAG_UPDATE_CURRENT);
-
+    private void createNotification(Pair pair) {
+        if (BuildConfig.DEBUG) {
+            Log.d("testtt", "create notification for " + pair.getId());
+        }
         Intent notificationIntent = new Intent(this, NotificationPublisher.class);
-        notificationIntent.putExtra(NotificationPublisher.NOTIFICATION_ID, (int) p.getId());
-        notificationIntent.putExtra(
-                NotificationPublisher.NOTIFICATION,
-                new NotificationCompat.Builder(getApplicationContext())
-                        .setContentTitle(p.getSubject())
-                        .setContentText("Через 10 минут, аудитория " + p.getClassroom())
-                        .setContentIntent(contentIntent)
-                        .setLargeIcon(
-                                BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher)
-                        )
-                        .setAutoCancel(true)
-                        .build()
-        );
+        notificationIntent.putExtra(NotificationPublisher.PAIR_ID, pair.getId());
 
         PendingIntent pendingIntent = PendingIntent.getBroadcast(
                 this, 0, notificationIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT
         );
 
-        DateTime dateTime = p.getStartDateTime();
+        DateTime dateTime = pair.getStartDateTime();
+        if (BuildConfig.DEBUG) {
+            Log.d("testtt", pair.getId() + " wait for "
+                    + (dateTime.minusMinutes(10).getMillis() - DateTime.now().getMillis()) / 1000
+                    + " seconds");
+        }
 
-        pendingIntentStack.add(pendingIntent);
-        alarmManager.set(
-                AlarmManager.RTC_WAKEUP,
-                dateTime.minusMinutes(10).getMillis(),
-                pendingIntent
-        );
+        pendingIntentStack.push(pendingIntent);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            alarmManager.setExactAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    dateTime.minusMinutes(10).getMillis(),
+                    pendingIntent
+            );
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            alarmManager.setExact(
+                    AlarmManager.RTC_WAKEUP,
+                    dateTime.minusMinutes(10).getMillis(),
+                    pendingIntent
+            );
+        } else {
+            alarmManager.set(
+                    AlarmManager.RTC_WAKEUP,
+                    dateTime.minusMinutes(10).getMillis(),
+                    pendingIntent
+            );
+        }
     }
 
     @Nullable
@@ -170,15 +191,51 @@ public class NotificationService extends Service {
     }
 
     public static class NotificationPublisher extends BroadcastReceiver {
-        public static String NOTIFICATION_ID = "notification-id";
-        public static String NOTIFICATION = "notification";
+        public static String PAIR_ID = "notification-id";
 
         public void onReceive(Context context, Intent intent) {
+            if (BuildConfig.DEBUG) {
+                Log.d("testtt", "notify " + intent.getLongExtra(PAIR_ID, 0));
+            }
             NotificationManager notificationManager
                     = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-            Notification notification = intent.getParcelableExtra(NOTIFICATION);
-            int id = intent.getIntExtra(NOTIFICATION_ID, 0);
-            notificationManager.notify(id, notification);
+            final Realm realm = Realm.getDefaultInstance();
+            final long id = intent.getLongExtra(PAIR_ID, 0);
+            Pair pair = realm.where(Pair.class)
+                    .equalTo("id", id)
+                    .findFirst();
+            PendingIntent contentIntent = PendingIntent.getActivity(context, 0,
+                    new Intent(context, SheduleActivity_.class), PendingIntent.FLAG_UPDATE_CURRENT);
+            long msLeft = pair.getStartDateTime().getMillis() - DateTime.now().getMillis();
+            int minutesLeft = (int) Math.abs(msLeft / 1000 * 60);
+            notificationManager.notify(Long.valueOf(id).intValue(),
+                    new NotificationCompat.Builder(context)
+                            .setContentTitle(pair.getSubject())
+                            .setContentText("Через " + minutesLeft + " минут, аудитория " + pair.getClassroom())
+                            .setContentIntent(contentIntent)
+                            .setSmallIcon(R.drawable.ic_room_white_18dp)
+                            .setLargeIcon(
+                                    BitmapFactory.decodeResource(context.getResources(), R.mipmap.ic_launcher)
+                            )
+                            .setAutoCancel(true)
+                            .build());
+            realm.executeTransactionAsync(new Realm.Transaction() {
+                @Override
+                public void execute(Realm realm) {
+                    realm.where(Pair.class).equalTo("id", id)
+                            .findFirst().setNotified();
+                }
+            }, new Realm.Transaction.OnSuccess() {
+                @Override
+                public void onSuccess() {
+                    realm.close();
+                }
+            }, new Realm.Transaction.OnError() {
+                @Override
+                public void onError(Throwable error) {
+                    realm.close();
+                }
+            });
         }
     }
 }

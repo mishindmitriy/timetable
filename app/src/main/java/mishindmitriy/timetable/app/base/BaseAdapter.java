@@ -19,6 +19,12 @@ public abstract class BaseAdapter<I extends RealmObject, VH extends BaseViewHold
     private OnItemClickListener<I> itemClickListener = null;
     private List<I> filteredList = new ArrayList<>();
     private String filterPhrase = null;
+    private RealmChangeListener<RealmResults<I>> changeListener = new RealmChangeListener<RealmResults<I>>() {
+        @Override
+        public void onChange(RealmResults<I> element) {
+            filterAndNotifyDataChanged();
+        }
+    };
 
     public RealmResults<I> getItems() {
         return items;
@@ -55,18 +61,18 @@ public abstract class BaseAdapter<I extends RealmObject, VH extends BaseViewHold
     }
 
     public void setData(RealmResults<I> items) {
+        if (this.items != null) {
+            this.items.removeChangeListener(changeListener);
+        }
         this.items = items;
-        items.addChangeListener(new RealmChangeListener<RealmResults<I>>() {
-            @Override
-            public void onChange(RealmResults<I> element) {
-                filterAndNotifyDataChanged();
-            }
-        });
+        if (items == null) return;
+        items.addChangeListener(changeListener);
         filterAndNotifyDataChanged();
     }
 
     private void filterAndNotifyDataChanged() {
         filteredList.clear();
+        if (items == null) return;
         if (filterPhrase == null || filterPhrase.isEmpty()) {
             filteredList.addAll(items);
         } else {

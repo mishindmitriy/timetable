@@ -7,8 +7,6 @@ import android.database.DataSetObserver;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.NavigationView;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v4.widget.DrawerLayout;
@@ -16,7 +14,6 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.MenuItem;
 import android.widget.DatePicker;
 import android.widget.TextView;
@@ -44,7 +41,7 @@ import mishindmitriy.timetable.utils.Prefs;
 
 @EActivity(R.layout.activity_shedule)
 public class SheduleActivity extends BaseActivity {
-    private final int pagesCount = 100;
+    public final static int PAGES_COUNT = 100;
     @ViewById(R.id.toolbar)
     protected Toolbar toolbar;
     @ViewById(R.id.sheduleLayout)
@@ -65,12 +62,17 @@ public class SheduleActivity extends BaseActivity {
     protected DateTime lastUpdate;
     @InstanceState
     protected LocalDate startDate = LocalDate.now();
+    private ActionBarDrawerToggle mDrawerToggle;
+    private ThingAdapter thingAdapter = new ThingAdapter();
+    private DatePickerDialog dialog;
+    private DaysPagerAdapter pagerAdapter = new DaysPagerAdapter(realm);
     private SharedPreferences.OnSharedPreferenceChangeListener listener
             = new SharedPreferences.OnSharedPreferenceChangeListener() {
         @Override
         public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
             if (key.equals(Prefs.KEY_SELECTED_THING_ID)) {
-                refreshData();
+                lastUpdate = null;
+                onDateSelected(LocalDate.now());
                 Thing currentThing = realm.where(Thing.class)
                         .equalTo("id", Prefs.get().getSelectedThingId())
                         .findFirst();
@@ -80,13 +82,11 @@ public class SheduleActivity extends BaseActivity {
             }
         }
     };
-    private ActionBarDrawerToggle mDrawerToggle;
-    private ThingAdapter thingAdapter = new ThingAdapter();
-    private DatePickerDialog dialog;
 
     @Click(R.id.choose_thing)
     protected void chooseThingClicked() {
         ThingsActivity_.intent(SheduleActivity.this).start();
+        mDrawerLayout.closeDrawers();
     }
 
     private boolean canUpdate() {
@@ -191,17 +191,27 @@ public class SheduleActivity extends BaseActivity {
             mDrawerLayout.setDrawerListener(mDrawerToggle);
         }
 
-        initPager();
+        viewPager.setAdapter(pagerAdapter);
+        tabLayout.setUpWithViewPager(viewPager);
+
+        viewPager.getAdapter().registerDataSetObserver(new DataSetObserver() {
+            @Override
+            public void onChanged() {
+                tabLayout.getAdapter().notifyDataSetChanged();
+            }
+        });
+
+        viewPager.setCurrentItem(PAGES_COUNT / 2, false);
     }
 
     private void onDateSelected(LocalDate newDate) {
         if (!startDate.isEqual(newDate)) {
             startDate = newDate;
             DataHelper.loadSchedule(null, startDate);
-            viewPager.getAdapter().notifyDataSetChanged();
+            pagerAdapter.setStartDate(newDate);
             lastUpdate = DateTime.now();
         }
-        viewPager.setCurrentItem(pagesCount / 2, true);
+        viewPager.setCurrentItem(PAGES_COUNT / 2, false);
     }
 
     private void setNewThing(final Thing thing) {
@@ -217,59 +227,6 @@ public class SheduleActivity extends BaseActivity {
                 currentThing.incrementOpenTimes();
             }
         });
-    }
-
-    private void initPager() {
-        viewPager.setAdapter(new FragmentStatePagerAdapter(getSupportFragmentManager()) {
-            private LocalDate getLocalDate(int pos) {
-                LocalDate date = startDate.plusDays(pos - pagesCount / 2);
-                Log.d("testtt", "startdate " + startDate.toString() + "; " + pos + " pos date " + date.toString());
-                return date;
-            }
-
-            @Override
-            public int getItemPosition(Object object) {
-                // TODO: 02.10.2016 fragments just restarted, not creating new
-                return POSITION_NONE;
-            }
-
-            @Override
-            public Fragment getItem(int position) {
-                return DayPairsFragment_.builder()
-                        .localDate(getLocalDate(position))
-                        .build();
-            }
-
-            @Override
-            public int getCount() {
-                return pagesCount;
-            }
-
-            @Override
-            public CharSequence getPageTitle(int position) {
-                LocalDate localDate = getLocalDate(position);
-                if (localDate.isEqual(LocalDate.now())) {
-                    return "Сегодня";
-                } else if (localDate.isEqual(LocalDate.now().minusDays(1))) {
-                    return "Вчера";
-                } else if (localDate.isEqual(LocalDate.now().plusDays(1))) {
-                    return "Завтра";
-                } else {
-                    return localDate.toString("dd MMM EE");
-                }
-            }
-        });
-
-        tabLayout.setUpWithViewPager(viewPager);
-
-        viewPager.getAdapter().registerDataSetObserver(new DataSetObserver() {
-            @Override
-            public void onChanged() {
-                tabLayout.getAdapter().notifyDataSetChanged();
-            }
-        });
-
-        viewPager.setCurrentItem(pagesCount / 2, false);
     }
 
     @Override

@@ -25,6 +25,15 @@ public class Pair extends RealmObject implements Serializable {
     private String date;
     private String note;
     private Thing thing;
+    private boolean notified = false;
+
+    public boolean isNotified() {
+        return notified;
+    }
+
+    public void setNotified() {
+        this.notified = true;
+    }
 
     public Thing getThing() {
         return thing;

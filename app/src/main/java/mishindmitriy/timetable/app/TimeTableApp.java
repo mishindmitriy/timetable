@@ -35,8 +35,7 @@ public class TimeTableApp extends Application {
                     .penaltyLog()
                     .build());
         }
-        Realm.init(this);
-        Realm.setDefaultConfiguration(new RealmConfiguration.Builder()
+        Realm.setDefaultConfiguration(new RealmConfiguration.Builder(this)
                 .schemaVersion(1)
                 .deleteRealmIfMigrationNeeded()
                 .build());

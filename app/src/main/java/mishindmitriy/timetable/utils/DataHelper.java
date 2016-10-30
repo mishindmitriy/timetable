@@ -18,6 +18,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import io.realm.Realm;
+import mishindmitriy.timetable.BuildConfig;
 import mishindmitriy.timetable.model.Pair;
 import mishindmitriy.timetable.model.Thing;
 import mishindmitriy.timetable.model.ThingType;
@@ -196,6 +197,14 @@ public class DataHelper {
                     List<Pair> pairs = DataHelper.getShedule(thing,
                             date.minusDays(100),
                             date.plusDays(100));
+                    for (Pair p : pairs) {
+                        Pair existPair = realm.where(Pair.class)
+                                .equalTo("id", p.getId())
+                                .findFirst();
+                        if (existPair != null && existPair.isNotified()) {
+                            p.setNotified();
+                        }
+                    }
                     realm.copyToRealmOrUpdate(pairs);
                     // TODO: 19.09.16 add remove old pairs
                 } catch (IOException e) {
@@ -213,6 +222,13 @@ public class DataHelper {
         }, new Realm.Transaction.OnError() {
             @Override
             public void onError(Throwable error) {
+                if (BuildConfig.DEBUG) {
+                    try {
+                        throw new Exception(error);
+                    } catch (Exception ignored) {
+
+                    }
+                }
                 realm.close();
                 if (afterLoadRunnable != null) {
                     afterLoadRunnable.run();

@@ -2,6 +2,7 @@ package mishindmitriy.timetable.app.shedule;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
@@ -21,6 +22,8 @@ import mishindmitriy.timetable.model.Pair;
 import mishindmitriy.timetable.utils.DataHelper;
 import mishindmitriy.timetable.utils.Prefs;
 
+import static mishindmitriy.timetable.app.shedule.SheduleActivity.PAGES_COUNT;
+
 /**
  * Created by mishindmitriy on 20.09.2016.
  */
@@ -30,9 +33,12 @@ public class DayPairsFragment extends BaseFragment {
     protected RecyclerView recyclerView;
     @ViewById(R.id.swipeRefreshLayout)
     protected SwipeRefreshLayout swipeRefreshLayout;
+    @FragmentArg
+    @InstanceState
+    protected LocalDate startDate = null;
     @InstanceState
     @FragmentArg
-    protected LocalDate localDate = null;
+    protected int position = 0;
     private PairAdapter adapter = new PairAdapter();
     private SharedPreferences.OnSharedPreferenceChangeListener listener
             = new SharedPreferences.OnSharedPreferenceChangeListener() {
@@ -44,6 +50,11 @@ public class DayPairsFragment extends BaseFragment {
         }
     };
 
+    public void setStartDate(@NonNull LocalDate startDate) {
+        this.startDate = startDate;
+        loadData();
+    }
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -53,14 +64,12 @@ public class DayPairsFragment extends BaseFragment {
     @Override
     public void onDestroy() {
         Prefs.get().unregister(listener);
-        Log.d("testtt", "destroy " + localDate.toString());
         super.onDestroy();
     }
 
     @AfterViews
     protected void init() {
-        Log.d("testtt", "create " + localDate.toString());
-        if (localDate == null) {
+        if (startDate == null) {
             throw new IllegalArgumentException("localdate must not be null");
         }
 
@@ -80,7 +89,7 @@ public class DayPairsFragment extends BaseFragment {
                             swipeRefreshLayout.setRefreshing(false);
                         }
                     }
-                }, localDate);
+                }, startDate);
             }
         });
     }
@@ -89,6 +98,7 @@ public class DayPairsFragment extends BaseFragment {
     public void setUserVisibleHint(boolean isVisibleToUser) {
         super.setUserVisibleHint(isVisibleToUser);
         if (isVisibleToUser) {
+            Log.d("testtt", "isVisibleToUser  date " + startDate + "; pos " + position);
             adapter.notifyDataSetChanged();
         }
     }
@@ -100,9 +110,10 @@ public class DayPairsFragment extends BaseFragment {
     }
 
     private void loadData() {
+        Log.d("testtt", "load date " + startDate + "; pos " + position);
         adapter.setData(realm.where(Pair.class)
                 .beginGroup()
-                .equalTo("date", localDate.toString())
+                .equalTo("date", startDate.plusDays(position - PAGES_COUNT / 2).toString())
                 .equalTo("thing.id", Prefs.get().getSelectedThingId())
                 .endGroup()
                 .findAllSortedAsync("number"));

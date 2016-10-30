@@ -46,7 +46,7 @@ dependencies {
     compile "org.androidannotations:androidannotations-api:$AAVersion"
     compile 'com.android.support:design:24.2.1'
     compile 'org.jsoup:jsoup:1.8.3'
-    compile('com.crashlytics.sdk.android:crashlytics:2.6.4@aar') {
+    compile('com.crashlytics.sdk.android:crashlytics:2.6.5@aar') {
         transitive = true;
     }
     compile 'com.squareup.okhttp3:okhttp:3.4.1'

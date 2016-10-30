@@ -26,7 +26,7 @@
             android:name=".app.things.ThingsActivity_"
             android:screenOrientation="portrait" />
 
-        <receiver android:name=".app.NotificationService$NotificationPublisher" />
+        <receiver android:name=".app.NotificationPublisher" />
         <service android:name=".app.NotificationService" />
         <meta-data
             android:name="io.fabric.ApiKey"

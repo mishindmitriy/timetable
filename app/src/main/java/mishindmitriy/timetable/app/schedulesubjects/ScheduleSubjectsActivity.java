@@ -33,6 +33,7 @@ import mishindmitriy.timetable.utils.DataHelper;
 import mishindmitriy.timetable.utils.Prefs;
 import rx.Observable;
 import rx.Subscriber;
+import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
 import rx.functions.Func1;
@@ -51,6 +52,8 @@ public class ScheduleSubjectsActivity extends BaseActivity {
     @ViewById(R.id.recyclerView)
     protected RecyclerView recyclerView;
     private ScheduleSubjectAdapter scheduleSubjectAdapter = new ScheduleSubjectAdapter();
+    private Observable<List<ScheduleSubject>> loadSubjectsObservable;
+    private Subscription loadSubscribtion;
 
     @AfterViews
     protected void init() {
@@ -95,6 +98,43 @@ public class ScheduleSubjectsActivity extends BaseActivity {
         });
         scheduleSubjectAdapter.setData(realm.where(ScheduleSubject.class)
                 .findAllSortedAsync("sortRating", Sort.ASCENDING, "name", Sort.ASCENDING));
+
+        initLoadObservable();
+    }
+
+    private void initLoadObservable() {
+        loadSubjectsObservable = Observable.zip(
+                createLoadThingObservable(ScheduleSubjectType.GROUP),
+                createLoadThingObservable(ScheduleSubjectType.TEACHER),
+                createLoadThingObservable(ScheduleSubjectType.CLASSROOM),
+                new Func3<List<ScheduleSubject>, List<ScheduleSubject>,
+                        List<ScheduleSubject>, List<ScheduleSubject>>() {
+                    @Override
+                    public List<ScheduleSubject> call(List<ScheduleSubject> subjects1,
+                                                      List<ScheduleSubject> subjects2,
+                                                      List<ScheduleSubject> subjects3) {
+                        List<ScheduleSubject> allScheduleSubjects = new ArrayList<>();
+                        allScheduleSubjects.addAll(subjects1);
+                        allScheduleSubjects.addAll(subjects2);
+                        allScheduleSubjects.addAll(subjects3);
+                        return allScheduleSubjects;
+                    }
+                }
+        )
+                .doOnNext(new Action1<List<ScheduleSubject>>() {
+                    @Override
+                    public void call(List<ScheduleSubject> scheduleSubjects) {
+                        cacheSubjects(scheduleSubjects);
+                    }
+                })
+                .timeout(10, TimeUnit.SECONDS)
+                .onErrorReturn(new Func1<Throwable, List<ScheduleSubject>>() {
+                    @Override
+                    public List<ScheduleSubject> call(Throwable throwable) {
+                        return null;
+                    }
+                })
+                .subscribeOn(Schedulers.io());
     }
 
     @Override
@@ -160,38 +200,8 @@ public class ScheduleSubjectsActivity extends BaseActivity {
     }
 
     private void loadThings() {
-        Observable.zip(
-                createLoadThingObservable(ScheduleSubjectType.GROUP),
-                createLoadThingObservable(ScheduleSubjectType.TEACHER),
-                createLoadThingObservable(ScheduleSubjectType.CLASSROOM),
-                new Func3<List<ScheduleSubject>, List<ScheduleSubject>,
-                        List<ScheduleSubject>, List<ScheduleSubject>>() {
-                    @Override
-                    public List<ScheduleSubject> call(List<ScheduleSubject> subjects1,
-                                                      List<ScheduleSubject> subjects2,
-                                                      List<ScheduleSubject> subjects3) {
-                        List<ScheduleSubject> allScheduleSubjects = new ArrayList<>();
-                        allScheduleSubjects.addAll(subjects1);
-                        allScheduleSubjects.addAll(subjects2);
-                        allScheduleSubjects.addAll(subjects3);
-                        return allScheduleSubjects;
-                    }
-                }
-        )
-                .doOnNext(new Action1<List<ScheduleSubject>>() {
-                    @Override
-                    public void call(List<ScheduleSubject> scheduleSubjects) {
-                        cacheSubjects(scheduleSubjects);
-                    }
-                })
-                .timeout(10, TimeUnit.SECONDS)
-                .onErrorReturn(new Func1<Throwable, List<ScheduleSubject>>() {
-                    @Override
-                    public List<ScheduleSubject> call(Throwable throwable) {
-                        return null;
-                    }
-                })
-                .subscribeOn(Schedulers.io())
+        unsubscribe();
+        loadSubscribtion = loadSubjectsObservable
                 .subscribe(new Subscriber<List<ScheduleSubject>>() {
                     @Override
                     public void onCompleted() {
@@ -211,6 +221,18 @@ public class ScheduleSubjectsActivity extends BaseActivity {
                         hideRefreshing();
                     }
                 });
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        unsubscribe();
+    }
+
+    private void unsubscribe() {
+        if (loadSubscribtion != null && !loadSubscribtion.isUnsubscribed()) {
+            loadSubscribtion.unsubscribe();
+        }
     }
 
     private boolean canUpdate() {

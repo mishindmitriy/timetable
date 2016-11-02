@@ -33,9 +33,9 @@ import io.realm.Sort;
 import mishindmitriy.timetable.R;
 import mishindmitriy.timetable.app.base.BaseActivity;
 import mishindmitriy.timetable.app.base.BaseAdapter;
-import mishindmitriy.timetable.app.things.ThingAdapter;
-import mishindmitriy.timetable.app.things.ThingsActivity_;
-import mishindmitriy.timetable.model.Thing;
+import mishindmitriy.timetable.app.schedulesubjects.ScheduleSubjectAdapter;
+import mishindmitriy.timetable.app.schedulesubjects.ScheduleSubjectsActivity_;
+import mishindmitriy.timetable.model.ScheduleSubject;
 import mishindmitriy.timetable.utils.DataHelper;
 import mishindmitriy.timetable.utils.Prefs;
 
@@ -63,7 +63,7 @@ public class SheduleActivity extends BaseActivity {
     @InstanceState
     protected LocalDate startDate = LocalDate.now();
     private ActionBarDrawerToggle mDrawerToggle;
-    private ThingAdapter thingAdapter = new ThingAdapter();
+    private ScheduleSubjectAdapter scheduleSubjectAdapter = new ScheduleSubjectAdapter();
     private DatePickerDialog dialog;
     private DaysPagerAdapter pagerAdapter = new DaysPagerAdapter(realm);
     private SharedPreferences.OnSharedPreferenceChangeListener listener
@@ -73,11 +73,11 @@ public class SheduleActivity extends BaseActivity {
             if (key.equals(Prefs.KEY_SELECTED_THING_ID)) {
                 lastUpdate = null;
                 onDateSelected(LocalDate.now());
-                Thing currentThing = realm.where(Thing.class)
+                ScheduleSubject currentScheduleSubject = realm.where(ScheduleSubject.class)
                         .equalTo("id", Prefs.get().getSelectedThingId())
                         .findFirst();
-                if (currentThing != null) {
-                    currentThingTextView.setText(currentThing.getName());
+                if (currentScheduleSubject != null) {
+                    currentThingTextView.setText(currentScheduleSubject.getName());
                 }
             }
         }
@@ -85,7 +85,7 @@ public class SheduleActivity extends BaseActivity {
 
     @Click(R.id.choose_thing)
     protected void chooseThingClicked() {
-        ThingsActivity_.intent(SheduleActivity.this).start();
+        ScheduleSubjectsActivity_.intent(SheduleActivity.this).start();
         mDrawerLayout.closeDrawers();
     }
 
@@ -112,27 +112,27 @@ public class SheduleActivity extends BaseActivity {
     protected void init() {
         chooseThingText.setText(R.string.choose_thing);
 
-        Thing currentThing = realm.where(Thing.class)
+        ScheduleSubject currentScheduleSubject = realm.where(ScheduleSubject.class)
                 .equalTo("id", Prefs.get().getSelectedThingId())
                 .findFirst();
 
         if (Prefs.get().getSelectedThingId() == 0
-                || currentThing == null) {
-            ThingsActivity_.intent(this).start();
+                || currentScheduleSubject == null) {
+            ScheduleSubjectsActivity_.intent(this).start();
             finish();
             return;
         }
 
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        recyclerView.setAdapter(thingAdapter);
-        thingAdapter.setData(realm.where(Thing.class)
+        recyclerView.setAdapter(scheduleSubjectAdapter);
+        scheduleSubjectAdapter.setData(realm.where(ScheduleSubject.class)
                 .greaterThan("timesOpen", 0)
                 .findAllSortedAsync("timesOpen", Sort.DESCENDING, "name", Sort.ASCENDING));
-        thingAdapter.setOnItemClickListener(new BaseAdapter.OnItemClickListener<Thing>() {
+        scheduleSubjectAdapter.setOnItemClickListener(new BaseAdapter.OnItemClickListener<ScheduleSubject>() {
             @Override
-            public void onItemClick(Thing thing) {
-                if (thing.getId() != Prefs.get().getSelectedThingId()) {
-                    setNewThing(thing);
+            public void onItemClick(ScheduleSubject scheduleSubject) {
+                if (scheduleSubject.getId() != Prefs.get().getSelectedThingId()) {
+                    setNewThing(scheduleSubject);
                 }
                 mDrawerLayout.closeDrawers();
             }
@@ -175,12 +175,12 @@ public class SheduleActivity extends BaseActivity {
         });
 
 
-        currentThingTextView.setText(currentThing.getName());
+        currentThingTextView.setText(currentScheduleSubject.getName());
 
         DataHelper.loadSchedule(null, startDate);
 
         {
-            // setThing navigation drawer
+            // setScheduleSubject navigation drawer
             mDrawerToggle = new ActionBarDrawerToggle(
                     this,                    /* host Activity */
                     SheduleActivity.this.mDrawerLayout, toolbar,                    /* DrawerLayout object */
@@ -214,17 +214,17 @@ public class SheduleActivity extends BaseActivity {
         viewPager.setCurrentItem(PAGES_COUNT / 2, false);
     }
 
-    private void setNewThing(final Thing thing) {
-        if (thing == null) return;
-        Prefs.get().setSelectedThingId(thing.getId());
-        final Long id = thing.getId();
+    private void setNewThing(final ScheduleSubject scheduleSubject) {
+        if (scheduleSubject == null) return;
+        Prefs.get().setSelectedThingId(scheduleSubject.getId());
+        final Long id = scheduleSubject.getId();
         realm.executeTransactionAsync(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
-                Thing currentThing = realm.where(Thing.class)
+                ScheduleSubject currentScheduleSubject = realm.where(ScheduleSubject.class)
                         .equalTo("id", id)
                         .findFirst();
-                currentThing.incrementOpenTimes();
+                currentScheduleSubject.incrementOpenTimes();
             }
         });
     }

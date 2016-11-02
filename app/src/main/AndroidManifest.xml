@@ -5,7 +5,6 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
-    <!-- <receiver android:name=".TimeNotification" /> -->
     <application
         android:name=".app.TimeTableApp"
         android:allowBackup="false"
@@ -15,7 +14,12 @@
         <activity
             android:name=".app.shedule.SheduleActivity_"
             android:launchMode="singleInstance"
-            android:screenOrientation="portrait">
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name=".app.SplashScreen"
+            android:screenOrientation="portrait"
+            android:theme="@style/SplashTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -23,7 +27,7 @@
         </activity>
 
         <activity
-            android:name=".app.things.ThingsActivity_"
+            android:name=".app.schedulesubjects.ScheduleSubjectsActivity_"
             android:screenOrientation="portrait" />
 
         <receiver android:name=".app.NotificationPublisher" />
@@ -32,5 +36,4 @@
             android:name="io.fabric.ApiKey"
             android:value="2d22a494fc2ac3e93047f01c673d690fd1948c2b" />
     </application>
-
 </manifest>

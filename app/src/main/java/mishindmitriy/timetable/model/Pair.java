@@ -24,7 +24,7 @@ public class Pair extends RealmObject implements Serializable {
     private String group;
     private String date;
     private String note;
-    private Thing thing;
+    private ScheduleSubject scheduleSubject;
     private boolean notified = false;
 
     public boolean isNotified() {
@@ -35,12 +35,12 @@ public class Pair extends RealmObject implements Serializable {
         this.notified = true;
     }
 
-    public Thing getThing() {
-        return thing;
+    public ScheduleSubject getScheduleSubject() {
+        return scheduleSubject;
     }
 
-    public void setThing(Thing thing) {
-        this.thing = thing;
+    public void setScheduleSubject(ScheduleSubject scheduleSubject) {
+        this.scheduleSubject = scheduleSubject;
     }
 
     public String getNote() {

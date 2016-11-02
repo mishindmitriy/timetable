@@ -82,7 +82,7 @@ public class DaysPagerAdapter extends PagerAdapter {
                 .setData(realm.where(Pair.class)
                         .beginGroup()
                         .equalTo("date", getLocalDate(position).toString())
-                        .equalTo("thing.id", Prefs.get().getSelectedThingId())
+                        .equalTo("scheduleSubject.id", Prefs.get().getSelectedThingId())
                         .endGroup()
                         .findAllSortedAsync("number"));
         container.addView(recyclerView);
@@ -96,7 +96,7 @@ public class DaysPagerAdapter extends PagerAdapter {
             if (view != null && view instanceof RecyclerView) {
                 if (object.equals(view)) {
                     RecyclerView recyclerView = (RecyclerView) view;
-                    ((PairAdapter) recyclerView.getAdapter()).setItems(null);
+                    ((PairAdapter) recyclerView.getAdapter()).setData(null);
                     container.removeView(view);
                     viewStack.push(recyclerView);
                     break;

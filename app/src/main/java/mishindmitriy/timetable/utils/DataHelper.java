@@ -20,8 +20,8 @@ import java.util.regex.Pattern;
 import io.realm.Realm;
 import mishindmitriy.timetable.BuildConfig;
 import mishindmitriy.timetable.model.Pair;
-import mishindmitriy.timetable.model.Thing;
-import mishindmitriy.timetable.model.ThingType;
+import mishindmitriy.timetable.model.ScheduleSubject;
+import mishindmitriy.timetable.model.ScheduleSubjectType;
 import okhttp3.FormBody;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -66,7 +66,7 @@ public class DataHelper {
         return html;
     }
 
-    private static List<Pair> mappingListPairs(String html, Thing thing) {
+    private static List<Pair> mappingListPairs(String html, ScheduleSubject scheduleSubject) {
         List<Pair> pairs = new ArrayList<>();
         if (html == null || html.length() == 0) return pairs;
         Document doc = Jsoup.parse(html);
@@ -94,7 +94,7 @@ public class DataHelper {
                 }
             } else {
                 Pair p = parsePair(element, iterator, date);
-                p.setThing(thing);
+                p.setScheduleSubject(scheduleSubject);
                 pairs.add(p);
             }
         }
@@ -150,35 +150,35 @@ public class DataHelper {
         return lastUpdate;
     }*/
 
-    public static List<Pair> getShedule(Thing thing, LocalDate from, LocalDate to) throws IOException {
+    public static List<Pair> getShedule(ScheduleSubject scheduleSubject, LocalDate from, LocalDate to) throws IOException {
         String html = sendPostToGetShedule(
-                String.valueOf(ThingType.getPositionByPeriod(thing.getType())),
-                thing.getServerId(),
+                String.valueOf(ScheduleSubjectType.getPositionByPeriod(scheduleSubject.getEnumType())),
+                scheduleSubject.getServerId(),
                 from.toString("dd.MM.yyyy"),
                 to.toString("dd.MM.yyyy"));
-        return mappingListPairs(html, thing);
+        return mappingListPairs(html, scheduleSubject);
     }
 
-    private static List<Thing> mappingListThings(String html, ThingType type) {
+    private static List<ScheduleSubject> mappingListThings(String html, ScheduleSubjectType type) {
         Document doc = Jsoup.parse(html);
         Element spinner = doc.select("select[id=vr][name=vr]").first();
         Elements elements = spinner.select("option");
-        List<Thing> things = new ArrayList<>();
+        List<ScheduleSubject> scheduleSubjects = new ArrayList<>();
         for (Element element : elements) {
             String serverId = element.attr("value");
             String name = element.text();
-            things.add(new Thing()
+            scheduleSubjects.add(new ScheduleSubject()
                     .setServerId(serverId)
                     .setName(name)
-                    .setType(type)
+                    .setEnumType(type)
                     .setId());
         }
-        return things;
+        return scheduleSubjects;
     }
 
-    public static List<Thing> getSomeThing(ThingType thingType) throws IOException {
-        String url = URL + "?id=" + ThingType.getPositionByPeriod(thingType);
-        return mappingListThings(doQuery(url, null), thingType);
+    public static List<ScheduleSubject> loadThing(ScheduleSubjectType scheduleSubjectType) throws IOException {
+        String url = URL + "?id=" + ScheduleSubjectType.getPositionByPeriod(scheduleSubjectType);
+        return mappingListThings(doQuery(url, null), scheduleSubjectType);
     }
 
     public static void loadSchedule(final Runnable afterLoadRunnable, final LocalDate startDate) {
@@ -188,13 +188,13 @@ public class DataHelper {
             public void execute(Realm realm) {
                 long id = Prefs.get().getSelectedThingId();
                 if (id == 0) return;
-                Thing thing = realm.where(Thing.class)
+                ScheduleSubject scheduleSubject = realm.where(ScheduleSubject.class)
                         .equalTo("id", id)
                         .findFirst();
                 try {
                     LocalDate date = startDate;
                     if (date == null) date = LocalDate.now();
-                    List<Pair> pairs = DataHelper.getShedule(thing,
+                    List<Pair> pairs = DataHelper.getShedule(scheduleSubject,
                             date.minusDays(100),
                             date.plusDays(100));
                     for (Pair p : pairs) {

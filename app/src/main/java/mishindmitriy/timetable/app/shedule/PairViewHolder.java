@@ -55,7 +55,7 @@ public class PairViewHolder extends BaseViewHolder<Pair> {
 
     @Override
     public void update(@NonNull Pair pair) {
-        switch (pair.getThing().getType()) {
+        switch (pair.getScheduleSubject().getEnumType()) {
             case GROUP:
                 classroomTextView.setText(pair.getClassroom());
                 teacherTextView.setText(pair.getTeacher());

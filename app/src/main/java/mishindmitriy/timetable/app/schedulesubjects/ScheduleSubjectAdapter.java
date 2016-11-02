@@ -1,4 +1,4 @@
-package mishindmitriy.timetable.app.things;
+package mishindmitriy.timetable.app.schedulesubjects;
 
 import android.graphics.Color;
 import android.support.annotation.NonNull;
@@ -12,13 +12,16 @@ import com.timehop.stickyheadersrecyclerview.StickyRecyclerHeadersAdapter;
 import mishindmitriy.timetable.R;
 import mishindmitriy.timetable.app.base.BaseAdapter;
 import mishindmitriy.timetable.app.base.BaseViewHolder;
-import mishindmitriy.timetable.model.Thing;
+import mishindmitriy.timetable.model.ScheduleSubject;
 
 /**
  * Created by dmitriy on 19.09.16.
  */
-public class ThingAdapter extends BaseAdapter<Thing, ThingViewHolder>
+public class ScheduleSubjectAdapter extends BaseAdapter<ScheduleSubject, ScheduleSubjectViewHolder>
         implements StickyRecyclerHeadersAdapter<BaseViewHolder<String>> {
+    public ScheduleSubjectAdapter() {
+        setHasStableIds(true);
+    }
 
     @Override
     public long getItemId(int position) {
@@ -26,13 +29,13 @@ public class ThingAdapter extends BaseAdapter<Thing, ThingViewHolder>
     }
 
     @Override
-    public ThingViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        return new ThingViewHolder(parent);
+    public ScheduleSubjectViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        return new ScheduleSubjectViewHolder(parent);
     }
 
     @Override
     public long getHeaderId(int position) {
-        switch (getItem(position).getType()) {
+        switch (getItem(position).getEnumType()) {
             case CLASSROOM:
                 return 1;
             case TEACHER:
@@ -48,9 +51,8 @@ public class ThingAdapter extends BaseAdapter<Thing, ThingViewHolder>
     public BaseViewHolder<String> onCreateHeaderViewHolder(ViewGroup parent) {
         View view = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.item_thing, parent, false);
-        ((TextView) view.findViewById(R.id.text))
-                .setBackgroundColor(view.getContext().getResources()
-                        .getColor(R.color.teal500));
+        view.findViewById(R.id.text)
+                .setBackgroundColor(view.getContext().getResources().getColor(R.color.teal500));
         ((TextView) view.findViewById(R.id.text)).setTextColor(Color.WHITE);
         return new BaseViewHolder<String>(view) {
             @Override
@@ -62,7 +64,7 @@ public class ThingAdapter extends BaseAdapter<Thing, ThingViewHolder>
 
     @Override
     public void onBindHeaderViewHolder(BaseViewHolder<String> holder, int position) {
-        switch (getItem(position).getType()) {
+        switch (getItem(position).getEnumType()) {
             case CLASSROOM:
                 holder.update(holder.itemView.getContext().getResources()
                         .getString(R.string.classrooms));
@@ -82,7 +84,7 @@ public class ThingAdapter extends BaseAdapter<Thing, ThingViewHolder>
     }
 
     @Override
-    protected boolean contains(Thing t, String filterPhrase) {
-        return t.getName().toLowerCase().contains(filterPhrase.toLowerCase());
+    protected boolean contains(ScheduleSubject s, String filterPhrase) {
+        return s.getName().toLowerCase().contains(filterPhrase.toLowerCase());
     }
 }

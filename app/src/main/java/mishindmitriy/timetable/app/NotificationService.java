@@ -93,7 +93,7 @@ public class NotificationService extends Service {
             todayPairs.removeChangeListeners();
         }
         RealmResults<Pair> results = realm.where(Pair.class)
-                .equalTo("thing.id", Prefs.get().getSelectedThingId())
+                .equalTo("scheduleSubject.id", Prefs.get().getSelectedThingId())
                 .equalTo("date", LocalDate.now().toString())
                 .findAllSorted("number");
         results.addChangeListener(new RealmChangeListener<RealmResults<Pair>>() {

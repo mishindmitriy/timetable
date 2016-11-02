@@ -65,7 +65,10 @@ public abstract class BaseAdapter<I extends RealmObject, VH extends BaseViewHold
             this.items.removeChangeListener(changeListener);
         }
         this.items = items;
-        if (items == null) return;
+        if (items == null) {
+            notifyDataSetChanged();
+            return;
+        }
         items.addChangeListener(changeListener);
         filterAndNotifyDataChanged();
     }

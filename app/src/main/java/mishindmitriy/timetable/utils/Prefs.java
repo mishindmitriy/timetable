@@ -9,6 +9,7 @@ import android.content.SharedPreferences;
 public class Prefs {
     public final static String KEY_SELECTED_THING_ID = "selected_thing_id";
     public final static String KEY_NOTIFICATIONS = "notifications";
+    public final static String KEY_SCHEDULE_SUBJECTS_LAST_UPDATE = "subjects_last_update";
     private static Prefs instance;
     final private SharedPreferences prefs;
 
@@ -32,6 +33,14 @@ public class Prefs {
         if (thingId == 0) return;
         prefs.edit().putLong(KEY_SELECTED_THING_ID, thingId)
                 .apply();
+    }
+
+    public long getSubjectsLastUpdate() {
+        return prefs.getLong(KEY_SCHEDULE_SUBJECTS_LAST_UPDATE, 0);
+    }
+
+    public void setSubjectsLastUpdate(long ms) {
+        prefs.edit().putLong(KEY_SCHEDULE_SUBJECTS_LAST_UPDATE, ms).apply();
     }
 
     public void register(SharedPreferences.OnSharedPreferenceChangeListener listener) {

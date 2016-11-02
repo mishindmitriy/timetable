@@ -44,7 +44,7 @@ dependencies {
     //compile fileTree(include: ['*.jar'], dir: 'libs')
     apt "org.androidannotations:androidannotations:$AAVersion"
     compile "org.androidannotations:androidannotations-api:$AAVersion"
-    compile 'com.android.support:design:24.2.1'
+    compile 'com.android.support:design:25.0.0'
     compile 'org.jsoup:jsoup:1.8.3'
     compile('com.crashlytics.sdk.android:crashlytics:2.6.5@aar') {
         transitive = true;
@@ -54,6 +54,8 @@ dependencies {
     compile 'net.danlew:android.joda:2.9.4.1'
     compile 'com.timehop.stickyheadersrecyclerview:library:0.4.3@aar'
     compile 'com.nshmura:recyclertablayout:1.0.2'
+    compile 'io.reactivex:rxjava:1.1.6'
+    compile 'io.reactivex:rxandroid:1.2.1'
 }
 
 apt {

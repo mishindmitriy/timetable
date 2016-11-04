@@ -1,6 +1,7 @@
 package mishindmitriy.timetable.app.shedule;
 
 import android.app.DatePickerDialog;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.database.DataSetObserver;
@@ -15,6 +16,7 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.MenuItem;
 import android.widget.DatePicker;
 import android.widget.TextView;
@@ -36,6 +38,7 @@ import io.realm.Sort;
 import mishindmitriy.timetable.R;
 import mishindmitriy.timetable.app.base.BaseActivity;
 import mishindmitriy.timetable.app.base.BaseAdapter;
+import mishindmitriy.timetable.app.notifications.NotificationService;
 import mishindmitriy.timetable.app.schedulesubjects.ScheduleSubjectAdapter;
 import mishindmitriy.timetable.app.schedulesubjects.ScheduleSubjectsActivity_;
 import mishindmitriy.timetable.model.Pair;
@@ -263,6 +266,8 @@ public class ScheduleActivity extends BaseActivity {
         pagerAdapter.notifyDataChanged();
         updateTabs();
         viewPager.setCurrentItem(PAGES_COUNT / 2, false);
+        Log.d("testtt", "date selected service");
+        startService(new Intent(this, NotificationService.class));
     }
 
     private void setNewThing(final ScheduleSubject scheduleSubject) {
@@ -280,7 +285,8 @@ public class ScheduleActivity extends BaseActivity {
         }, new Realm.Transaction.OnSuccess() {
             @Override
             public void onSuccess() {
-
+                Log.d("testtt", "change subject service");
+                startService(new Intent(ScheduleActivity.this, NotificationService.class));
             }
         }, new Realm.Transaction.OnError() {
             @Override
@@ -321,6 +327,10 @@ public class ScheduleActivity extends BaseActivity {
             public void onNext(List<Pair> pairs) {
                 lastUpdate = DateTime.now();
                 hideRefreshing();
+                if (pairs != null && pairs.size() > 0) {
+                    Log.d("testtt", "onnext service");
+                    startService(new Intent(ScheduleActivity.this, NotificationService.class));
+                }
             }
         });
     }

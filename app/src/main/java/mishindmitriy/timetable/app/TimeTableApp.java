@@ -3,6 +3,7 @@ package mishindmitriy.timetable.app;
 import android.app.Application;
 import android.content.Intent;
 import android.os.StrictMode;
+import android.util.Log;
 
 import com.crashlytics.android.Crashlytics;
 
@@ -12,6 +13,8 @@ import io.fabric.sdk.android.Fabric;
 import io.realm.Realm;
 import io.realm.RealmConfiguration;
 import mishindmitriy.timetable.BuildConfig;
+import mishindmitriy.timetable.app.notifications.NotificationService;
+import mishindmitriy.timetable.utils.DataHelper;
 import mishindmitriy.timetable.utils.Prefs;
 
 /**
@@ -41,6 +44,8 @@ public class TimeTableApp extends Application {
                 .deleteRealmIfMigrationNeeded()
                 .build());
         Prefs.init(this);
+        DataHelper.init(this);
+        Log.d("testtt", "init service");
         startService(new Intent(this, NotificationService.class));
     }
 }

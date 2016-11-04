@@ -4,6 +4,7 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
         android:name=".app.TimeTableApp"
@@ -30,8 +31,18 @@
             android:name=".app.schedulesubjects.ScheduleSubjectsActivity_"
             android:screenOrientation="portrait" />
 
-        <receiver android:name=".app.NotificationPublisher" />
-        <service android:name=".app.NotificationService" />
+        <receiver android:name=".app.notifications.NotificationPublisherReceiver" />
+        <receiver android:name=".app.notifications.UpdateNotificationsReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.TIME_SET" />
+                <action android:name="android.intent.action.DATE_CHANGED" />
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+                <action android:name="android.intent.action.CONFIGURATION_CHANGED" />
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+
+        <service android:name=".app.notifications.NotificationService" />
         <meta-data
             android:name="io.fabric.ApiKey"
             android:value="2d22a494fc2ac3e93047f01c673d690fd1948c2b" />

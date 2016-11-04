@@ -3,6 +3,9 @@ package mishindmitriy.timetable.utils;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import java.util.HashSet;
+import java.util.Set;
+
 /**
  * Created by dmitriy on 19.09.16.
  */
@@ -10,6 +13,7 @@ public class Prefs {
     public final static String KEY_SELECTED_THING_ID = "selected_thing_id";
     public final static String KEY_NOTIFICATIONS = "notifications";
     public final static String KEY_SCHEDULE_SUBJECTS_LAST_UPDATE = "subjects_last_update";
+    private static final String KEY_PENDING_IDS = "pending_intents_ids";
     private static Prefs instance;
     final private SharedPreferences prefs;
 
@@ -23,6 +27,10 @@ public class Prefs {
 
     public static void init(Context context) {
         instance = new Prefs(context.getSharedPreferences("tolgas.prefs", Context.MODE_PRIVATE));
+    }
+
+    public static boolean isInited() {
+        return instance != null;
     }
 
     public long getSelectedThingId() {
@@ -57,6 +65,21 @@ public class Prefs {
 
     public void setNotificationsEnabled(boolean enabled) {
         prefs.edit().putBoolean(KEY_NOTIFICATIONS, enabled)
+                .apply();
+    }
+
+    public HashSet<Long> getPendingIntentPairsIds() {
+        Set<String> ids = prefs.getStringSet(KEY_PENDING_IDS, new HashSet<String>());
+        HashSet<Long> longIds = new HashSet<>();
+        for (String s : ids) {
+            longIds.add(Long.valueOf(s));
+        }
+        return longIds;
+    }
+
+    public void setPendingIntentPairsIds(Set<String> ids) {
+        prefs.edit()
+                .putStringSet(KEY_PENDING_IDS, ids)
                 .apply();
     }
 }

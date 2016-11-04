@@ -1,5 +1,6 @@
 package mishindmitriy.timetable.utils;
 
+import android.content.Context;
 import android.support.annotation.Nullable;
 
 import org.joda.time.LocalDate;
@@ -21,6 +22,8 @@ import io.realm.Realm;
 import mishindmitriy.timetable.model.Pair;
 import mishindmitriy.timetable.model.ScheduleSubject;
 import mishindmitriy.timetable.model.ScheduleSubjectType;
+import okhttp3.Cache;
+import okhttp3.CacheControl;
 import okhttp3.FormBody;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -39,30 +42,22 @@ import rx.schedulers.Schedulers;
  */
 public class DataHelper {
     private static final String URL = "http://www.tolgas.ru/services/raspisanie/";
+    private static OkHttpClient httpClient;
 
     private static String doQuery(String inputUrl, @Nullable RequestBody requestBody) throws IOException {
-        HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor();
-        loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.HEADERS);
-        OkHttpClient httpClient = new OkHttpClient.Builder()
-                .addInterceptor(loggingInterceptor)
-                .connectTimeout(10, TimeUnit.SECONDS)
-                .writeTimeout(10, TimeUnit.SECONDS)
-                .readTimeout(10, TimeUnit.SECONDS)
-                .build();
-        Request request;
+        Request.Builder request = new Request.Builder()
+                .cacheControl(new CacheControl.Builder()
+                        .maxAge(1, TimeUnit.HOURS)
+                        .build())
+                .url(inputUrl);
         if (requestBody != null) //значит делаем POST запрос
         {
-            request = new Request.Builder()
-                    .url(inputUrl)
-                    .post(requestBody)
-                    .build();
+            request.post(requestBody);
         } else {
-            request = new Request.Builder()
-                    .url(inputUrl)
-                    .get()
-                    .build();
+            request.get();
         }
-        Response response = httpClient.newCall(request).execute();
+
+        Response response = httpClient.newCall(request.build()).execute();
         if (response.code() != 200) {
             throw new IOException("query failed with error code " + response.code());
         }
@@ -148,13 +143,6 @@ public class DataHelper {
         return matcher.matches();
     }
 
-   /* private static String parseLastUpdateServer(TagNode output) {
-        String lastUpdate = null;
-        TagNode[] outputTd = output.getElementsByAttValue("class", "last_mod", true, true);
-        lastUpdate = outputTd[0].getText().toString();
-        return lastUpdate;
-    }*/
-
     public static List<Pair> getShedule(ScheduleSubject scheduleSubject, LocalDate from, LocalDate to)
             throws IOException {
         String html = sendPostToGetShedule(
@@ -164,6 +152,13 @@ public class DataHelper {
                 to.toString("dd.MM.yyyy"));
         return mappingListPairs(html, scheduleSubject);
     }
+
+   /* private static String parseLastUpdateServer(TagNode output) {
+        String lastUpdate = null;
+        TagNode[] outputTd = output.getElementsByAttValue("class", "last_mod", true, true);
+        lastUpdate = outputTd[0].getText().toString();
+        return lastUpdate;
+    }*/
 
     private static List<ScheduleSubject> mappingListThings(String html, ScheduleSubjectType type) {
         Document doc = Jsoup.parse(html);
@@ -186,7 +181,6 @@ public class DataHelper {
         String url = URL + "?id=" + ScheduleSubjectType.getPositionByPeriod(scheduleSubjectType);
         return mappingListThings(doQuery(url, null), scheduleSubjectType);
     }
-
 
     public static Observable<List<Pair>> createLoadPairsObservable(LocalDate startDate) {
         if (startDate == null) {
@@ -252,5 +246,22 @@ public class DataHelper {
                 })
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread());
+    }
+
+    public static void init(Context context) {
+        HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor();
+        loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.HEADERS);
+        httpClient = new OkHttpClient.Builder()
+                .cache(createCache(context))
+                .addInterceptor(loggingInterceptor)
+                .connectTimeout(10, TimeUnit.SECONDS)
+                .writeTimeout(10, TimeUnit.SECONDS)
+                .readTimeout(10, TimeUnit.SECONDS)
+                .build();
+    }
+
+    private static Cache createCache(Context context) {
+        int cacheSize = 5 * 1024 * 1024;// 5 MiB
+        return new Cache(context.getDir("http_cache", Context.MODE_PRIVATE), cacheSize);
     }
 }

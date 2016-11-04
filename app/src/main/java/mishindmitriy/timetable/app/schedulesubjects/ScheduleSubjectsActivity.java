@@ -26,19 +26,19 @@ import io.realm.Sort;
 import mishindmitriy.timetable.R;
 import mishindmitriy.timetable.app.base.BaseActivity;
 import mishindmitriy.timetable.app.base.BaseAdapter;
-import mishindmitriy.timetable.app.shedule.SheduleActivity_;
+import mishindmitriy.timetable.app.shedule.ScheduleActivity_;
 import mishindmitriy.timetable.model.ScheduleSubject;
 import mishindmitriy.timetable.model.ScheduleSubjectType;
 import mishindmitriy.timetable.utils.DataHelper;
 import mishindmitriy.timetable.utils.Prefs;
 import rx.Observable;
 import rx.Subscriber;
-import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
 import rx.functions.Func1;
 import rx.functions.Func3;
 import rx.schedulers.Schedulers;
+import rx.subscriptions.CompositeSubscription;
 
 @EActivity(R.layout.activity_things)
 public class ScheduleSubjectsActivity extends BaseActivity {
@@ -53,7 +53,7 @@ public class ScheduleSubjectsActivity extends BaseActivity {
     protected RecyclerView recyclerView;
     private ScheduleSubjectAdapter scheduleSubjectAdapter = new ScheduleSubjectAdapter();
     private Observable<List<ScheduleSubject>> loadSubjectsObservable;
-    private Subscription loadSubscribtion;
+    private CompositeSubscription subscription = new CompositeSubscription();
 
     @AfterViews
     protected void init() {
@@ -185,7 +185,7 @@ public class ScheduleSubjectsActivity extends BaseActivity {
     private void onSubjectClicked(ScheduleSubject subject) {
         if (subject == null) return;
         Prefs.get().setSelectedThingId(subject.getId());
-        SheduleActivity_.intent(ScheduleSubjectsActivity.this).start();
+        ScheduleActivity_.intent(ScheduleSubjectsActivity.this).start();
         finish();
         final Long id = subject.getId();
         realm.executeTransactionAsync(new Realm.Transaction() {
@@ -200,8 +200,8 @@ public class ScheduleSubjectsActivity extends BaseActivity {
     }
 
     private void loadThings() {
-        unsubscribe();
-        loadSubscribtion = loadSubjectsObservable
+        subscription.clear();
+        subscription.add(loadSubjectsObservable
                 .subscribe(new Subscriber<List<ScheduleSubject>>() {
                     @Override
                     public void onCompleted() {
@@ -220,20 +220,17 @@ public class ScheduleSubjectsActivity extends BaseActivity {
                         }
                         hideRefreshing();
                     }
-                });
+                })
+        );
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        unsubscribe();
+        subscription.clear();
+        hideRefreshing();
     }
 
-    private void unsubscribe() {
-        if (loadSubscribtion != null && !loadSubscribtion.isUnsubscribed()) {
-            loadSubscribtion.unsubscribe();
-        }
-    }
 
     private boolean canUpdate() {
         return DateTime.now().getMillis() - Prefs.get().getSubjectsLastUpdate() > UPDATE_INTERVAL;

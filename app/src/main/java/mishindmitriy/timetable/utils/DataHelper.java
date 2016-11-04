@@ -29,6 +29,7 @@ import okhttp3.Response;
 import okhttp3.logging.HttpLoggingInterceptor;
 import rx.Observable;
 import rx.Subscriber;
+import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
 import rx.functions.Func1;
 import rx.schedulers.Schedulers;
@@ -44,9 +45,9 @@ public class DataHelper {
         loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.HEADERS);
         OkHttpClient httpClient = new OkHttpClient.Builder()
                 .addInterceptor(loggingInterceptor)
-                .connectTimeout(5, TimeUnit.SECONDS)
-                .writeTimeout(5, TimeUnit.SECONDS)
-                .readTimeout(5, TimeUnit.SECONDS)
+                .connectTimeout(10, TimeUnit.SECONDS)
+                .writeTimeout(10, TimeUnit.SECONDS)
+                .readTimeout(10, TimeUnit.SECONDS)
                 .build();
         Request request;
         if (requestBody != null) //значит делаем POST запрос
@@ -154,7 +155,8 @@ public class DataHelper {
         return lastUpdate;
     }*/
 
-    public static List<Pair> getShedule(ScheduleSubject scheduleSubject, LocalDate from, LocalDate to) throws IOException {
+    public static List<Pair> getShedule(ScheduleSubject scheduleSubject, LocalDate from, LocalDate to)
+            throws IOException {
         String html = sendPostToGetShedule(
                 String.valueOf(ScheduleSubjectType.getPositionByPeriod(scheduleSubject.getEnumType())),
                 scheduleSubject.getServerId(),
@@ -248,6 +250,7 @@ public class DataHelper {
                         realm.close();
                     }
                 })
-                .subscribeOn(Schedulers.io());
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread());
     }
 }

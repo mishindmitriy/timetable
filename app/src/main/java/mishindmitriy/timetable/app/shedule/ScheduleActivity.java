@@ -10,6 +10,7 @@ import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v4.widget.DrawerLayout;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -42,9 +43,11 @@ import mishindmitriy.timetable.model.ScheduleSubject;
 import mishindmitriy.timetable.utils.DataHelper;
 import mishindmitriy.timetable.utils.Prefs;
 import rx.Observable;
+import rx.Subscriber;
+import rx.Subscription;
 
 @EActivity(R.layout.activity_shedule)
-public class SheduleActivity extends BaseActivity {
+public class ScheduleActivity extends BaseActivity {
     public final static int PAGES_COUNT = 100;
     @ViewById(R.id.toolbar)
     protected Toolbar toolbar;
@@ -62,6 +65,8 @@ public class SheduleActivity extends BaseActivity {
     protected RecyclerTabLayout tabLayout;
     @ViewById(R.id.choose_thing)
     protected TextView chooseThingText;
+    @ViewById(R.id.swipeRefreshLayout)
+    protected SwipeRefreshLayout swipeRefreshLayout;
     @InstanceState
     protected DateTime lastUpdate;
     @InstanceState
@@ -71,6 +76,7 @@ public class SheduleActivity extends BaseActivity {
     private DatePickerDialog dialog;
     private DaysPagerAdapter pagerAdapter = new DaysPagerAdapter(realm);
     private Observable<List<Pair>> dataUpdateObservable;
+    private Subscription dataUpdateSubscription;
     private SharedPreferences.OnSharedPreferenceChangeListener listener
             = new SharedPreferences.OnSharedPreferenceChangeListener() {
         @Override
@@ -87,10 +93,26 @@ public class SheduleActivity extends BaseActivity {
             }
         }
     };
+    private DatePickerDialog.OnDateSetListener onDateSetListener = new DatePickerDialog.OnDateSetListener() {
+        @Override
+        public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
+            if (dialog != null) {
+                dialog.dismiss();
+                dialog = null;
+            }
+            LocalDate newDate = new LocalDate(
+                    String.format("%d-%d-%d",
+                            year,
+                            month + 1,
+                            dayOfMonth)
+            );
+            onDateSelected(newDate);
+        }
+    };
 
     @Click(R.id.choose_thing)
     protected void chooseThingClicked() {
-        ScheduleSubjectsActivity_.intent(SheduleActivity.this).start();
+        ScheduleSubjectsActivity_.intent(ScheduleActivity.this).start();
         mDrawerLayout.closeDrawers();
     }
 
@@ -155,23 +177,8 @@ public class SheduleActivity extends BaseActivity {
                 switch (item.getItemId()) {
                     case R.id.case_date:
                         if (dialog == null) {
-                            dialog = new DatePickerDialog(SheduleActivity.this,
-                                    new DatePickerDialog.OnDateSetListener() {
-                                        @Override
-                                        public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
-                                            if (dialog != null) {
-                                                dialog.dismiss();
-                                                dialog = null;
-                                            }
-                                            LocalDate newDate = new LocalDate(
-                                                    String.format("%d-%d-%d",
-                                                            year,
-                                                            month + 1,
-                                                            dayOfMonth)
-                                            );
-                                            onDateSelected(newDate);
-                                        }
-                                    },
+                            dialog = new DatePickerDialog(ScheduleActivity.this,
+                                    onDateSetListener,
                                     startDate.getYear(),
                                     startDate.getMonthOfYear() - 1,
                                     startDate.getDayOfMonth());
@@ -191,7 +198,7 @@ public class SheduleActivity extends BaseActivity {
             // setScheduleSubject navigation drawer
             mDrawerToggle = new ActionBarDrawerToggle(
                     this,                    /* host Activity */
-                    SheduleActivity.this.mDrawerLayout, toolbar,                    /* DrawerLayout object */
+                    ScheduleActivity.this.mDrawerLayout, toolbar,                    /* DrawerLayout object */
                     R.string.navigation_drawer_open,  /* "open drawer" description for accessibility */
                     R.string.navigation_drawer_close  /* "close drawer" description for accessibility */
             );
@@ -212,17 +219,49 @@ public class SheduleActivity extends BaseActivity {
         viewPager.setCurrentItem(PAGES_COUNT / 2, false);
 
         dataUpdateObservable = DataHelper.createLoadPairsObservable(startDate);
+        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                refreshData();
+            }
+        });
+
+        viewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+            @Override
+            public void onPageScrolled(int position, float v, int i1) {
+
+            }
+
+            @Override
+            public void onPageSelected(int position) {
+            }
+
+            @Override
+            public void onPageScrollStateChanged(int state) {
+                switch (state) {
+                    case ViewPager.SCROLL_STATE_DRAGGING:
+                        if (!swipeRefreshLayout.isRefreshing()) {
+                            swipeRefreshLayout.setEnabled(false);
+                        }
+                        break;
+                    case ViewPager.SCROLL_STATE_SETTLING:
+                    case ViewPager.SCROLL_STATE_IDLE:
+                        swipeRefreshLayout.setEnabled(true);
+                        break;
+                }
+            }
+        });
     }
 
     private void onDateSelected(LocalDate newDate) {
         if (!startDate.isEqual(newDate)) {
             startDate = newDate;
-            dataUpdateObservable.subscribe();
-            // TODO: 02.11.2016 change select date with observable
+            refreshData();
             pagerAdapter.setStartDate(newDate);
             lastUpdate = DateTime.now();
         }
         pagerAdapter.notifyDataChanged();
+        updateTabs();
         viewPager.setCurrentItem(PAGES_COUNT / 2, false);
     }
 
@@ -233,10 +272,20 @@ public class SheduleActivity extends BaseActivity {
         realm.executeTransactionAsync(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
-                ScheduleSubject currentScheduleSubject = realm.where(ScheduleSubject.class)
+                realm.where(ScheduleSubject.class)
                         .equalTo("id", id)
-                        .findFirst();
-                currentScheduleSubject.incrementOpenTimes();
+                        .findFirst()
+                        .incrementOpenTimes();
+            }
+        }, new Realm.Transaction.OnSuccess() {
+            @Override
+            public void onSuccess() {
+
+            }
+        }, new Realm.Transaction.OnError() {
+            @Override
+            public void onError(Throwable error) {
+
             }
         });
     }
@@ -245,13 +294,40 @@ public class SheduleActivity extends BaseActivity {
     public void onResume() {
         super.onResume();
         updateTabs();
-        refreshData();
+        if (canUpdate()) {
+            refreshData();
+        }
     }
 
     private void refreshData() {
-        if (canUpdate()) {
-            dataUpdateObservable.subscribe();
-            lastUpdate = DateTime.now();
+        if (swipeRefreshLayout != null && !swipeRefreshLayout.isRefreshing()) {
+            swipeRefreshLayout.setRefreshing(true);
+        }
+        if (dataUpdateSubscription != null && !dataUpdateSubscription.isUnsubscribed()) {
+            dataUpdateSubscription.unsubscribe();
+        }
+        dataUpdateSubscription = dataUpdateObservable.subscribe(new Subscriber<List<Pair>>() {
+            @Override
+            public void onCompleted() {
+
+            }
+
+            @Override
+            public void onError(Throwable e) {
+                hideRefreshing();
+            }
+
+            @Override
+            public void onNext(List<Pair> pairs) {
+                lastUpdate = DateTime.now();
+                hideRefreshing();
+            }
+        });
+    }
+
+    private void hideRefreshing() {
+        if (swipeRefreshLayout != null && swipeRefreshLayout.isRefreshing()) {
+            swipeRefreshLayout.setRefreshing(false);
         }
     }
 

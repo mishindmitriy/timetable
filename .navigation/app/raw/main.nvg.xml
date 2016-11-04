@@ -5,8 +5,8 @@
     class = "java.util.ArrayList">
     <statePointEntry>
       <state      
-        class = "com.android.tools.idea.editors.navigation.model.ActivityState"      
-        className = "mishindmitriy.timetable.app.shedule.SheduleActivity"/>
+        class = "com.android.tools.idea.editors.navigation.model.ActivityState"
+          className="mishindmitriy.timetable.app.shedule.ScheduleActivity" />
       <point      
         x = "1540"      
         y = "104"/>

@@ -21,7 +21,7 @@ import mishindmitriy.timetable.app.base.BaseFragment;
 import mishindmitriy.timetable.model.Pair;
 import mishindmitriy.timetable.utils.Prefs;
 
-import static mishindmitriy.timetable.app.shedule.SheduleActivity.PAGES_COUNT;
+import static mishindmitriy.timetable.app.shedule.ScheduleActivity.PAGES_COUNT;
 
 /**
  * Created by mishindmitriy on 20.09.2016.
@@ -85,7 +85,7 @@ public class DayPairsFragment extends BaseFragment {
                     @Override
                     public void run() {
                         if (swipeRefreshLayout != null) {
-                            swipeRefreshLayout.setRefreshing(false);
+                            swipeRefreshLayout.hideRefreshing(false);
                         }
                     }
                 }, startDate);*/

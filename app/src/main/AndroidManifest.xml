@@ -12,7 +12,7 @@
         android:label="@string/app_name"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".app.shedule.SheduleActivity_"
+            android:name=".app.shedule.ScheduleActivity_"
             android:launchMode="singleInstance"
             android:screenOrientation="portrait" />
 

@@ -1,7 +1,7 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    tools:context="mishindmitriy.timetable.app.shedule.SheduleActivity">
+    tools:context="mishindmitriy.timetable.app.shedule.ScheduleActivity">
     <item
         android:id="@+id/case_date"
         android:icon="@drawable/ic_event_white_24dp"

@@ -6,7 +6,7 @@ import android.support.v7.app.AppCompatActivity;
 
 import mishindmitriy.timetable.R;
 import mishindmitriy.timetable.app.schedulesubjects.ScheduleSubjectsActivity_;
-import mishindmitriy.timetable.app.shedule.SheduleActivity_;
+import mishindmitriy.timetable.app.shedule.ScheduleActivity_;
 import mishindmitriy.timetable.utils.Prefs;
 
 /**
@@ -19,7 +19,7 @@ public class SplashScreen extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         try {
             if (Prefs.get().getSelectedThingId() > 0) {
-                SheduleActivity_.intent(this).start();
+                ScheduleActivity_.intent(this).start();
             } else {
                 ScheduleSubjectsActivity_.intent(this).start();
             }

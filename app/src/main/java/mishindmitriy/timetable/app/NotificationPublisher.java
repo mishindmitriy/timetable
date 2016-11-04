@@ -14,7 +14,7 @@ import org.joda.time.DateTime;
 import io.realm.Realm;
 import mishindmitriy.timetable.BuildConfig;
 import mishindmitriy.timetable.R;
-import mishindmitriy.timetable.app.shedule.SheduleActivity_;
+import mishindmitriy.timetable.app.shedule.ScheduleActivity_;
 import mishindmitriy.timetable.model.Pair;
 
 /**
@@ -36,7 +36,10 @@ public class NotificationPublisher extends BroadcastReceiver {
                 .equalTo("id", id)
                 .findFirst();
         PendingIntent contentIntent = PendingIntent.getActivity(context, 0,
-                new Intent(context, SheduleActivity_.class), PendingIntent.FLAG_UPDATE_CURRENT);
+                new Intent(context, ScheduleActivity_.class), PendingIntent.FLAG_UPDATE_CURRENT);
+        if (pair.getStartDateTime().isAfterNow()) {
+            return;
+        }
         long msLeft = pair.getStartDateTime().getMillis() - DateTime.now().getMillis();
         int minutesLeft = (int) Math.abs(msLeft / 1000 * 60);
         notificationManager.notify(Long.valueOf(id).intValue(),

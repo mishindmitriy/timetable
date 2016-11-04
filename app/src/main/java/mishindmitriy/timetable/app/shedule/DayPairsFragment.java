@@ -19,7 +19,6 @@ import org.joda.time.LocalDate;
 import mishindmitriy.timetable.R;
 import mishindmitriy.timetable.app.base.BaseFragment;
 import mishindmitriy.timetable.model.Pair;
-import mishindmitriy.timetable.utils.DataHelper;
 import mishindmitriy.timetable.utils.Prefs;
 
 import static mishindmitriy.timetable.app.shedule.SheduleActivity.PAGES_COUNT;
@@ -82,14 +81,14 @@ public class DayPairsFragment extends BaseFragment {
             @Override
             public void onRefresh() {
                 swipeRefreshLayout.setRefreshing(true);
-                DataHelper.loadSchedule(new Runnable() {
+                /*DataHelper.loadSchedule(new Runnable() {
                     @Override
                     public void run() {
                         if (swipeRefreshLayout != null) {
                             swipeRefreshLayout.setRefreshing(false);
                         }
                     }
-                }, startDate);
+                }, startDate);*/
             }
         });
     }

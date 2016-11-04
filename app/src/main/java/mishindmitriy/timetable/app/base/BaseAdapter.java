@@ -66,6 +66,7 @@ public abstract class BaseAdapter<I extends RealmObject, VH extends BaseViewHold
         }
         this.items = items;
         if (items == null) {
+            filteredList.clear();
             notifyDataSetChanged();
             return;
         }

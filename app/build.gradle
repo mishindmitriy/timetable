@@ -19,13 +19,13 @@ apply plugin: 'realm-android'
 def AAVersion = '4.1.0'
 
 android {
-    compileSdkVersion 24
-    buildToolsVersion '24.0.2'
+    compileSdkVersion 25
+    buildToolsVersion '25.0.0'
 
     defaultConfig {
         applicationId "mishindmitriy.timetable.phone"
         minSdkVersion 16
-        targetSdkVersion 24
+        targetSdkVersion 25
         versionCode 17
         versionName '1.3'
     }

@@ -3,6 +3,7 @@ package mishindmitriy.timetable.app.shedule;
 import android.support.v4.view.PagerAdapter;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.SparseArray;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -11,6 +12,7 @@ import org.joda.time.LocalDate;
 import java.util.Stack;
 
 import io.realm.Realm;
+import io.realm.RealmResults;
 import mishindmitriy.timetable.model.Pair;
 import mishindmitriy.timetable.utils.Prefs;
 
@@ -24,6 +26,7 @@ public class DaysPagerAdapter extends PagerAdapter {
     private final Realm realm;
     private Stack<RecyclerView> viewStack = new Stack<>();
     private LocalDate startDate = LocalDate.now();
+    private SparseArray<RecyclerView> activeViews = new SparseArray<>();
 
     public DaysPagerAdapter(Realm realm) {
         this.realm = realm;
@@ -35,7 +38,23 @@ public class DaysPagerAdapter extends PagerAdapter {
 
     public void setStartDate(LocalDate startDate) {
         this.startDate = startDate;
-        notifyDataSetChanged();
+    }
+
+    public void notifyDataChanged() {
+        for (int i = 0; i < activeViews.size(); i++) {
+            int position = activeViews.keyAt(i);
+            RecyclerView recyclerView = activeViews.get(position);
+            RealmResults<Pair> pairs = realm.where(Pair.class)
+                    .beginGroup()
+                    .equalTo("date", getLocalDate(position).toString())
+                    .equalTo("scheduleSubject.id", Prefs.get().getSelectedThingId())
+                    .endGroup()
+                    .findAllSortedAsync("number");
+            ((PairAdapter) recyclerView.getAdapter())
+                    .setData(
+                            pairs
+                    );
+        }
     }
 
     @Override
@@ -79,29 +98,25 @@ public class DaysPagerAdapter extends PagerAdapter {
             recyclerView.setAdapter(new PairAdapter());
         }
         ((PairAdapter) recyclerView.getAdapter())
-                .setData(realm.where(Pair.class)
-                        .beginGroup()
-                        .equalTo("date", getLocalDate(position).toString())
-                        .equalTo("scheduleSubject.id", Prefs.get().getSelectedThingId())
-                        .endGroup()
-                        .findAllSortedAsync("number"));
+                .setData(
+                        realm.where(Pair.class)
+                                .beginGroup()
+                                .equalTo("date", getLocalDate(position).toString())
+                                .equalTo("scheduleSubject.id", Prefs.get().getSelectedThingId())
+                                .endGroup()
+                                .findAllSortedAsync("number")
+                );
+        activeViews.put(position, recyclerView);
         container.addView(recyclerView);
         return recyclerView;
     }
 
     @Override
     public void destroyItem(ViewGroup container, int position, Object object) {
-        for (int i = 0; i < container.getChildCount(); i++) {
-            View view = container.getChildAt(i);
-            if (view != null && view instanceof RecyclerView) {
-                if (object.equals(view)) {
-                    RecyclerView recyclerView = (RecyclerView) view;
-                    ((PairAdapter) recyclerView.getAdapter()).setData(null);
-                    container.removeView(view);
-                    viewStack.push(recyclerView);
-                    break;
-                }
-            }
-        }
+        RecyclerView recyclerView = (RecyclerView) object;
+        activeViews.remove(position);
+        ((PairAdapter) recyclerView.getAdapter()).setData(null);
+        container.removeView(recyclerView);
+        viewStack.push(recyclerView);
     }
 }

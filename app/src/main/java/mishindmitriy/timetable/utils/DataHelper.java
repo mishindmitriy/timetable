@@ -18,7 +18,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import io.realm.Realm;
-import mishindmitriy.timetable.BuildConfig;
 import mishindmitriy.timetable.model.Pair;
 import mishindmitriy.timetable.model.ScheduleSubject;
 import mishindmitriy.timetable.model.ScheduleSubjectType;
@@ -28,6 +27,11 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 import okhttp3.logging.HttpLoggingInterceptor;
+import rx.Observable;
+import rx.Subscriber;
+import rx.functions.Action1;
+import rx.functions.Func1;
+import rx.schedulers.Schedulers;
 
 /**
  * Created by dmitriy on 21.05.15.
@@ -181,59 +185,69 @@ public class DataHelper {
         return mappingListThings(doQuery(url, null), scheduleSubjectType);
     }
 
-    public static void loadSchedule(final Runnable afterLoadRunnable, final LocalDate startDate) {
-        final Realm realm = Realm.getDefaultInstance();
-        realm.executeTransactionAsync(new Realm.Transaction() {
-            @Override
-            public void execute(Realm realm) {
-                long id = Prefs.get().getSelectedThingId();
-                if (id == 0) return;
-                ScheduleSubject scheduleSubject = realm.where(ScheduleSubject.class)
-                        .equalTo("id", id)
-                        .findFirst();
-                try {
-                    LocalDate date = startDate;
-                    if (date == null) date = LocalDate.now();
-                    List<Pair> pairs = DataHelper.getShedule(scheduleSubject,
-                            date.minusDays(100),
-                            date.plusDays(100));
-                    for (Pair p : pairs) {
-                        Pair existPair = realm.where(Pair.class)
-                                .equalTo("id", p.getId())
-                                .findFirst();
-                        if (existPair != null && existPair.isNotified()) {
-                            p.setNotified();
-                        }
-                    }
-                    realm.copyToRealmOrUpdate(pairs);
-                    // TODO: 19.09.16 add remove old pairs
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }, new Realm.Transaction.OnSuccess() {
-            @Override
-            public void onSuccess() {
-                realm.close();
-                if (afterLoadRunnable != null) {
-                    afterLoadRunnable.run();
-                }
-            }
-        }, new Realm.Transaction.OnError() {
-            @Override
-            public void onError(Throwable error) {
-                if (BuildConfig.DEBUG) {
-                    try {
-                        throw new Exception(error);
-                    } catch (Exception ignored) {
 
+    public static Observable<List<Pair>> createLoadPairsObservable(LocalDate startDate) {
+        if (startDate == null) {
+            startDate = LocalDate.now();
+        }
+        final LocalDate from = startDate.minusDays(100);
+        final LocalDate to = startDate.plusDays(100);
+        return Observable.create(new Observable.OnSubscribe<List<Pair>>() {
+            @Override
+            public void call(Subscriber<? super List<Pair>> subscriber) {
+                long id = Prefs.get().getSelectedThingId();
+                if (id == 0) throw new IllegalStateException();
+
+                Realm realm = Realm.getDefaultInstance();
+                ScheduleSubject scheduleSubject = null;
+                try {
+                    scheduleSubject = realm.where(ScheduleSubject.class)
+                            .equalTo("id", id)
+                            .findFirst();
+                    if (scheduleSubject == null) throw new IllegalStateException();
+
+                    List<Pair> pairs = DataHelper.getShedule(scheduleSubject, from, to);
+                    if (!subscriber.isUnsubscribed()) {
+                        subscriber.onNext(pairs);
                     }
-                }
-                realm.close();
-                if (afterLoadRunnable != null) {
-                    afterLoadRunnable.run();
+                } catch (IOException e) {
+                    if (!subscriber.isUnsubscribed()) {
+                        subscriber.onError(e);
+                    }
+                } finally {
+                    realm.close();
                 }
             }
-        });
+        })
+                .timeout(10, TimeUnit.SECONDS)
+                .onErrorReturn(new Func1<Throwable, List<Pair>>() {
+                    @Override
+                    public List<Pair> call(Throwable throwable) {
+                        return new ArrayList<Pair>();
+                    }
+                })
+                .doOnNext(new Action1<List<Pair>>() {
+                    @Override
+                    public void call(final List<Pair> pairs) {
+                        Realm realm = Realm.getDefaultInstance();
+                        realm.executeTransaction(new Realm.Transaction() {
+                            @Override
+                            public void execute(Realm realm) {
+                                for (Pair p : pairs) {
+                                    Pair existPair = realm.where(Pair.class)
+                                            .equalTo("id", p.getId())
+                                            .findFirst();
+                                    if (existPair != null && existPair.isNotified()) {
+                                        p.setNotified();
+                                    }
+                                }
+                                realm.copyToRealmOrUpdate(pairs);
+                                // TODO: 19.09.16 add remove old pairs for this period (change date type to millis?)
+                            }
+                        });
+                        realm.close();
+                    }
+                })
+                .subscribeOn(Schedulers.io());
     }
 }

@@ -28,6 +28,8 @@ import org.androidannotations.annotations.ViewById;
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 
+import java.util.List;
+
 import io.realm.Realm;
 import io.realm.Sort;
 import mishindmitriy.timetable.R;
@@ -35,9 +37,11 @@ import mishindmitriy.timetable.app.base.BaseActivity;
 import mishindmitriy.timetable.app.base.BaseAdapter;
 import mishindmitriy.timetable.app.schedulesubjects.ScheduleSubjectAdapter;
 import mishindmitriy.timetable.app.schedulesubjects.ScheduleSubjectsActivity_;
+import mishindmitriy.timetable.model.Pair;
 import mishindmitriy.timetable.model.ScheduleSubject;
 import mishindmitriy.timetable.utils.DataHelper;
 import mishindmitriy.timetable.utils.Prefs;
+import rx.Observable;
 
 @EActivity(R.layout.activity_shedule)
 public class SheduleActivity extends BaseActivity {
@@ -66,6 +70,7 @@ public class SheduleActivity extends BaseActivity {
     private ScheduleSubjectAdapter scheduleSubjectAdapter = new ScheduleSubjectAdapter();
     private DatePickerDialog dialog;
     private DaysPagerAdapter pagerAdapter = new DaysPagerAdapter(realm);
+    private Observable<List<Pair>> dataUpdateObservable;
     private SharedPreferences.OnSharedPreferenceChangeListener listener
             = new SharedPreferences.OnSharedPreferenceChangeListener() {
         @Override
@@ -112,12 +117,17 @@ public class SheduleActivity extends BaseActivity {
     protected void init() {
         chooseThingText.setText(R.string.choose_thing);
 
+        if (Prefs.get().getSelectedThingId() == 0) {
+            ScheduleSubjectsActivity_.intent(this).start();
+            finish();
+            return;
+        }
+
         ScheduleSubject currentScheduleSubject = realm.where(ScheduleSubject.class)
                 .equalTo("id", Prefs.get().getSelectedThingId())
                 .findFirst();
 
-        if (Prefs.get().getSelectedThingId() == 0
-                || currentScheduleSubject == null) {
+        if (currentScheduleSubject == null) {
             ScheduleSubjectsActivity_.intent(this).start();
             finish();
             return;
@@ -177,8 +187,6 @@ public class SheduleActivity extends BaseActivity {
 
         currentThingTextView.setText(currentScheduleSubject.getName());
 
-        DataHelper.loadSchedule(null, startDate);
-
         {
             // setScheduleSubject navigation drawer
             mDrawerToggle = new ActionBarDrawerToggle(
@@ -202,15 +210,19 @@ public class SheduleActivity extends BaseActivity {
         });
 
         viewPager.setCurrentItem(PAGES_COUNT / 2, false);
+
+        dataUpdateObservable = DataHelper.createLoadPairsObservable(startDate);
     }
 
     private void onDateSelected(LocalDate newDate) {
         if (!startDate.isEqual(newDate)) {
             startDate = newDate;
-            DataHelper.loadSchedule(null, startDate);
+            dataUpdateObservable.subscribe();
+            // TODO: 02.11.2016 change select date with observable
             pagerAdapter.setStartDate(newDate);
             lastUpdate = DateTime.now();
         }
+        pagerAdapter.notifyDataChanged();
         viewPager.setCurrentItem(PAGES_COUNT / 2, false);
     }
 
@@ -238,7 +250,7 @@ public class SheduleActivity extends BaseActivity {
 
     private void refreshData() {
         if (canUpdate()) {
-            DataHelper.loadSchedule(null, startDate);
+            dataUpdateObservable.subscribe();
             lastUpdate = DateTime.now();
         }
     }

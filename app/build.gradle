@@ -20,7 +20,7 @@ def AAVersion = '4.1.0'
 
 android {
     compileSdkVersion 25
-    buildToolsVersion '25.0.0'
+    buildToolsVersion '25.0.2'
 
     defaultConfig {
         applicationId "mishindmitriy.timetable.phone"
@@ -40,11 +40,15 @@ android {
     }
 }
 
+realm {
+    syncEnabled = false;
+}
+
 dependencies {
     //compile fileTree(include: ['*.jar'], dir: 'libs')
     apt "org.androidannotations:androidannotations:$AAVersion"
     compile "org.androidannotations:androidannotations-api:$AAVersion"
-    compile 'com.android.support:design:25.0.0'
+    compile 'com.android.support:design:25.1.0'
     compile 'org.jsoup:jsoup:1.8.3'
     compile('com.crashlytics.sdk.android:crashlytics:2.6.5@aar') {
         transitive = true;

@@ -1,7 +1,6 @@
 package mishindmitriy.timetable.app;
 
 import android.app.Application;
-import android.content.Intent;
 import android.os.StrictMode;
 import android.util.Log;
 
@@ -12,8 +11,8 @@ import net.danlew.android.joda.JodaTimeAndroid;
 import io.fabric.sdk.android.Fabric;
 import io.realm.Realm;
 import io.realm.RealmConfiguration;
+import io.realm.log.RealmLog;
 import mishindmitriy.timetable.BuildConfig;
-import mishindmitriy.timetable.app.notifications.NotificationService;
 import mishindmitriy.timetable.utils.DataHelper;
 import mishindmitriy.timetable.utils.Prefs;
 
@@ -26,9 +25,15 @@ public class TimeTableApp extends Application {
     public void onCreate() {
         super.onCreate();
         JodaTimeAndroid.init(this);
+        Realm.init(this);
+        Realm.setDefaultConfiguration(new RealmConfiguration.Builder()
+                .schemaVersion(1)
+                .deleteRealmIfMigrationNeeded()
+                .build());
         if (!BuildConfig.DEBUG) {
             Fabric.with(this, new Crashlytics());
         } else {
+            RealmLog.setLevel(Log.VERBOSE);
             StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder()
                     .detectAll()
                     .penaltyLog()
@@ -38,14 +43,10 @@ public class TimeTableApp extends Application {
                     .penaltyLog()
                     .build());
         }
-        Realm.init(this);
-        Realm.setDefaultConfiguration(new RealmConfiguration.Builder()
-                .schemaVersion(1)
-                .deleteRealmIfMigrationNeeded()
-                .build());
+
         Prefs.init(this);
+
         DataHelper.init(this);
-        Log.d("testtt", "init service");
-        startService(new Intent(this, NotificationService.class));
+        //startService(new Intent(this, NotificationService.class));
     }
 }

@@ -6,6 +6,7 @@ import android.view.View;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.realm.Realm;
 import io.realm.RealmChangeListener;
 import io.realm.RealmObject;
 import io.realm.RealmResults;
@@ -21,18 +22,19 @@ public abstract class BaseAdapter<I extends RealmObject, VH extends BaseViewHold
     private String filterPhrase = null;
     private RealmChangeListener<RealmResults<I>> changeListener = new RealmChangeListener<RealmResults<I>>() {
         @Override
-        public void onChange(RealmResults<I> element) {
+        public void onChange(final RealmResults<I> element) {
+            Realm realm = Realm.getDefaultInstance();
+            realm.executeTransaction(new Realm.Transaction() {
+                @Override
+                public void execute(Realm realm) {
+                    realm.copyToRealm(element);
+                }
+            });
+
+            realm.close();
             filterAndNotifyDataChanged();
         }
     };
-
-    public RealmResults<I> getItems() {
-        return items;
-    }
-
-    public void setItems(RealmResults<I> items) {
-        this.items = items;
-    }
 
     @Override
     public int getItemCount() {
@@ -61,7 +63,7 @@ public abstract class BaseAdapter<I extends RealmObject, VH extends BaseViewHold
     }
 
     public void setData(RealmResults<I> items) {
-        if (this.items != null) {
+        if (this.items != null && this.items.isValid()) {
             this.items.removeChangeListener(changeListener);
         }
         this.items = items;

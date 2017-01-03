@@ -24,6 +24,8 @@ import mishindmitriy.timetable.utils.Prefs;
  */
 
 public class NotificationService extends IntentService {
+    private static final String ACTION_SHOW_NOTIFICATION = "com.mishindmitriy.timetable.ACTION.show_notification";
+
     public NotificationService() {
         super(NotificationService.class.getSimpleName());
     }
@@ -81,12 +83,13 @@ public class NotificationService extends IntentService {
 
     private void removeNotifications() {
         for (long id : Prefs.get().getPendingIntentPairsIds()) {
-            createPendingIntent(id, PendingIntent.FLAG_UPDATE_CURRENT).cancel();
+            createPendingIntentToPublisherReceiver(id, PendingIntent.FLAG_UPDATE_CURRENT).cancel();
         }
     }
 
-    private PendingIntent createPendingIntent(long id, int flag) {
-        Intent notificationIntent = new Intent(this, NotificationPublisherReceiver.class);
+    private PendingIntent createPendingIntentToPublisherReceiver(long id, int flag) {
+        Intent notificationIntent = new Intent();
+        notificationIntent.setAction(ACTION_SHOW_NOTIFICATION);
         notificationIntent.putExtra(NotificationPublisherReceiver.PAIR_ID, id);
 
         return PendingIntent.getBroadcast(this, 0, notificationIntent, flag);
@@ -97,7 +100,7 @@ public class NotificationService extends IntentService {
             Log.d("testtt", "create notification for " + pair.getId());
         }
 
-        PendingIntent pendingIntent = createPendingIntent(
+        PendingIntent pendingIntent = createPendingIntentToPublisherReceiver(
                 pair.getId(),
                 PendingIntent.FLAG_UPDATE_CURRENT
         );

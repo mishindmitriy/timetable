@@ -30,7 +30,6 @@ import mishindmitriy.timetable.app.shedule.ScheduleActivity_;
 import mishindmitriy.timetable.model.ScheduleSubject;
 import mishindmitriy.timetable.model.ScheduleSubjectType;
 import mishindmitriy.timetable.utils.DataHelper;
-import mishindmitriy.timetable.utils.Prefs;
 import rx.Observable;
 import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
@@ -57,7 +56,7 @@ public class ScheduleSubjectsActivity extends BaseActivity {
 
     @AfterViews
     protected void init() {
-        if (Prefs.get().getSelectedThingId() != 0) {
+        if (prefs.getSelectedThingId() != 0) {
             toolbar.setNavigationIcon(R.drawable.ic_arrow_back_white_24dp);
             toolbar.setNavigationOnClickListener(new View.OnClickListener() {
                 @Override
@@ -184,7 +183,7 @@ public class ScheduleSubjectsActivity extends BaseActivity {
 
     private void onSubjectClicked(ScheduleSubject subject) {
         if (subject == null) return;
-        Prefs.get().setSelectedThingId(subject.getId());
+        prefs.setSelectedThingId(subject.getId());
         ScheduleActivity_.intent(ScheduleSubjectsActivity.this).start();
         finish();
         final Long id = subject.getId();
@@ -216,7 +215,7 @@ public class ScheduleSubjectsActivity extends BaseActivity {
                     @Override
                     public void onNext(List<ScheduleSubject> scheduleSubjects) {
                         if (scheduleSubjects.size() > 0) {
-                            Prefs.get().setSubjectsLastUpdate(DateTime.now().getMillis());
+                            prefs.setSubjectsLastUpdate(DateTime.now().getMillis());
                         }
                         hideRefreshing();
                     }
@@ -233,7 +232,7 @@ public class ScheduleSubjectsActivity extends BaseActivity {
 
 
     private boolean canUpdate() {
-        return DateTime.now().getMillis() - Prefs.get().getSubjectsLastUpdate() > UPDATE_INTERVAL;
+        return DateTime.now().getMillis() - prefs.getSubjectsLastUpdate() > UPDATE_INTERVAL;
     }
 
     private void hideRefreshing() {

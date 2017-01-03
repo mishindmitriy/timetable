@@ -21,9 +21,20 @@ import mishindmitriy.timetable.utils.Prefs;
  * TimeTable Application Class
  */
 public class TimeTableApp extends Application {
+    private static AppComponent appComponent;
+
+    public static AppComponent component() {
+        return appComponent;
+    }
+
     @Override
     public void onCreate() {
         super.onCreate();
+        appComponent = DaggerAppComponent.builder()
+                .androidModule(new AndroidModule(this))
+                .realmModule(new RealmModule())
+                .settingsModule(new Prefs.SettingsModule())
+                .build();
         JodaTimeAndroid.init(this);
         Realm.init(this);
         Realm.setDefaultConfiguration(new RealmConfiguration.Builder()
@@ -33,7 +44,7 @@ public class TimeTableApp extends Application {
         if (!BuildConfig.DEBUG) {
             Fabric.with(this, new Crashlytics());
         } else {
-            RealmLog.setLevel(Log.VERBOSE);
+            RealmLog.setLevel(Log.ERROR);
             StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder()
                     .detectAll()
                     .penaltyLog()
@@ -43,8 +54,6 @@ public class TimeTableApp extends Application {
                     .penaltyLog()
                     .build());
         }
-
-        Prefs.init(this);
 
         DataHelper.init(this);
         //startService(new Intent(this, NotificationService.class));

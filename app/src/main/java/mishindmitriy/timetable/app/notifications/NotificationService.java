@@ -13,9 +13,12 @@ import org.joda.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.inject.Inject;
+
 import io.realm.Realm;
 import io.realm.RealmResults;
 import mishindmitriy.timetable.BuildConfig;
+import mishindmitriy.timetable.app.TimeTableApp;
 import mishindmitriy.timetable.model.Pair;
 import mishindmitriy.timetable.utils.Prefs;
 
@@ -26,17 +29,22 @@ import mishindmitriy.timetable.utils.Prefs;
 public class NotificationService extends IntentService {
     private static final String ACTION_SHOW_NOTIFICATION = "com.mishindmitriy.timetable.ACTION.show_notification";
 
+    @Inject
+    protected Prefs prefs;
+
     public NotificationService() {
         super(NotificationService.class.getSimpleName());
     }
 
     @Override
+    public void onCreate() {
+        super.onCreate();
+        TimeTableApp.component().inject(this);
+    }
+
+    @Override
     protected void onHandleIntent(Intent intent) {
         updateRepeatedIntent();
-        if (!Prefs.isInited()) {
-            Log.d("testtt", "init prefs from service");
-            Prefs.init(getApplicationContext());
-        }
         updateNotifications();
     }
 
@@ -54,7 +62,7 @@ public class NotificationService extends IntentService {
 
     private RealmResults<Pair> getTodayPairs(Realm realm) {
         return realm.where(Pair.class)
-                .equalTo("scheduleSubject.id", Prefs.get().getSelectedThingId())
+                .equalTo("scheduleSubject.id", prefs.getSelectedThingId())
                 .equalTo("date", LocalDate.now().toString())
                 .findAllSorted("number");
     }
@@ -78,11 +86,11 @@ public class NotificationService extends IntentService {
             realm.close();
         }
 
-        Prefs.get().setPendingIntentPairsIds(ids);
+        prefs.setPendingIntentPairsIds(ids);
     }
 
     private void removeNotifications() {
-        for (long id : Prefs.get().getPendingIntentPairsIds()) {
+        for (long id : prefs.getPendingIntentPairsIds()) {
             createPendingIntentToPublisherReceiver(id, PendingIntent.FLAG_UPDATE_CURRENT).cancel();
         }
     }

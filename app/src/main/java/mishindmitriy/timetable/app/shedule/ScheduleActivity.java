@@ -31,7 +31,10 @@ import org.androidannotations.annotations.ViewById;
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import io.realm.Realm;
 import io.realm.Sort;
@@ -48,6 +51,10 @@ import mishindmitriy.timetable.utils.Prefs;
 import rx.Observable;
 import rx.Subscriber;
 import rx.Subscription;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Action1;
+import rx.functions.Func1;
+import rx.schedulers.Schedulers;
 
 @EActivity(R.layout.activity_shedule)
 public class ScheduleActivity extends BaseActivity {
@@ -77,7 +84,7 @@ public class ScheduleActivity extends BaseActivity {
     private ActionBarDrawerToggle mDrawerToggle;
     private ScheduleSubjectAdapter scheduleSubjectAdapter = new ScheduleSubjectAdapter();
     private DatePickerDialog dialog;
-    private DaysPagerAdapter pagerAdapter = new DaysPagerAdapter(realm);
+    private DaysPagerAdapter pagerAdapter;
     private Observable<List<Pair>> dataUpdateObservable;
     private Subscription dataUpdateSubscription;
     private SharedPreferences.OnSharedPreferenceChangeListener listener
@@ -88,7 +95,7 @@ public class ScheduleActivity extends BaseActivity {
                 lastUpdate = null;
                 onDateSelected(LocalDate.now());
                 ScheduleSubject currentScheduleSubject = realm.where(ScheduleSubject.class)
-                        .equalTo("id", Prefs.get().getSelectedThingId())
+                        .equalTo("id", prefs.getSelectedThingId())
                         .findFirst();
                 if (currentScheduleSubject != null) {
                     currentThingTextView.setText(currentScheduleSubject.getName());
@@ -128,28 +135,29 @@ public class ScheduleActivity extends BaseActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Prefs.get().register(listener);
+        pagerAdapter = new DaysPagerAdapter(realm);
+        prefs.register(listener);
     }
 
     @Override
     protected void onDestroy() {
         if (dialog != null) dialog.dismiss();
         super.onDestroy();
-        Prefs.get().unregister(listener);
+        prefs.unregister(listener);
     }
 
     @AfterViews
     protected void init() {
         chooseThingText.setText(R.string.choose_thing);
 
-        if (Prefs.get().getSelectedThingId() == 0) {
+        if (prefs.getSelectedThingId() == 0) {
             ScheduleSubjectsActivity_.intent(this).start();
             finish();
             return;
         }
 
         ScheduleSubject currentScheduleSubject = realm.where(ScheduleSubject.class)
-                .equalTo("id", Prefs.get().getSelectedThingId())
+                .equalTo("id", prefs.getSelectedThingId())
                 .findFirst();
 
         if (currentScheduleSubject == null) {
@@ -166,7 +174,7 @@ public class ScheduleActivity extends BaseActivity {
         scheduleSubjectAdapter.setOnItemClickListener(new BaseAdapter.OnItemClickListener<ScheduleSubject>() {
             @Override
             public void onItemClick(ScheduleSubject scheduleSubject) {
-                if (scheduleSubject.getId() != Prefs.get().getSelectedThingId()) {
+                if (scheduleSubject.getId() != prefs.getSelectedThingId()) {
                     setNewThing(scheduleSubject);
                 }
                 mDrawerLayout.closeDrawers();
@@ -221,7 +229,7 @@ public class ScheduleActivity extends BaseActivity {
 
         viewPager.setCurrentItem(PAGES_COUNT / 2, false);
 
-        dataUpdateObservable = DataHelper.createLoadPairsObservable(startDate);
+        dataUpdateObservable = createLoadPairsObservable(startDate);
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
@@ -256,6 +264,72 @@ public class ScheduleActivity extends BaseActivity {
         });
     }
 
+    public Observable<List<Pair>> createLoadPairsObservable(LocalDate startDate) {
+        if (startDate == null) {
+            startDate = LocalDate.now();
+        }
+        final LocalDate from = startDate.minusDays(50);
+        final LocalDate to = startDate.plusDays(50);
+        return Observable.create(new Observable.OnSubscribe<List<Pair>>() {
+            @Override
+            public void call(Subscriber<? super List<Pair>> subscriber) {
+                long id = prefs.getSelectedThingId();
+                if (id == 0) throw new IllegalStateException();
+
+                Realm realm = Realm.getDefaultInstance();
+                ScheduleSubject scheduleSubject = null;
+                try {
+                    scheduleSubject = realm.where(ScheduleSubject.class)
+                            .equalTo("id", id)
+                            .findFirst();
+                    if (scheduleSubject == null) throw new IllegalStateException();
+
+                    List<Pair> pairs = DataHelper.getShedule(scheduleSubject, from, to);
+                    if (!subscriber.isUnsubscribed()) {
+                        subscriber.onNext(pairs);
+                    }
+                } catch (IOException e) {
+                    if (!subscriber.isUnsubscribed()) {
+                        subscriber.onError(e);
+                    }
+                } finally {
+                    realm.close();
+                }
+            }
+        })
+                .timeout(10, TimeUnit.SECONDS)
+                .onErrorReturn(new Func1<Throwable, List<Pair>>() {
+                    @Override
+                    public List<Pair> call(Throwable throwable) {
+                        return new ArrayList<Pair>();
+                    }
+                })
+                .doOnNext(new Action1<List<Pair>>() {
+                    @Override
+                    public void call(final List<Pair> pairs) {
+                        Realm realm = Realm.getDefaultInstance();
+                        realm.executeTransaction(new Realm.Transaction() {
+                            @Override
+                            public void execute(Realm realm) {
+                                for (Pair p : pairs) {
+                                    Pair existPair = realm.where(Pair.class)
+                                            .equalTo("id", p.getId())
+                                            .findFirst();
+                                    if (existPair != null && existPair.isNotified()) {
+                                        p.setNotified();
+                                    }
+                                }
+                                realm.copyToRealmOrUpdate(pairs);
+                                // TODO: 19.09.16 add remove old pairs for this period (change date type to millis?)
+                            }
+                        });
+                        realm.close();
+                    }
+                })
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread());
+    }
+
     private void onDateSelected(LocalDate newDate) {
         if (!startDate.isEqual(newDate)) {
             startDate = newDate;
@@ -272,7 +346,7 @@ public class ScheduleActivity extends BaseActivity {
 
     private void setNewThing(final ScheduleSubject scheduleSubject) {
         if (scheduleSubject == null) return;
-        Prefs.get().setSelectedThingId(scheduleSubject.getId());
+        prefs.setSelectedThingId(scheduleSubject.getId());
         final Long id = scheduleSubject.getId();
         realm.executeTransactionAsync(new Realm.Transaction() {
             @Override

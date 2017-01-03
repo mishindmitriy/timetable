@@ -11,8 +11,11 @@ import org.joda.time.LocalDate;
 
 import java.util.Stack;
 
+import javax.inject.Inject;
+
 import io.realm.Realm;
 import io.realm.RealmResults;
+import mishindmitriy.timetable.app.TimeTableApp;
 import mishindmitriy.timetable.model.Pair;
 import mishindmitriy.timetable.utils.Prefs;
 
@@ -24,12 +27,15 @@ import static mishindmitriy.timetable.app.shedule.ScheduleActivity.PAGES_COUNT;
 
 public class DaysPagerAdapter extends PagerAdapter {
     private final Realm realm;
+    @Inject
+    protected Prefs prefs;
     private Stack<RecyclerView> viewStack = new Stack<>();
     private LocalDate startDate = LocalDate.now();
     private SparseArray<RecyclerView> activeViews = new SparseArray<>();
 
     public DaysPagerAdapter(Realm realm) {
         this.realm = realm;
+        TimeTableApp.component().inject(this);
     }
 
     private LocalDate getLocalDate(int pos) {
@@ -53,7 +59,7 @@ public class DaysPagerAdapter extends PagerAdapter {
         return realm.where(Pair.class)
                 .beginGroup()
                 .equalTo("date", getLocalDate(position).toString())
-                .equalTo("scheduleSubject.id", Prefs.get().getSelectedThingId())
+                .equalTo("scheduleSubject.id", prefs.getSelectedThingId())
                 .endGroup()
                 .findAllSortedAsync("number");
     }

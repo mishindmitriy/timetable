@@ -57,7 +57,7 @@ dependencies {
     compile 'com.squareup.okhttp3:logging-interceptor:3.4.1'
     compile 'net.danlew:android.joda:2.9.4.1'
     compile 'com.timehop.stickyheadersrecyclerview:library:0.4.3@aar'
-    compile 'com.nshmura:recyclertablayout:1.0.2'
+    compile 'com.nshmura:recyclertablayout:1.1.0'
     compile 'io.reactivex:rxjava:1.1.6'
     compile 'io.reactivex:rxandroid:1.2.1'
     apt 'com.google.dagger:dagger-compiler:2.8'

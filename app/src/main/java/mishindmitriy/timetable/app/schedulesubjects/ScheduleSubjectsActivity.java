@@ -1,6 +1,9 @@
 package mishindmitriy.timetable.app.schedulesubjects;
 
+import android.content.Intent;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -9,11 +12,9 @@ import android.support.v7.widget.Toolbar;
 import android.text.InputType;
 import android.view.View;
 
+import com.arellomobile.mvp.presenter.InjectPresenter;
 import com.timehop.stickyheadersrecyclerview.StickyRecyclerHeadersDecoration;
 
-import org.androidannotations.annotations.AfterViews;
-import org.androidannotations.annotations.EActivity;
-import org.androidannotations.annotations.ViewById;
 import org.joda.time.DateTime;
 
 import java.io.IOException;
@@ -26,7 +27,7 @@ import io.realm.Sort;
 import mishindmitriy.timetable.R;
 import mishindmitriy.timetable.app.base.BaseActivity;
 import mishindmitriy.timetable.app.base.BaseAdapter;
-import mishindmitriy.timetable.app.shedule.ScheduleActivity_;
+import mishindmitriy.timetable.app.shedule.ScheduleActivity;
 import mishindmitriy.timetable.model.ScheduleSubject;
 import mishindmitriy.timetable.model.ScheduleSubjectType;
 import mishindmitriy.timetable.utils.DataHelper;
@@ -39,23 +40,24 @@ import rx.functions.Func3;
 import rx.schedulers.Schedulers;
 import rx.subscriptions.CompositeSubscription;
 
-@EActivity(R.layout.activity_things)
-public class ScheduleSubjectsActivity extends BaseActivity {
+public class ScheduleSubjectsActivity extends BaseActivity implements ScheduleSubjectsView {
     private static final long UPDATE_INTERVAL = 1000 * 60 * 60; //one hour
-    @ViewById(R.id.toolbar)
-    protected Toolbar toolbar;
-    @ViewById(R.id.searchView)
     protected SearchView searchView;
-    @ViewById(R.id.swipeRefreshLayout)
-    protected SwipeRefreshLayout swipeRefreshLayout;
-    @ViewById(R.id.recyclerView)
+    protected Toolbar toolbar;
     protected RecyclerView recyclerView;
+    protected SwipeRefreshLayout swipeRefreshLayout;
+
+    @InjectPresenter
+    ScheduleSubjectsPresenter presenter;
     private ScheduleSubjectAdapter scheduleSubjectAdapter = new ScheduleSubjectAdapter();
     private Observable<List<ScheduleSubject>> loadSubjectsObservable;
     private CompositeSubscription subscription = new CompositeSubscription();
 
-    @AfterViews
-    protected void init() {
+    @Override
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_things);
+        initView();
         if (prefs.getSelectedThingId() != 0) {
             toolbar.setNavigationIcon(R.drawable.ic_arrow_back_white_24dp);
             toolbar.setNavigationOnClickListener(new View.OnClickListener() {
@@ -76,7 +78,6 @@ public class ScheduleSubjectsActivity extends BaseActivity {
                 loadThings();
             }
         });
-
 
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         final StickyRecyclerHeadersDecoration decoration = new StickyRecyclerHeadersDecoration(scheduleSubjectAdapter);
@@ -99,6 +100,7 @@ public class ScheduleSubjectsActivity extends BaseActivity {
                 .findAllSortedAsync("sortRating", Sort.ASCENDING, "name", Sort.ASCENDING));
 
         initLoadObservable();
+
     }
 
     private void initLoadObservable() {
@@ -184,7 +186,7 @@ public class ScheduleSubjectsActivity extends BaseActivity {
     private void onSubjectClicked(ScheduleSubject subject) {
         if (subject == null) return;
         prefs.setSelectedThingId(subject.getId());
-        ScheduleActivity_.intent(ScheduleSubjectsActivity.this).start();
+        startActivity(new Intent(this, ScheduleActivity.class));
         finish();
         final Long id = subject.getId();
         realm.executeTransactionAsync(new Realm.Transaction() {
@@ -284,5 +286,17 @@ public class ScheduleSubjectsActivity extends BaseActivity {
                         return new ArrayList<ScheduleSubject>();
                     }
                 });
+    }
+
+    private void initView() {
+        searchView = (SearchView) findViewById(R.id.searchView);
+        toolbar = (Toolbar) findViewById(R.id.toolbar);
+        recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
+        swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipeRefreshLayout);
+    }
+
+    @Override
+    public void showSubjects() {
+
     }
 }

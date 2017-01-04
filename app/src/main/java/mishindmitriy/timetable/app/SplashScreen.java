@@ -1,5 +1,6 @@
 package mishindmitriy.timetable.app;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
@@ -7,8 +8,8 @@ import android.support.v7.app.AppCompatActivity;
 import javax.inject.Inject;
 
 import mishindmitriy.timetable.R;
-import mishindmitriy.timetable.app.schedulesubjects.ScheduleSubjectsActivity_;
-import mishindmitriy.timetable.app.shedule.ScheduleActivity_;
+import mishindmitriy.timetable.app.schedulesubjects.ScheduleSubjectsActivity;
+import mishindmitriy.timetable.app.shedule.ScheduleActivity;
 import mishindmitriy.timetable.utils.Prefs;
 
 /**
@@ -25,9 +26,9 @@ public class SplashScreen extends AppCompatActivity {
         TimeTableApp.component().inject(this);
         try {
             if (prefs.getSelectedThingId() > 0) {
-                ScheduleActivity_.intent(this).start();
+                startActivity(new Intent(this, ScheduleActivity.class));
             } else {
-                ScheduleSubjectsActivity_.intent(this).start();
+                startActivity(new Intent(this, ScheduleSubjectsActivity.class));
             }
         } finally {
             finish();

@@ -14,9 +14,7 @@ repositories {
 
 apply plugin: 'com.android.application'
 apply plugin: 'io.fabric'
-apply plugin: 'android-apt'
 apply plugin: 'realm-android'
-def AAVersion = '4.1.0'
 
 android {
     compileSdkVersion 25
@@ -46,8 +44,6 @@ realm {
 
 dependencies {
     //compile fileTree(include: ['*.jar'], dir: 'libs')
-    apt "org.androidannotations:androidannotations:$AAVersion"
-    compile "org.androidannotations:androidannotations-api:$AAVersion"
     compile 'com.android.support:design:25.1.0'
     compile 'org.jsoup:jsoup:1.8.3'
     compile('com.crashlytics.sdk.android:crashlytics:2.6.5@aar') {
@@ -60,14 +56,11 @@ dependencies {
     compile 'com.nshmura:recyclertablayout:1.1.0'
     compile 'io.reactivex:rxjava:1.1.6'
     compile 'io.reactivex:rxandroid:1.2.1'
-    apt 'com.google.dagger:dagger-compiler:2.8'
+    annotationProcessor 'com.google.dagger:dagger-compiler:2.8'
     compile 'com.google.dagger:dagger:2.8'
     provided 'javax.annotation:jsr250-api:1.0'
-}
-
-apt {
-    arguments {
-        androidManifestFile variant.outputs[0].processResources.manifestFile
-        resourcePackageName "mishindmitriy.timetable"
-    }
+    compile 'com.arello-mobile:moxy:1.4.3'
+    annotationProcessor 'com.arello-mobile:moxy-compiler:1.4.3'
+    compile 'com.arello-mobile:moxy-android:1.4.3'
+    compile 'com.arello-mobile:moxy-app-compat:1.4.3'
 }

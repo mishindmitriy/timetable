@@ -18,16 +18,12 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.DatePicker;
 import android.widget.TextView;
 
 import com.nshmura.recyclertablayout.RecyclerTabLayout;
 
-import org.androidannotations.annotations.AfterViews;
-import org.androidannotations.annotations.Click;
-import org.androidannotations.annotations.EActivity;
-import org.androidannotations.annotations.InstanceState;
-import org.androidannotations.annotations.ViewById;
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 
@@ -43,7 +39,7 @@ import mishindmitriy.timetable.app.base.BaseActivity;
 import mishindmitriy.timetable.app.base.BaseAdapter;
 import mishindmitriy.timetable.app.notifications.NotificationService;
 import mishindmitriy.timetable.app.schedulesubjects.ScheduleSubjectAdapter;
-import mishindmitriy.timetable.app.schedulesubjects.ScheduleSubjectsActivity_;
+import mishindmitriy.timetable.app.schedulesubjects.ScheduleSubjectsActivity;
 import mishindmitriy.timetable.model.Pair;
 import mishindmitriy.timetable.model.ScheduleSubject;
 import mishindmitriy.timetable.utils.DataHelper;
@@ -56,31 +52,19 @@ import rx.functions.Action1;
 import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
-@EActivity(R.layout.activity_shedule)
 public class ScheduleActivity extends BaseActivity {
     public final static int PAGES_COUNT = 100;
-    @ViewById(R.id.toolbar)
-    protected Toolbar toolbar;
-    @ViewById(R.id.sheduleLayout)
-    protected DrawerLayout mDrawerLayout;
-    @ViewById(R.id.current_thing_title)
-    protected TextView currentThingTextView;
-    @ViewById(R.id.nvView)
-    protected NavigationView navigationView;
-    @ViewById(R.id.recyclerView)
-    protected RecyclerView recyclerView;
-    @ViewById(R.id.viewPager)
-    protected ViewPager viewPager;
-    @ViewById(R.id.tabLayout)
-    protected RecyclerTabLayout tabLayout;
-    @ViewById(R.id.choose_thing)
-    protected TextView chooseThingText;
-    @ViewById(R.id.swipeRefreshLayout)
-    protected SwipeRefreshLayout swipeRefreshLayout;
-    @InstanceState
     protected DateTime lastUpdate;
-    @InstanceState
     protected LocalDate startDate = LocalDate.now();
+    protected TextView currentThingTitle;
+    protected Toolbar toolbar;
+    protected RecyclerTabLayout tabLayout;
+    protected ViewPager viewPager;
+    protected SwipeRefreshLayout swipeRefreshLayout;
+    protected TextView chooseThingText;
+    protected RecyclerView recyclerView;
+    protected NavigationView nvView;
+    protected DrawerLayout mDrawerLayout;
     private ActionBarDrawerToggle mDrawerToggle;
     private ScheduleSubjectAdapter scheduleSubjectAdapter = new ScheduleSubjectAdapter();
     private DatePickerDialog dialog;
@@ -98,7 +82,7 @@ public class ScheduleActivity extends BaseActivity {
                         .equalTo("id", prefs.getSelectedThingId())
                         .findFirst();
                 if (currentScheduleSubject != null) {
-                    currentThingTextView.setText(currentScheduleSubject.getName());
+                    currentThingTitle.setText(currentScheduleSubject.getName());
                 }
             }
         }
@@ -120,12 +104,6 @@ public class ScheduleActivity extends BaseActivity {
         }
     };
 
-    @Click(R.id.choose_thing)
-    protected void chooseThingClicked() {
-        ScheduleSubjectsActivity_.intent(ScheduleActivity.this).start();
-        mDrawerLayout.closeDrawers();
-    }
-
     private boolean canUpdate() {
         final long HOUR = 3600000;
         return lastUpdate == null
@@ -135,8 +113,18 @@ public class ScheduleActivity extends BaseActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        super.setContentView(R.layout.activity_shedule);
+        initView();
         pagerAdapter = new DaysPagerAdapter(realm);
+        init();
         prefs.register(listener);
+        chooseThingText.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(ScheduleActivity.this, ScheduleSubjectsActivity.class));
+                mDrawerLayout.closeDrawers();
+            }
+        });
     }
 
     @Override
@@ -146,12 +134,11 @@ public class ScheduleActivity extends BaseActivity {
         prefs.unregister(listener);
     }
 
-    @AfterViews
     protected void init() {
         chooseThingText.setText(R.string.choose_thing);
 
         if (prefs.getSelectedThingId() == 0) {
-            ScheduleSubjectsActivity_.intent(this).start();
+            startActivity(new Intent(this, ScheduleSubjectsActivity.class));
             finish();
             return;
         }
@@ -161,7 +148,7 @@ public class ScheduleActivity extends BaseActivity {
                 .findFirst();
 
         if (currentScheduleSubject == null) {
-            ScheduleSubjectsActivity_.intent(this).start();
+            startActivity(new Intent(this, ScheduleSubjectsActivity.class));
             finish();
             return;
         }
@@ -203,7 +190,7 @@ public class ScheduleActivity extends BaseActivity {
         });
 
 
-        currentThingTextView.setText(currentScheduleSubject.getName());
+        currentThingTitle.setText(currentScheduleSubject.getName());
 
         {
             // setScheduleSubject navigation drawer
@@ -440,5 +427,17 @@ public class ScheduleActivity extends BaseActivity {
         } else {
             super.onBackPressed();
         }
+    }
+
+    private void initView() {
+        currentThingTitle = (TextView) findViewById(R.id.current_thing_title);
+        toolbar = (Toolbar) findViewById(R.id.toolbar);
+        tabLayout = (RecyclerTabLayout) findViewById(R.id.tabLayout);
+        viewPager = (ViewPager) findViewById(R.id.viewPager);
+        swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipeRefreshLayout);
+        chooseThingText = (TextView) findViewById(R.id.choose_thing);
+        recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
+        nvView = (NavigationView) findViewById(R.id.nvView);
+        mDrawerLayout = (DrawerLayout) findViewById(R.id.sheduleLayout);
     }
 }

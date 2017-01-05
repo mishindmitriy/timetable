@@ -2,7 +2,6 @@ package mishindmitriy.timetable.app.schedulesubjects;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
@@ -15,11 +14,6 @@ import android.view.View;
 import com.arellomobile.mvp.presenter.InjectPresenter;
 import com.timehop.stickyheadersrecyclerview.StickyRecyclerHeadersDecoration;
 
-import org.joda.time.DateTime;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import io.realm.Realm;
@@ -29,19 +23,13 @@ import mishindmitriy.timetable.app.base.BaseActivity;
 import mishindmitriy.timetable.app.base.BaseAdapter;
 import mishindmitriy.timetable.app.shedule.ScheduleActivity;
 import mishindmitriy.timetable.model.ScheduleSubject;
-import mishindmitriy.timetable.model.ScheduleSubjectType;
-import mishindmitriy.timetable.utils.DataHelper;
 import rx.Observable;
 import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
 import rx.functions.Func1;
-import rx.functions.Func3;
-import rx.schedulers.Schedulers;
-import rx.subscriptions.CompositeSubscription;
 
 public class ScheduleSubjectsActivity extends BaseActivity implements ScheduleSubjectsView {
-    private static final long UPDATE_INTERVAL = 1000 * 60 * 60; //one hour
     protected SearchView searchView;
     protected Toolbar toolbar;
     protected RecyclerView recyclerView;
@@ -50,8 +38,6 @@ public class ScheduleSubjectsActivity extends BaseActivity implements ScheduleSu
     @InjectPresenter
     ScheduleSubjectsPresenter presenter;
     private ScheduleSubjectAdapter scheduleSubjectAdapter = new ScheduleSubjectAdapter();
-    private Observable<List<ScheduleSubject>> loadSubjectsObservable;
-    private CompositeSubscription subscription = new CompositeSubscription();
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -75,7 +61,7 @@ public class ScheduleSubjectsActivity extends BaseActivity implements ScheduleSu
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                loadThings();
+                presenter.loadThings();
             }
         });
 
@@ -98,53 +84,17 @@ public class ScheduleSubjectsActivity extends BaseActivity implements ScheduleSu
         });
         scheduleSubjectAdapter.setData(realm.where(ScheduleSubject.class)
                 .findAllSortedAsync("sortRating", Sort.ASCENDING, "name", Sort.ASCENDING));
-
-        initLoadObservable();
-
     }
 
-    private void initLoadObservable() {
-        loadSubjectsObservable = Observable.zip(
-                createLoadThingObservable(ScheduleSubjectType.GROUP),
-                createLoadThingObservable(ScheduleSubjectType.TEACHER),
-                createLoadThingObservable(ScheduleSubjectType.CLASSROOM),
-                new Func3<List<ScheduleSubject>, List<ScheduleSubject>,
-                        List<ScheduleSubject>, List<ScheduleSubject>>() {
-                    @Override
-                    public List<ScheduleSubject> call(List<ScheduleSubject> subjects1,
-                                                      List<ScheduleSubject> subjects2,
-                                                      List<ScheduleSubject> subjects3) {
-                        List<ScheduleSubject> allScheduleSubjects = new ArrayList<>();
-                        allScheduleSubjects.addAll(subjects1);
-                        allScheduleSubjects.addAll(subjects2);
-                        allScheduleSubjects.addAll(subjects3);
-                        return allScheduleSubjects;
-                    }
-                }
-        )
-                .doOnNext(new Action1<List<ScheduleSubject>>() {
-                    @Override
-                    public void call(List<ScheduleSubject> scheduleSubjects) {
-                        cacheSubjects(scheduleSubjects);
-                    }
-                })
-                .timeout(10, TimeUnit.SECONDS)
-                .onErrorReturn(new Func1<Throwable, List<ScheduleSubject>>() {
-                    @Override
-                    public List<ScheduleSubject> call(Throwable throwable) {
-                        return null;
-                    }
-                })
-                .subscribeOn(Schedulers.io());
+    @Override
+    public void showRefreshing() {
+        if (swipeRefreshLayout != null) swipeRefreshLayout.setRefreshing(true);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        if (canUpdate()) {
-            swipeRefreshLayout.setRefreshing(true);
-            loadThings();
-        }
+        presenter.loadIfNeed();
     }
 
     private void initSearchObservable() {
@@ -200,44 +150,14 @@ public class ScheduleSubjectsActivity extends BaseActivity implements ScheduleSu
         });
     }
 
-    private void loadThings() {
-        subscription.clear();
-        subscription.add(loadSubjectsObservable
-                .subscribe(new Subscriber<List<ScheduleSubject>>() {
-                    @Override
-                    public void onCompleted() {
-
-                    }
-
-                    @Override
-                    public void onError(Throwable e) {
-                        hideRefreshing();
-                    }
-
-                    @Override
-                    public void onNext(List<ScheduleSubject> scheduleSubjects) {
-                        if (scheduleSubjects.size() > 0) {
-                            prefs.setSubjectsLastUpdate(DateTime.now().getMillis());
-                        }
-                        hideRefreshing();
-                    }
-                })
-        );
-    }
-
     @Override
     protected void onPause() {
         super.onPause();
-        subscription.clear();
         hideRefreshing();
     }
 
-
-    private boolean canUpdate() {
-        return DateTime.now().getMillis() - prefs.getSubjectsLastUpdate() > UPDATE_INTERVAL;
-    }
-
-    private void hideRefreshing() {
+    @Override
+    public void hideRefreshing() {
         if (swipeRefreshLayout != null && swipeRefreshLayout.isRefreshing()) {
             swipeRefreshLayout.post(new Runnable() {
                 @Override
@@ -248,55 +168,10 @@ public class ScheduleSubjectsActivity extends BaseActivity implements ScheduleSu
         }
     }
 
-    private void cacheSubjects(final List<ScheduleSubject> scheduleSubjects) {
-        Realm realm = Realm.getDefaultInstance();
-        realm.executeTransaction(new Realm.Transaction() {
-            @Override
-            public void execute(Realm realm) {
-                for (ScheduleSubject s : scheduleSubjects) {
-                    s.mergeWithExistObject(realm);
-                }
-
-                realm.copyToRealmOrUpdate(scheduleSubjects);
-            }
-        });
-        realm.close();
-    }
-
-    private Observable<List<ScheduleSubject>> createLoadThingObservable(@NonNull final ScheduleSubjectType scheduleSubjectType) {
-        return Observable.create(new Observable.OnSubscribe<List<ScheduleSubject>>() {
-            @Override
-            public void call(Subscriber<? super List<ScheduleSubject>> subscriber) {
-                try {
-                    List<ScheduleSubject> scheduleSubjects = DataHelper.loadThing(scheduleSubjectType);
-                    if (!subscriber.isUnsubscribed()) {
-                        subscriber.onNext(scheduleSubjects);
-                    }
-                } catch (IOException e) {
-                    if (!subscriber.isUnsubscribed()) {
-                        subscriber.onError(e);
-                    }
-                }
-            }
-        })
-                .timeout(5, TimeUnit.SECONDS)
-                .onErrorReturn(new Func1<Throwable, List<ScheduleSubject>>() {
-                    @Override
-                    public List<ScheduleSubject> call(Throwable throwable) {
-                        return new ArrayList<ScheduleSubject>();
-                    }
-                });
-    }
-
     private void initView() {
         searchView = (SearchView) findViewById(R.id.searchView);
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
         swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipeRefreshLayout);
-    }
-
-    @Override
-    public void showSubjects() {
-
     }
 }

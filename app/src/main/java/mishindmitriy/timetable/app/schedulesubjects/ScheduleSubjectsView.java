@@ -7,5 +7,7 @@ import com.arellomobile.mvp.MvpView;
  */
 
 public interface ScheduleSubjectsView extends MvpView {
-    void showSubjects();
+    void hideRefreshing();
+
+    void showRefreshing();
 }

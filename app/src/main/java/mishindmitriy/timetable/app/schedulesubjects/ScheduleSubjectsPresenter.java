@@ -180,4 +180,24 @@ public class ScheduleSubjectsPresenter extends MvpPresenter<ScheduleSubjectsView
             loadThings();
         }
     }
+
+    public boolean isSubjectSelected() {
+        return prefs.getSelectedThingId() != 0;
+    }
+
+    public void onSubjectClicked(ScheduleSubject subject) {
+        if (subject == null) return;
+        prefs.setSelectedThingId(subject.getId());
+        final Long id = subject.getId();
+        realm.executeTransactionAsync(new Realm.Transaction() {
+            @Override
+            public void execute(Realm realm) {
+                ScheduleSubject currentScheduleSubject = realm.where(ScheduleSubject.class)
+                        .equalTo("id", id)
+                        .findFirst();
+                currentScheduleSubject.incrementOpenTimes();
+            }
+        });
+        getViewState().startScheduleActivity();
+    }
 }

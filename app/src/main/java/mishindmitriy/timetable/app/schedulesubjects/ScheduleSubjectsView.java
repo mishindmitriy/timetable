@@ -16,4 +16,6 @@ public interface ScheduleSubjectsView extends MvpView {
     void showRefreshing();
 
     void setData(List<ScheduleSubject> allSortedAsync);
+
+    void startScheduleActivity();
 }

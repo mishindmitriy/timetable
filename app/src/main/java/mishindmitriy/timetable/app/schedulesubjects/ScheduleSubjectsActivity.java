@@ -17,7 +17,6 @@ import com.timehop.stickyheadersrecyclerview.StickyRecyclerHeadersDecoration;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import io.realm.Realm;
 import mishindmitriy.timetable.R;
 import mishindmitriy.timetable.app.base.BaseActivity;
 import mishindmitriy.timetable.app.base.BaseAdapter;
@@ -42,7 +41,7 @@ public class ScheduleSubjectsActivity extends BaseActivity implements ScheduleSu
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_things);
         initView();
-        if (prefs.getSelectedThingId() != 0) {
+        if (presenter.isSubjectSelected()) {
             toolbar.setNavigationIcon(R.drawable.ic_arrow_back_white_24dp);
             toolbar.setNavigationOnClickListener(new View.OnClickListener() {
                 @Override
@@ -104,9 +103,15 @@ public class ScheduleSubjectsActivity extends BaseActivity implements ScheduleSu
         scheduleSubjectAdapter.setOnItemClickListener(new BaseAdapter.OnItemClickListener<ScheduleSubject>() {
             @Override
             public void onItemClick(final ScheduleSubject subject) {
-                onSubjectClicked(subject);
+                presenter.onSubjectClicked(subject);
             }
         });
+    }
+
+    @Override
+    public void startScheduleActivity() {
+        startActivity(new Intent(this, ScheduleActivity.class));
+        finish();
     }
 
     @Override
@@ -125,23 +130,6 @@ public class ScheduleSubjectsActivity extends BaseActivity implements ScheduleSu
     protected void onResume() {
         super.onResume();
         presenter.loadIfNeed();
-    }
-
-    private void onSubjectClicked(ScheduleSubject subject) {
-        if (subject == null) return;
-        prefs.setSelectedThingId(subject.getId());
-        startActivity(new Intent(this, ScheduleActivity.class));
-        finish();
-        final Long id = subject.getId();
-        realm.executeTransactionAsync(new Realm.Transaction() {
-            @Override
-            public void execute(Realm realm) {
-                ScheduleSubject currentScheduleSubject = realm.where(ScheduleSubject.class)
-                        .equalTo("id", id)
-                        .findFirst();
-                currentScheduleSubject.incrementOpenTimes();
-            }
-        });
     }
 
     @Override

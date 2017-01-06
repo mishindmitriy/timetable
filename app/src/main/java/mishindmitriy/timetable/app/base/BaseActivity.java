@@ -16,8 +16,10 @@ import mishindmitriy.timetable.utils.Prefs;
  */
 public abstract class BaseActivity extends MvpAppCompatActivity {
     @Inject
+    @Deprecated
     protected Prefs prefs;
     @Inject
+    @Deprecated
     protected Realm realm;
 
     @Override
@@ -35,6 +37,7 @@ public abstract class BaseActivity extends MvpAppCompatActivity {
         super.onDestroy();
     }
 
+    @Deprecated
     public Realm getRealm() {
         return realm;
     }

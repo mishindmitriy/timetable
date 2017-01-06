@@ -15,6 +15,8 @@ import java.util.concurrent.TimeUnit;
 import javax.inject.Inject;
 
 import io.realm.Realm;
+import io.realm.RealmResults;
+import io.realm.Sort;
 import mishindmitriy.timetable.app.TimeTableApp;
 import mishindmitriy.timetable.model.ScheduleSubject;
 import mishindmitriy.timetable.model.ScheduleSubjectType;
@@ -36,6 +38,8 @@ public class ScheduleSubjectsPresenter extends MvpPresenter<ScheduleSubjectsView
     private static final long UPDATE_INTERVAL = 1000 * 60 * 60; //one hour
     @Inject
     protected Prefs prefs;
+    @Inject
+    protected Realm realm;
     private Observable<List<ScheduleSubject>> loadSubjectsObservable = Observable.zip(
             createLoadThingObservable(ScheduleSubjectType.GROUP),
             createLoadThingObservable(ScheduleSubjectType.TEACHER),
@@ -73,15 +77,31 @@ public class ScheduleSubjectsPresenter extends MvpPresenter<ScheduleSubjectsView
     public ScheduleSubjectsPresenter() {
         super();
         TimeTableApp.component().inject(this);
+        realm.where(ScheduleSubject.class)
+                .findAllSortedAsync("sortRating", Sort.ASCENDING, "name", Sort.ASCENDING)
+                .asObservable()
+                .subscribe(new Action1<RealmResults<ScheduleSubject>>() {
+                    @Override
+                    public void call(RealmResults<ScheduleSubject> scheduleSubjects) {
+                        getViewState().setData(scheduleSubjects);
+                    }
+                });
+    }
+
+    @Override
+    protected void onFirstViewAttach() {
+        super.onFirstViewAttach();
     }
 
     @Override
     public void onDestroy() {
-        subscriptions.clear();
+        subscriptions.unsubscribe();
+        realm.close();
         super.onDestroy();
     }
 
     public void loadThings() {
+        getViewState().showRefreshing();
         subscriptions.clear();
         subscriptions.add(loadSubjectsObservable
                 .subscribe(new Subscriber<List<ScheduleSubject>>() {
@@ -126,7 +146,9 @@ public class ScheduleSubjectsPresenter extends MvpPresenter<ScheduleSubjectsView
         realm.close();
     }
 
-    private Observable<List<ScheduleSubject>> createLoadThingObservable(@NonNull final ScheduleSubjectType scheduleSubjectType) {
+    private Observable<List<ScheduleSubject>> createLoadThingObservable(
+            @NonNull final ScheduleSubjectType scheduleSubjectType
+    ) {
         return Observable.create(new Observable.OnSubscribe<List<ScheduleSubject>>() {
             @Override
             public void call(Subscriber<? super List<ScheduleSubject>> subscriber) {

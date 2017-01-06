@@ -66,7 +66,7 @@ public class ScheduleActivity extends BaseActivity {
     protected NavigationView nvView;
     protected DrawerLayout mDrawerLayout;
     private ActionBarDrawerToggle mDrawerToggle;
-    private ScheduleSubjectAdapter scheduleSubjectAdapter = new ScheduleSubjectAdapter();
+    private ScheduleSubjectAdapter scheduleSubjectAdapter = new ScheduleSubjectAdapter(Observable.just(""));
     private DatePickerDialog dialog;
     private DaysPagerAdapter pagerAdapter;
     private Observable<List<Pair>> dataUpdateObservable;

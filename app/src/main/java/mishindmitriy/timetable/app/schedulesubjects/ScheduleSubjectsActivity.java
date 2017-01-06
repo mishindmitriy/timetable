@@ -14,10 +14,10 @@ import android.view.View;
 import com.arellomobile.mvp.presenter.InjectPresenter;
 import com.timehop.stickyheadersrecyclerview.StickyRecyclerHeadersDecoration;
 
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import io.realm.Realm;
-import io.realm.Sort;
 import mishindmitriy.timetable.R;
 import mishindmitriy.timetable.app.base.BaseActivity;
 import mishindmitriy.timetable.app.base.BaseAdapter;
@@ -25,8 +25,6 @@ import mishindmitriy.timetable.app.shedule.ScheduleActivity;
 import mishindmitriy.timetable.model.ScheduleSubject;
 import rx.Observable;
 import rx.Subscriber;
-import rx.android.schedulers.AndroidSchedulers;
-import rx.functions.Action1;
 import rx.functions.Func1;
 
 public class ScheduleSubjectsActivity extends BaseActivity implements ScheduleSubjectsView {
@@ -37,7 +35,7 @@ public class ScheduleSubjectsActivity extends BaseActivity implements ScheduleSu
 
     @InjectPresenter
     ScheduleSubjectsPresenter presenter;
-    private ScheduleSubjectAdapter scheduleSubjectAdapter = new ScheduleSubjectAdapter();
+    private ScheduleSubjectAdapter scheduleSubjectAdapter;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -56,7 +54,6 @@ public class ScheduleSubjectsActivity extends BaseActivity implements ScheduleSu
 
         searchView.onActionViewExpanded();
         searchView.setInputType(InputType.TYPE_TEXT_FLAG_CAP_CHARACTERS);
-        initSearchObservable();
 
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
@@ -64,6 +61,34 @@ public class ScheduleSubjectsActivity extends BaseActivity implements ScheduleSu
                 presenter.loadThings();
             }
         });
+
+        scheduleSubjectAdapter = new ScheduleSubjectAdapter(
+                Observable.create(new Observable.OnSubscribe<String>() {
+                    @Override
+                    public void call(final Subscriber<? super String> subscriber) {
+                        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+                            @Override
+                            public boolean onQueryTextSubmit(String query) {
+                                return false;
+                            }
+
+                            @Override
+                            public boolean onQueryTextChange(String newText) {
+                                subscriber.onNext(newText);
+                                return true;
+                            }
+                        });
+                    }
+                })
+                        .debounce(200, TimeUnit.MILLISECONDS)
+                        .onErrorReturn(new Func1<Throwable, String>() {
+                            @Override
+                            public String call(Throwable throwable) {
+                                return "";
+                            }
+                        })
+                        .startWith("")
+        );
 
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         final StickyRecyclerHeadersDecoration decoration = new StickyRecyclerHeadersDecoration(scheduleSubjectAdapter);
@@ -82,8 +107,6 @@ public class ScheduleSubjectsActivity extends BaseActivity implements ScheduleSu
                 onSubjectClicked(subject);
             }
         });
-        scheduleSubjectAdapter.setData(realm.where(ScheduleSubject.class)
-                .findAllSortedAsync("sortRating", Sort.ASCENDING, "name", Sort.ASCENDING));
     }
 
     @Override
@@ -92,45 +115,16 @@ public class ScheduleSubjectsActivity extends BaseActivity implements ScheduleSu
     }
 
     @Override
+    public void setData(List<ScheduleSubject> data) {
+        if (scheduleSubjectAdapter != null) {
+            scheduleSubjectAdapter.setData(data);
+        }
+    }
+
+    @Override
     protected void onResume() {
         super.onResume();
         presenter.loadIfNeed();
-    }
-
-    private void initSearchObservable() {
-        Observable.create(new Observable.OnSubscribe<String>() {
-            @Override
-            public void call(final Subscriber<? super String> subscriber) {
-                searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-                    @Override
-                    public boolean onQueryTextSubmit(String query) {
-                        return false;
-                    }
-
-                    @Override
-                    public boolean onQueryTextChange(String newText) {
-                        if (!subscriber.isUnsubscribed()) {
-                            subscriber.onNext(newText);
-                        }
-                        return false;
-                    }
-                });
-            }
-        })
-                .debounce(100, TimeUnit.MILLISECONDS)
-                .onErrorReturn(new Func1<Throwable, String>() {
-                    @Override
-                    public String call(Throwable throwable) {
-                        return null;
-                    }
-                })
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Action1<String>() {
-                    @Override
-                    public void call(String s) {
-                        scheduleSubjectAdapter.filter(s);
-                    }
-                });
     }
 
     private void onSubjectClicked(ScheduleSubject subject) {

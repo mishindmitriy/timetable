@@ -6,35 +6,54 @@ import android.view.View;
 import java.util.ArrayList;
 import java.util.List;
 
-import io.realm.Realm;
-import io.realm.RealmChangeListener;
-import io.realm.RealmObject;
-import io.realm.RealmResults;
+import rx.Observable;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Action1;
+import rx.functions.Func2;
+import rx.subjects.PublishSubject;
 
 /**
  * Created by mishindmitriy on 02.07.2016.
  */
-public abstract class BaseAdapter<I extends RealmObject, VH extends BaseViewHolder<I>>
+public abstract class BaseAdapter<I, VH extends BaseViewHolder<I>>
         extends RecyclerView.Adapter<VH> {
-    private RealmResults<I> items;
+    private final PublishSubject<List<I>> publishSubject;
     private OnItemClickListener<I> itemClickListener = null;
     private List<I> filteredList = new ArrayList<>();
-    private String filterPhrase = null;
-    private RealmChangeListener<RealmResults<I>> changeListener = new RealmChangeListener<RealmResults<I>>() {
-        @Override
-        public void onChange(final RealmResults<I> element) {
-            Realm realm = Realm.getDefaultInstance();
-            realm.executeTransaction(new Realm.Transaction() {
-                @Override
-                public void execute(Realm realm) {
-                    realm.copyToRealm(element);
-                }
-            });
 
-            realm.close();
-            filterAndNotifyDataChanged();
-        }
-    };
+    protected BaseAdapter(Observable<String> filterQueryObservable) {
+        publishSubject = PublishSubject.create();
+        Observable.combineLatest(
+                filterQueryObservable.observeOn(AndroidSchedulers.mainThread()),
+                publishSubject,
+                new Func2<String, List<I>, List<I>>() {
+                    @Override
+                    public List<I> call(String filterPhrase, List<I> items) {
+                        List<I> filteredList = new ArrayList<I>();
+                        if (items != null) {
+                            if (filterPhrase == null || filterPhrase.isEmpty()) {
+                                filteredList.addAll(items);
+                            } else {
+                                for (I t : items) {
+                                    if (contains(t, filterPhrase)) {
+                                        filteredList.add(t);
+                                    }
+                                }
+                            }
+                        }
+                        return filteredList;
+                    }
+                }
+        )
+                .subscribeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Action1<List<I>>() {
+                    @Override
+                    public void call(List<I> filteredList) {
+                        BaseAdapter.this.filteredList = filteredList;
+                        notifyDataSetChanged();
+                    }
+                });
+    }
 
     @Override
     public int getItemCount() {
@@ -62,42 +81,12 @@ public abstract class BaseAdapter<I extends RealmObject, VH extends BaseViewHold
         this.itemClickListener = itemOnClickListener;
     }
 
-    public void setData(RealmResults<I> items) {
-        if (this.items != null && this.items.isValid()) {
-            this.items.removeChangeListener(changeListener);
-        }
-        this.items = items;
-        if (items == null) {
-            filteredList.clear();
-            notifyDataSetChanged();
-            return;
-        }
-        items.addChangeListener(changeListener);
-        filterAndNotifyDataChanged();
-    }
-
-    private void filterAndNotifyDataChanged() {
-        filteredList.clear();
-        if (items == null) return;
-        if (filterPhrase == null || filterPhrase.isEmpty()) {
-            filteredList.addAll(items);
-        } else {
-            for (I t : items) {
-                if (contains(t, filterPhrase)) {
-                    filteredList.add(t);
-                }
-            }
-        }
-        notifyDataSetChanged();
+    public void setData(List<I> items) {
+        publishSubject.onNext(items);
     }
 
     protected boolean contains(I t, String filterPhrase) {
         return true;
-    }
-
-    public void filter(String phrase) {
-        filterPhrase = phrase;
-        filterAndNotifyDataChanged();
     }
 
     public interface OnItemClickListener<ITEM> {

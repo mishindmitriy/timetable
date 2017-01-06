@@ -9,6 +9,7 @@ import mishindmitriy.timetable.app.base.BaseActivity;
 import mishindmitriy.timetable.app.notifications.NotificationService;
 import mishindmitriy.timetable.app.schedulesubjects.ScheduleSubjectsPresenter;
 import mishindmitriy.timetable.app.shedule.DaysPagerAdapter;
+import mishindmitriy.timetable.app.shedule.SchedulePresenter;
 import mishindmitriy.timetable.utils.Prefs;
 
 /**
@@ -28,6 +29,8 @@ public interface AppComponent {
     void inject(SplashScreen splashScreen);
 
     void inject(BaseActivity baseActivity);
+
+    void inject(SchedulePresenter schedulePresenter);
 
     void inject(ScheduleSubjectsPresenter scheduleSubjectsPresenter);
 }

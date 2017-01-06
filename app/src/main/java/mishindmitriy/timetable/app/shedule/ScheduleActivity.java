@@ -2,7 +2,6 @@ package mishindmitriy.timetable.app.shedule;
 
 import android.app.DatePickerDialog;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.database.DataSetObserver;
 import android.os.Bundle;
@@ -16,46 +15,27 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.DatePicker;
 import android.widget.TextView;
 
+import com.arellomobile.mvp.presenter.InjectPresenter;
 import com.nshmura.recyclertablayout.RecyclerTabLayout;
 
-import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-
-import io.realm.Realm;
-import io.realm.Sort;
+import io.realm.RealmResults;
 import mishindmitriy.timetable.R;
 import mishindmitriy.timetable.app.base.BaseActivity;
 import mishindmitriy.timetable.app.base.BaseAdapter;
-import mishindmitriy.timetable.app.notifications.NotificationService;
 import mishindmitriy.timetable.app.schedulesubjects.ScheduleSubjectAdapter;
 import mishindmitriy.timetable.app.schedulesubjects.ScheduleSubjectsActivity;
-import mishindmitriy.timetable.model.Pair;
 import mishindmitriy.timetable.model.ScheduleSubject;
-import mishindmitriy.timetable.utils.DataHelper;
-import mishindmitriy.timetable.utils.Prefs;
 import rx.Observable;
-import rx.Subscriber;
-import rx.Subscription;
-import rx.android.schedulers.AndroidSchedulers;
-import rx.functions.Action1;
-import rx.functions.Func1;
-import rx.schedulers.Schedulers;
 
-public class ScheduleActivity extends BaseActivity {
+public class ScheduleActivity extends BaseActivity implements ScheduleView {
     public final static int PAGES_COUNT = 100;
-    protected DateTime lastUpdate;
-    protected LocalDate startDate = LocalDate.now();
     protected TextView currentThingTitle;
     protected Toolbar toolbar;
     protected RecyclerTabLayout tabLayout;
@@ -65,28 +45,12 @@ public class ScheduleActivity extends BaseActivity {
     protected RecyclerView recyclerView;
     protected NavigationView nvView;
     protected DrawerLayout mDrawerLayout;
+    @InjectPresenter
+    SchedulePresenter presenter;
     private ActionBarDrawerToggle mDrawerToggle;
     private ScheduleSubjectAdapter scheduleSubjectAdapter = new ScheduleSubjectAdapter(Observable.just(""));
     private DatePickerDialog dialog;
     private DaysPagerAdapter pagerAdapter;
-    private Observable<List<Pair>> dataUpdateObservable;
-    private Subscription dataUpdateSubscription;
-    private SharedPreferences.OnSharedPreferenceChangeListener listener
-            = new SharedPreferences.OnSharedPreferenceChangeListener() {
-        @Override
-        public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-            if (key.equals(Prefs.KEY_SELECTED_THING_ID)) {
-                lastUpdate = null;
-                onDateSelected(LocalDate.now());
-                ScheduleSubject currentScheduleSubject = realm.where(ScheduleSubject.class)
-                        .equalTo("id", prefs.getSelectedThingId())
-                        .findFirst();
-                if (currentScheduleSubject != null) {
-                    currentThingTitle.setText(currentScheduleSubject.getName());
-                }
-            }
-        }
-    };
     private DatePickerDialog.OnDateSetListener onDateSetListener = new DatePickerDialog.OnDateSetListener() {
         @Override
         public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
@@ -100,15 +64,9 @@ public class ScheduleActivity extends BaseActivity {
                             month + 1,
                             dayOfMonth)
             );
-            onDateSelected(newDate);
+            presenter.onDateSelected(newDate);
         }
     };
-
-    private boolean canUpdate() {
-        final long HOUR = 3600000;
-        return lastUpdate == null
-                || (DateTime.now().getMillis() - lastUpdate.getMillis()) > HOUR;
-    }
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -117,7 +75,6 @@ public class ScheduleActivity extends BaseActivity {
         initView();
         pagerAdapter = new DaysPagerAdapter(realm);
         init();
-        prefs.register(listener);
         chooseThingText.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -131,23 +88,22 @@ public class ScheduleActivity extends BaseActivity {
     protected void onDestroy() {
         if (dialog != null) dialog.dismiss();
         super.onDestroy();
-        prefs.unregister(listener);
+    }
+
+    @Override
+    public void showCurrentSubjectTitle(String name) {
+        currentThingTitle.setText(name);
+    }
+
+    @Override
+    public void setData(RealmResults<ScheduleSubject> scheduleSubjects) {
+        scheduleSubjectAdapter.setData(scheduleSubjects);
     }
 
     protected void init() {
         chooseThingText.setText(R.string.choose_thing);
 
-        if (prefs.getSelectedThingId() == 0) {
-            startActivity(new Intent(this, ScheduleSubjectsActivity.class));
-            finish();
-            return;
-        }
-
-        ScheduleSubject currentScheduleSubject = realm.where(ScheduleSubject.class)
-                .equalTo("id", prefs.getSelectedThingId())
-                .findFirst();
-
-        if (currentScheduleSubject == null) {
+        if (!presenter.isSubjectSelected() || !presenter.isSubjectNotNull()) {
             startActivity(new Intent(this, ScheduleSubjectsActivity.class));
             finish();
             return;
@@ -155,15 +111,11 @@ public class ScheduleActivity extends BaseActivity {
 
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(scheduleSubjectAdapter);
-        scheduleSubjectAdapter.setData(realm.where(ScheduleSubject.class)
-                .greaterThan("timesOpen", 0)
-                .findAllSortedAsync("timesOpen", Sort.DESCENDING, "name", Sort.ASCENDING));
+
         scheduleSubjectAdapter.setOnItemClickListener(new BaseAdapter.OnItemClickListener<ScheduleSubject>() {
             @Override
             public void onItemClick(ScheduleSubject scheduleSubject) {
-                if (scheduleSubject.getId() != prefs.getSelectedThingId()) {
-                    setNewThing(scheduleSubject);
-                }
+                presenter.scheduleSubjectClicked(scheduleSubject);
                 mDrawerLayout.closeDrawers();
             }
         });
@@ -177,9 +129,9 @@ public class ScheduleActivity extends BaseActivity {
                         if (dialog == null) {
                             dialog = new DatePickerDialog(ScheduleActivity.this,
                                     onDateSetListener,
-                                    startDate.getYear(),
-                                    startDate.getMonthOfYear() - 1,
-                                    startDate.getDayOfMonth());
+                                    presenter.getStartDate().getYear(),
+                                    presenter.getStartDate().getMonthOfYear() - 1,
+                                    presenter.getStartDate().getDayOfMonth());
                         }
                         dialog.setCancelable(true);
                         dialog.show();
@@ -188,9 +140,6 @@ public class ScheduleActivity extends BaseActivity {
                 return false;
             }
         });
-
-
-        currentThingTitle.setText(currentScheduleSubject.getName());
 
         {
             // setScheduleSubject navigation drawer
@@ -216,11 +165,10 @@ public class ScheduleActivity extends BaseActivity {
 
         viewPager.setCurrentItem(PAGES_COUNT / 2, false);
 
-        dataUpdateObservable = createLoadPairsObservable(startDate);
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                refreshData();
+                presenter.refreshData();
             }
         });
 
@@ -251,152 +199,34 @@ public class ScheduleActivity extends BaseActivity {
         });
     }
 
-    public Observable<List<Pair>> createLoadPairsObservable(LocalDate startDate) {
-        if (startDate == null) {
-            startDate = LocalDate.now();
-        }
-        final LocalDate from = startDate.minusDays(50);
-        final LocalDate to = startDate.plusDays(50);
-        return Observable.create(new Observable.OnSubscribe<List<Pair>>() {
-            @Override
-            public void call(Subscriber<? super List<Pair>> subscriber) {
-                long id = prefs.getSelectedThingId();
-                if (id == 0) throw new IllegalStateException();
-
-                Realm realm = Realm.getDefaultInstance();
-                ScheduleSubject scheduleSubject = null;
-                try {
-                    scheduleSubject = realm.where(ScheduleSubject.class)
-                            .equalTo("id", id)
-                            .findFirst();
-                    if (scheduleSubject == null) throw new IllegalStateException();
-
-                    List<Pair> pairs = DataHelper.getShedule(scheduleSubject, from, to);
-                    if (!subscriber.isUnsubscribed()) {
-                        subscriber.onNext(pairs);
-                    }
-                } catch (IOException e) {
-                    if (!subscriber.isUnsubscribed()) {
-                        subscriber.onError(e);
-                    }
-                } finally {
-                    realm.close();
-                }
-            }
-        })
-                .timeout(10, TimeUnit.SECONDS)
-                .onErrorReturn(new Func1<Throwable, List<Pair>>() {
-                    @Override
-                    public List<Pair> call(Throwable throwable) {
-                        return new ArrayList<Pair>();
-                    }
-                })
-                .doOnNext(new Action1<List<Pair>>() {
-                    @Override
-                    public void call(final List<Pair> pairs) {
-                        Realm realm = Realm.getDefaultInstance();
-                        realm.executeTransaction(new Realm.Transaction() {
-                            @Override
-                            public void execute(Realm realm) {
-                                for (Pair p : pairs) {
-                                    Pair existPair = realm.where(Pair.class)
-                                            .equalTo("id", p.getId())
-                                            .findFirst();
-                                    if (existPair != null && existPair.isNotified()) {
-                                        p.setNotified();
-                                    }
-                                }
-                                realm.copyToRealmOrUpdate(pairs);
-                                // TODO: 19.09.16 add remove old pairs for this period (change date type to millis?)
-                            }
-                        });
-                        realm.close();
-                    }
-                })
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread());
+    @Override
+    public void setStartDate(LocalDate newDate) {
+        pagerAdapter.setStartDate(newDate);
     }
 
-    private void onDateSelected(LocalDate newDate) {
-        if (!startDate.isEqual(newDate)) {
-            startDate = newDate;
-            refreshData();
-            pagerAdapter.setStartDate(newDate);
-            lastUpdate = DateTime.now();
-        }
+    @Override
+    public void notifyPagerDateChanged() {
         pagerAdapter.notifyDataChanged();
         updateTabs();
         viewPager.setCurrentItem(PAGES_COUNT / 2, false);
-        Log.d("testtt", "date selected service");
-        startService(new Intent(this, NotificationService.class));
-    }
-
-    private void setNewThing(final ScheduleSubject scheduleSubject) {
-        if (scheduleSubject == null) return;
-        prefs.setSelectedThingId(scheduleSubject.getId());
-        final Long id = scheduleSubject.getId();
-        realm.executeTransactionAsync(new Realm.Transaction() {
-            @Override
-            public void execute(Realm realm) {
-                realm.where(ScheduleSubject.class)
-                        .equalTo("id", id)
-                        .findFirst()
-                        .incrementOpenTimes();
-            }
-        }, new Realm.Transaction.OnSuccess() {
-            @Override
-            public void onSuccess() {
-                Log.d("testtt", "change subject service");
-                startService(new Intent(ScheduleActivity.this, NotificationService.class));
-            }
-        }, new Realm.Transaction.OnError() {
-            @Override
-            public void onError(Throwable error) {
-
-            }
-        });
     }
 
     @Override
     public void onResume() {
         super.onResume();
         updateTabs();
-        if (canUpdate()) {
-            refreshData();
-        }
+        presenter.loadIfNeed();
     }
 
-    private void refreshData() {
+    @Override
+    public void showRefreshing() {
         if (swipeRefreshLayout != null && !swipeRefreshLayout.isRefreshing()) {
             swipeRefreshLayout.setRefreshing(true);
         }
-        if (dataUpdateSubscription != null && !dataUpdateSubscription.isUnsubscribed()) {
-            dataUpdateSubscription.unsubscribe();
-        }
-        dataUpdateSubscription = dataUpdateObservable.subscribe(new Subscriber<List<Pair>>() {
-            @Override
-            public void onCompleted() {
-
-            }
-
-            @Override
-            public void onError(Throwable e) {
-                hideRefreshing();
-            }
-
-            @Override
-            public void onNext(List<Pair> pairs) {
-                lastUpdate = DateTime.now();
-                hideRefreshing();
-                if (pairs != null && pairs.size() > 0) {
-                    Log.d("testtt", "onnext service");
-                    startService(new Intent(ScheduleActivity.this, NotificationService.class));
-                }
-            }
-        });
     }
 
-    private void hideRefreshing() {
+    @Override
+    public void hideRefreshing() {
         if (swipeRefreshLayout != null && swipeRefreshLayout.isRefreshing()) {
             swipeRefreshLayout.setRefreshing(false);
         }

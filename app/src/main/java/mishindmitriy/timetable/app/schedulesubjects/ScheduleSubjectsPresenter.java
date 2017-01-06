@@ -3,7 +3,6 @@ package mishindmitriy.timetable.app.schedulesubjects;
 import android.support.annotation.NonNull;
 
 import com.arellomobile.mvp.InjectViewState;
-import com.arellomobile.mvp.MvpPresenter;
 
 import org.joda.time.DateTime;
 
@@ -12,16 +11,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import javax.inject.Inject;
-
 import io.realm.Realm;
 import io.realm.RealmResults;
 import io.realm.Sort;
 import mishindmitriy.timetable.app.TimeTableApp;
+import mishindmitriy.timetable.app.base.BasePresenter;
 import mishindmitriy.timetable.model.ScheduleSubject;
 import mishindmitriy.timetable.model.ScheduleSubjectType;
 import mishindmitriy.timetable.utils.DataHelper;
-import mishindmitriy.timetable.utils.Prefs;
 import rx.Observable;
 import rx.Subscriber;
 import rx.functions.Action1;
@@ -34,12 +31,8 @@ import rx.subscriptions.CompositeSubscription;
  * Created by mishindmitriy on 03.01.2017.
  */
 @InjectViewState
-public class ScheduleSubjectsPresenter extends MvpPresenter<ScheduleSubjectsView> {
+public class ScheduleSubjectsPresenter extends BasePresenter<ScheduleSubjectsView> {
     private static final long UPDATE_INTERVAL = 1000 * 60 * 60; //one hour
-    @Inject
-    protected Prefs prefs;
-    @Inject
-    protected Realm realm;
     private Observable<List<ScheduleSubject>> loadSubjectsObservable = Observable.zip(
             createLoadThingObservable(ScheduleSubjectType.GROUP),
             createLoadThingObservable(ScheduleSubjectType.TEACHER),
@@ -96,7 +89,6 @@ public class ScheduleSubjectsPresenter extends MvpPresenter<ScheduleSubjectsView
     @Override
     public void onDestroy() {
         subscriptions.unsubscribe();
-        realm.close();
         super.onDestroy();
     }
 
@@ -173,16 +165,15 @@ public class ScheduleSubjectsPresenter extends MvpPresenter<ScheduleSubjectsView
                 });
     }
 
-
+    @Override
+    protected void inject() {
+        TimeTableApp.component().inject(this);
+    }
     public void loadIfNeed() {
         if (canUpdate()) {
             getViewState().showRefreshing();
             loadThings();
         }
-    }
-
-    public boolean isSubjectSelected() {
-        return prefs.getSelectedThingId() != 0;
     }
 
     public void onSubjectClicked(ScheduleSubject subject) {

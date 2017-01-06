@@ -1,3 +1,7 @@
+apply plugin: 'com.android.application'
+apply plugin: 'io.fabric'
+apply plugin: 'realm-android'
+
 buildscript {
     repositories {
         mavenCentral()
@@ -11,10 +15,6 @@ buildscript {
 repositories {
     maven { url 'https://maven.fabric.io/public' }
 }
-
-apply plugin: 'com.android.application'
-apply plugin: 'io.fabric'
-apply plugin: 'realm-android'
 
 android {
     compileSdkVersion 25

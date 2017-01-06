@@ -16,9 +16,6 @@
 #   public *;
 #}
 
-# androidannotations
--dontwarn org.springframework.**
-
 # support design
 -dontwarn android.support.design.**
 -keep class android.support.design.** { *; }
@@ -44,16 +41,3 @@ public *;
 -keep interface com.squareup.okhttp.** { *; }
 -dontwarn com.squareup.okhttp.**
 -dontwarn okio.**
-
-# OrmLite uses reflection
--keep class com.j256.**
--keepclassmembers class com.j256.** { *; }
--keep enum com.j256.**
--keepclassmembers enum com.j256.** { *; }
--keep interface com.j256.**
--keepclassmembers interface com.j256.** { *; }
-# my classes for ormlite
--keep class mishindmitriy.timetable.model.db.** { *; }
--keepclasseswithmembers class mishindmitriy.timetable.model.db.** { *; }
--keep class mishindmitriy.timetable.model.data.entity.** { *; }
--keepclasseswithmembers class mishindmitriy.timetable.model.data.entity.** { *; }

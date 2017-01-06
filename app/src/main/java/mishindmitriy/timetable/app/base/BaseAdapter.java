@@ -1,6 +1,7 @@
 package mishindmitriy.timetable.app.base;
 
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.View;
 
 import java.util.ArrayList;
@@ -10,25 +11,27 @@ import rx.Observable;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
 import rx.functions.Func2;
-import rx.subjects.PublishSubject;
+import rx.subjects.BehaviorSubject;
 
 /**
  * Created by mishindmitriy on 02.07.2016.
  */
 public abstract class BaseAdapter<I, VH extends BaseViewHolder<I>>
         extends RecyclerView.Adapter<VH> {
-    private final PublishSubject<List<I>> publishSubject;
+    private final BehaviorSubject<List<I>> publishSubject;
     private OnItemClickListener<I> itemClickListener = null;
     private List<I> filteredList = new ArrayList<>();
 
     protected BaseAdapter(Observable<String> filterQueryObservable) {
-        publishSubject = PublishSubject.create();
+        publishSubject = BehaviorSubject.create();
+        publishSubject.onNext(new ArrayList<I>());
         Observable.combineLatest(
                 filterQueryObservable.observeOn(AndroidSchedulers.mainThread()),
                 publishSubject,
                 new Func2<String, List<I>, List<I>>() {
                     @Override
                     public List<I> call(String filterPhrase, List<I> items) {
+                        Log.d("testtt", "query " + filterPhrase + " items size " + items);
                         List<I> filteredList = new ArrayList<I>();
                         if (items != null) {
                             if (filterPhrase == null || filterPhrase.isEmpty()) {

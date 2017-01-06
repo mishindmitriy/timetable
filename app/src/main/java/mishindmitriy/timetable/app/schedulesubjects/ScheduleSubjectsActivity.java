@@ -27,14 +27,20 @@ import rx.Subscriber;
 import rx.functions.Func1;
 
 public class ScheduleSubjectsActivity extends BaseActivity implements ScheduleSubjectsView {
+    private static final String KEY_QUERY = "search_query";
     protected SearchView searchView;
     protected Toolbar toolbar;
     protected RecyclerView recyclerView;
     protected SwipeRefreshLayout swipeRefreshLayout;
-
     @InjectPresenter
     ScheduleSubjectsPresenter presenter;
     private ScheduleSubjectAdapter scheduleSubjectAdapter;
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putString(KEY_QUERY, searchView.getQuery().toString());
+    }
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -61,6 +67,9 @@ public class ScheduleSubjectsActivity extends BaseActivity implements ScheduleSu
             }
         });
 
+        if (savedInstanceState != null) {
+            searchView.setQuery(savedInstanceState.getString(KEY_QUERY), false);
+        }
         scheduleSubjectAdapter = new ScheduleSubjectAdapter(
                 Observable.create(new Observable.OnSubscribe<String>() {
                     @Override
@@ -68,7 +77,8 @@ public class ScheduleSubjectsActivity extends BaseActivity implements ScheduleSu
                         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
                             @Override
                             public boolean onQueryTextSubmit(String query) {
-                                return false;
+                                subscriber.onNext(query);
+                                return true;
                             }
 
                             @Override
@@ -86,7 +96,7 @@ public class ScheduleSubjectsActivity extends BaseActivity implements ScheduleSu
                                 return "";
                             }
                         })
-                        .startWith("")
+                        .startWith(searchView.getQuery().toString())
         );
 
         recyclerView.setLayoutManager(new LinearLayoutManager(this));

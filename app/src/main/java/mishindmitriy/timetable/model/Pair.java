@@ -108,7 +108,7 @@ public class Pair extends RealmObject implements Serializable {
     }
 
     public void setId() {
-        id = Math.abs(date.hashCode() + number + subject.hashCode());
+        id = Math.abs(date.hashCode() + number + subject.hashCode() + scheduleSubject.getType().hashCode());
     }
 
     public long getId() {

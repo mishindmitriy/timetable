@@ -89,6 +89,7 @@ public class DataHelper {
             } else {
                 Pair p = parsePair(element, iterator, date);
                 p.setScheduleSubject(scheduleSubject);
+                p.setId();
                 pairs.add(p);
             }
         }
@@ -105,7 +106,6 @@ public class DataHelper {
         pair.setGroup(iterator.next().text());
         pair.setNote(iterator.next().text());
         pair.setDate(date);
-        pair.setId();
         return pair;
     }
 

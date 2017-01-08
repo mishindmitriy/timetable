@@ -133,15 +133,10 @@ public class SchedulePresenter extends BasePresenter<ScheduleView> {
                             .equalTo("id", id)
                             .findFirst();
                     if (scheduleSubject == null) throw new IllegalStateException();
-
                     List<Pair> pairs = DataHelper.getShedule(scheduleSubject, from, to);
-                    if (!subscriber.isUnsubscribed()) {
-                        subscriber.onNext(pairs);
-                    }
+                    subscriber.onNext(pairs);
                 } catch (IOException e) {
-                    if (!subscriber.isUnsubscribed()) {
-                        subscriber.onError(e);
-                    }
+                    subscriber.onError(e);
                 } finally {
                     realm.close();
                 }

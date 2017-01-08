@@ -212,6 +212,7 @@ public class ScheduleActivity extends BaseActivity implements ScheduleView {
         viewPager.setCurrentItem(PAGES_COUNT / 2, false);
     }
 
+
     @Override
     public void onResume() {
         super.onResume();

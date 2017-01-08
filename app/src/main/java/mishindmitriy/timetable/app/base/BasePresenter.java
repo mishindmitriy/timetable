@@ -60,7 +60,7 @@ public abstract class BasePresenter<V extends MvpView> extends MvpPresenter<V>
         return prefs;
     }
 
-    protected Realm getRealm() {
+    public Realm getRealm() {
         return realm;
     }
 

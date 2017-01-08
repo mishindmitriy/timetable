@@ -11,6 +11,7 @@ import android.support.v7.widget.Toolbar;
 import android.text.InputType;
 import android.view.View;
 
+import com.arellomobile.mvp.MvpAppCompatActivity;
 import com.arellomobile.mvp.presenter.InjectPresenter;
 import com.timehop.stickyheadersrecyclerview.StickyRecyclerHeadersDecoration;
 
@@ -18,7 +19,6 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import mishindmitriy.timetable.R;
-import mishindmitriy.timetable.app.base.BaseActivity;
 import mishindmitriy.timetable.app.base.BaseAdapter;
 import mishindmitriy.timetable.app.shedule.ScheduleActivity;
 import mishindmitriy.timetable.model.ScheduleSubject;
@@ -26,7 +26,7 @@ import rx.Observable;
 import rx.Subscriber;
 import rx.functions.Func1;
 
-public class ScheduleSubjectsActivity extends BaseActivity implements ScheduleSubjectsView {
+public class ScheduleSubjectsActivity extends MvpAppCompatActivity implements ScheduleSubjectsView {
     private static final String KEY_QUERY = "search_query";
     protected SearchView searchView;
     protected Toolbar toolbar;

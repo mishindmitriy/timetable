@@ -20,6 +20,7 @@ import android.view.View;
 import android.widget.DatePicker;
 import android.widget.TextView;
 
+import com.arellomobile.mvp.MvpAppCompatActivity;
 import com.arellomobile.mvp.presenter.InjectPresenter;
 import com.nshmura.recyclertablayout.RecyclerTabLayout;
 
@@ -28,14 +29,13 @@ import org.joda.time.LocalDate;
 import java.util.List;
 
 import mishindmitriy.timetable.R;
-import mishindmitriy.timetable.app.base.BaseActivity;
 import mishindmitriy.timetable.app.base.BaseAdapter;
 import mishindmitriy.timetable.app.schedulesubjects.ScheduleSubjectAdapter;
 import mishindmitriy.timetable.app.schedulesubjects.ScheduleSubjectsActivity;
 import mishindmitriy.timetable.model.ScheduleSubject;
 import rx.Observable;
 
-public class ScheduleActivity extends BaseActivity implements ScheduleView {
+public class ScheduleActivity extends MvpAppCompatActivity implements ScheduleView {
     public final static int PAGES_COUNT = 100;
     protected TextView currentThingTitle;
     protected Toolbar toolbar;
@@ -74,7 +74,7 @@ public class ScheduleActivity extends BaseActivity implements ScheduleView {
         super.onCreate(savedInstanceState);
         super.setContentView(R.layout.activity_shedule);
         initView();
-        pagerAdapter = new DaysPagerAdapter(realm);
+        pagerAdapter = new DaysPagerAdapter(presenter.getRealm());
         init();
         chooseThingText.setOnClickListener(new View.OnClickListener() {
             @Override

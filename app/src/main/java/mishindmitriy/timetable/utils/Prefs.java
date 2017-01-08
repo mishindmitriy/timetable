@@ -3,6 +3,8 @@ package mishindmitriy.timetable.utils;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import org.joda.time.DateTime;
+
 import java.util.HashSet;
 import java.util.Set;
 
@@ -19,7 +21,9 @@ public class Prefs {
     public final static String KEY_NOTIFICATIONS = "notifications";
     public final static String KEY_SCHEDULE_SUBJECTS_LAST_UPDATE = "subjects_last_update";
     private static final String KEY_PENDING_IDS = "pending_intents_ids";
+    private static final String KEY_SCHEDULE_LAST_UPDATE = "schedule_last_update";
     final private SharedPreferences prefs;
+
     public Prefs(SharedPreferences prefs) {
         this.prefs = prefs;
     }
@@ -30,7 +34,9 @@ public class Prefs {
 
     public void setSelectedThingId(long thingId) {
         if (thingId == 0) return;
-        prefs.edit().putLong(KEY_SELECTED_THING_ID, thingId)
+        prefs.edit()
+                .putLong(KEY_SELECTED_THING_ID, thingId)
+                .putLong(KEY_SCHEDULE_LAST_UPDATE, 0)
                 .apply();
     }
 
@@ -38,8 +44,10 @@ public class Prefs {
         return prefs.getLong(KEY_SCHEDULE_SUBJECTS_LAST_UPDATE, 0);
     }
 
-    public void setSubjectsLastUpdate(long ms) {
-        prefs.edit().putLong(KEY_SCHEDULE_SUBJECTS_LAST_UPDATE, ms).apply();
+    public void setSubjectsLastUpdate() {
+        prefs.edit()
+                .putLong(KEY_SCHEDULE_SUBJECTS_LAST_UPDATE, DateTime.now().getMillis())
+                .apply();
     }
 
     public void register(SharedPreferences.OnSharedPreferenceChangeListener listener) {
@@ -71,6 +79,16 @@ public class Prefs {
     public void setPendingIntentPairsIds(Set<String> ids) {
         prefs.edit()
                 .putStringSet(KEY_PENDING_IDS, ids)
+                .apply();
+    }
+
+    public long getScheduleLastUpdate() {
+        return prefs.getLong(KEY_SCHEDULE_LAST_UPDATE, 0);
+    }
+
+    public void setScheduleLastUpdate() {
+        prefs.edit()
+                .putLong(KEY_SCHEDULE_LAST_UPDATE, DateTime.now().getMillis())
                 .apply();
     }
 

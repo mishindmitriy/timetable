@@ -15,10 +15,7 @@ import mishindmitriy.timetable.model.ScheduleSubject;
 
 public interface ScheduleSubjectsView extends MvpView {
     @StateStrategyType(AddToEndSingleStrategy.class)
-    void hideRefreshing();
-
-    @StateStrategyType(AddToEndSingleStrategy.class)
-    void showRefreshing();
+    void setRefreshing(boolean enable);
 
     @StateStrategyType(AddToEndSingleStrategy.class)
     void setData(List<ScheduleSubject> allSortedAsync);

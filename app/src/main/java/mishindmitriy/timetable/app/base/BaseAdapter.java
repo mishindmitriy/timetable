@@ -1,7 +1,6 @@
 package mishindmitriy.timetable.app.base;
 
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.View;
 
 import java.util.ArrayList;
@@ -31,7 +30,6 @@ public abstract class BaseAdapter<I, VH extends BaseViewHolder<I>>
                 new Func2<String, List<I>, List<I>>() {
                     @Override
                     public List<I> call(String filterPhrase, List<I> items) {
-                        Log.d("testtt", "query " + filterPhrase + " items size " + items);
                         List<I> filteredList = new ArrayList<I>();
                         if (items != null) {
                             if (filterPhrase == null || filterPhrase.isEmpty()) {

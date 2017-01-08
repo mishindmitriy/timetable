@@ -32,7 +32,7 @@ import rx.subscriptions.CompositeSubscription;
  */
 @InjectViewState
 public class ScheduleSubjectsPresenter extends BasePresenter<ScheduleSubjectsView> {
-    private static final long UPDATE_INTERVAL = 1000 * 60 * 60; //one hour
+    private static final long UPDATE_INTERVAL = 1000 * 60 * 60 * 24; //24 hours
     private Observable<List<ScheduleSubject>> loadSubjectsObservable = Observable.zip(
             createLoadThingObservable(ScheduleSubjectType.GROUP),
             createLoadThingObservable(ScheduleSubjectType.TEACHER),
@@ -93,7 +93,7 @@ public class ScheduleSubjectsPresenter extends BasePresenter<ScheduleSubjectsVie
     }
 
     public void loadThings() {
-        getViewState().showRefreshing();
+        getViewState().setRefreshing(true);
         subscriptions.clear();
         subscriptions.add(loadSubjectsObservable
                 .subscribe(new Subscriber<List<ScheduleSubject>>() {
@@ -104,15 +104,15 @@ public class ScheduleSubjectsPresenter extends BasePresenter<ScheduleSubjectsVie
 
                     @Override
                     public void onError(Throwable e) {
-                        getViewState().hideRefreshing();
+                        getViewState().setRefreshing(false);
                     }
 
                     @Override
                     public void onNext(List<ScheduleSubject> scheduleSubjects) {
                         if (scheduleSubjects.size() > 0) {
-                            prefs.setSubjectsLastUpdate(DateTime.now().getMillis());
+                            prefs.setSubjectsLastUpdate();
                         }
-                        getViewState().hideRefreshing();
+                        getViewState().setRefreshing(false);
                     }
                 })
         );
@@ -169,9 +169,9 @@ public class ScheduleSubjectsPresenter extends BasePresenter<ScheduleSubjectsVie
     protected void inject() {
         TimeTableApp.component().inject(this);
     }
+
     public void loadIfNeed() {
         if (canUpdate()) {
-            getViewState().showRefreshing();
             loadThings();
         }
     }

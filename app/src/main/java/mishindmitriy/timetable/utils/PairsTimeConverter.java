@@ -1,6 +1,6 @@
 package mishindmitriy.timetable.utils;
 
-import java.util.HashMap;
+import android.util.SparseArray;
 
 /**
  * Created by mishindmitriy on 15.11.2015.
@@ -20,39 +20,39 @@ public class PairsTimeConverter {
     public static final CharSequence sixthPairEnd = "19.50";
     public static final CharSequence seventhPairStart = "20.00";
     public static final CharSequence seventhPairEnd = "21.35";
-    private static HashMap<Byte, CharSequence> pairStartTimeNumber = new HashMap<>();
-    private static HashMap<Byte, CharSequence> pairEndTimeNumber = new HashMap<>();
-    private static HashMap<Byte, CharSequence> pairStartTimeNumberSaturday = new HashMap<>();
-    private static HashMap<Byte, CharSequence> pairEndTimeNumberSaturday = new HashMap<>();
+    private static SparseArray<CharSequence> pairStartTimeNumber = new SparseArray<>();
+    private static SparseArray<CharSequence> pairEndTimeNumber = new SparseArray<>();
+    private static SparseArray<CharSequence> pairStartTimeNumberSaturday = new SparseArray<>();
+    private static SparseArray<CharSequence> pairEndTimeNumberSaturday = new SparseArray<>();
 
     static {
-        pairEndTimeNumber.put((byte) 1, firstPairEnd);
-        pairEndTimeNumber.put((byte) 2, secondPairEnd);
-        pairEndTimeNumber.put((byte) 3, thirdPairEnd);
-        pairEndTimeNumber.put((byte) 4, fourthPairEnd);
-        pairEndTimeNumber.put((byte) 5, fifthPairEnd);
-        pairEndTimeNumber.put((byte) 6, sixthPairEnd);
-        pairEndTimeNumber.put((byte) 7, seventhPairEnd);
+        pairEndTimeNumber.put(1, firstPairEnd);
+        pairEndTimeNumber.put(2, secondPairEnd);
+        pairEndTimeNumber.put(3, thirdPairEnd);
+        pairEndTimeNumber.put(4, fourthPairEnd);
+        pairEndTimeNumber.put(5, fifthPairEnd);
+        pairEndTimeNumber.put(6, sixthPairEnd);
+        pairEndTimeNumber.put(7, seventhPairEnd);
 
-        pairStartTimeNumber.put((byte) 1, firstPairStart);
-        pairStartTimeNumber.put((byte) 2, secondPairStart);
-        pairStartTimeNumber.put((byte) 3, thirdPairStart);
-        pairStartTimeNumber.put((byte) 4, fourthPairStart);
-        pairStartTimeNumber.put((byte) 5, fifthPairStart);
-        pairStartTimeNumber.put((byte) 6, sixthPairStart);
-        pairStartTimeNumber.put((byte) 7, seventhPairStart);
+        pairStartTimeNumber.put(1, firstPairStart);
+        pairStartTimeNumber.put(2, secondPairStart);
+        pairStartTimeNumber.put(3, thirdPairStart);
+        pairStartTimeNumber.put(4, fourthPairStart);
+        pairStartTimeNumber.put(5, fifthPairStart);
+        pairStartTimeNumber.put(6, sixthPairStart);
+        pairStartTimeNumber.put(7, seventhPairStart);
 
-        pairEndTimeNumberSaturday.put((byte) 1, Saturday.firstPairEnd);
-        pairEndTimeNumberSaturday.put((byte) 2, Saturday.secondPairEnd);
-        pairEndTimeNumberSaturday.put((byte) 3, Saturday.thirdPairEnd);
-        pairEndTimeNumberSaturday.put((byte) 4, Saturday.fourthPairEnd);
-        pairEndTimeNumberSaturday.put((byte) 5, Saturday.fifthPairEnd);
+        pairEndTimeNumberSaturday.put(1, Saturday.firstPairEnd);
+        pairEndTimeNumberSaturday.put(2, Saturday.secondPairEnd);
+        pairEndTimeNumberSaturday.put(3, Saturday.thirdPairEnd);
+        pairEndTimeNumberSaturday.put(4, Saturday.fourthPairEnd);
+        pairEndTimeNumberSaturday.put(5, Saturday.fifthPairEnd);
 
-        pairStartTimeNumberSaturday.put((byte) 1, Saturday.firstPairStart);
-        pairStartTimeNumberSaturday.put((byte) 2, Saturday.secondPairStart);
-        pairStartTimeNumberSaturday.put((byte) 3, Saturday.thirdPairStart);
-        pairStartTimeNumberSaturday.put((byte) 4, Saturday.fourthPairStart);
-        pairStartTimeNumberSaturday.put((byte) 5, Saturday.fifthPairStart);
+        pairStartTimeNumberSaturday.put(1, Saturday.firstPairStart);
+        pairStartTimeNumberSaturday.put(2, Saturday.secondPairStart);
+        pairStartTimeNumberSaturday.put(3, Saturday.thirdPairStart);
+        pairStartTimeNumberSaturday.put(4, Saturday.fourthPairStart);
+        pairStartTimeNumberSaturday.put(5, Saturday.fifthPairStart);
     }
 
     public static CharSequence getPairStartTime(Byte pairNumber, boolean saturday) {

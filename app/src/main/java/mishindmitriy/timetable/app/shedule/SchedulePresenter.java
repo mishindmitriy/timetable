@@ -35,7 +35,6 @@ import rx.schedulers.Schedulers;
 @InjectViewState
 public class SchedulePresenter extends BasePresenter<ScheduleView> {
     private final Observable<List<Pair>> dataUpdateObservable;
-    protected DateTime lastUpdate;
     protected LocalDate startDate = LocalDate.now();
     private Subscription dataUpdateSubscription;
 
@@ -60,7 +59,6 @@ public class SchedulePresenter extends BasePresenter<ScheduleView> {
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
         super.onSharedPreferenceChanged(sharedPreferences, key);
         if (key.equals(Prefs.KEY_SELECTED_THING_ID)) {
-            lastUpdate = null;
             onDateSelected(LocalDate.now());
         }
     }
@@ -68,19 +66,24 @@ public class SchedulePresenter extends BasePresenter<ScheduleView> {
     public void onDateSelected(LocalDate newDate) {
         if (!startDate.isEqual(newDate)) {
             startDate = newDate;
-            refreshData();
+            if (canUpdate() || !isPairsContainsForDate(newDate)) refreshData();
             getViewState().setStartDate(newDate);
-            lastUpdate = DateTime.now();
         }
         getViewState().notifyPagerDateChanged();
        /* Log.d("testtt", "date selected service");
         startService(new Intent(this, NotificationService.class));*/
     }
 
+    private boolean isPairsContainsForDate(LocalDate date) {
+        return realm.where(Pair.class)
+                .equalTo("date", date.toString())
+                .equalTo("scheduleSubject.id", prefs.getSelectedThingId())
+                .count() > 0;
+    }
+
     private boolean canUpdate() {
-        final long HOUR = 3600000;
-        return lastUpdate == null
-                || (DateTime.now().getMillis() - lastUpdate.getMillis()) > HOUR;
+        final long DAY = 3600000 * 24;
+        return DateTime.now().getMillis() - prefs.getScheduleLastUpdate() > DAY;
     }
 
     @Override
@@ -193,7 +196,7 @@ public class SchedulePresenter extends BasePresenter<ScheduleView> {
 
             @Override
             public void onNext(List<Pair> pairs) {
-                lastUpdate = DateTime.now();
+                prefs.setScheduleLastUpdate();
                 getViewState().setRefreshing(false);
                /* if (pairs != null && pairs.size() > 0) {
                     Log.d("testtt", "onnext service");

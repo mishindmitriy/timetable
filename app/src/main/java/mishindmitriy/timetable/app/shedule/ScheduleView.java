@@ -7,7 +7,8 @@ import com.arellomobile.mvp.viewstate.strategy.StateStrategyType;
 
 import org.joda.time.LocalDate;
 
-import io.realm.RealmResults;
+import java.util.List;
+
 import mishindmitriy.timetable.model.ScheduleSubject;
 
 /**
@@ -19,17 +20,14 @@ public interface ScheduleView extends MvpView {
     void showCurrentSubjectTitle(String name);
 
     @StateStrategyType(AddToEndSingleStrategy.class)
-    void showRefreshing();
-
-    @StateStrategyType(AddToEndSingleStrategy.class)
-    void hideRefreshing();
-
-    @StateStrategyType(AddToEndSingleStrategy.class)
     void setStartDate(LocalDate newDate);
 
     @StateStrategyType(SkipStrategy.class)
     void notifyPagerDateChanged();
 
     @StateStrategyType(AddToEndSingleStrategy.class)
-    void setData(RealmResults<ScheduleSubject> scheduleSubjects);
+    void setSubjectsData(List<ScheduleSubject> scheduleSubjects);
+
+    @StateStrategyType(AddToEndSingleStrategy.class)
+    void setRefreshing(boolean enable);
 }

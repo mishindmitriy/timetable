@@ -94,7 +94,7 @@ public class SchedulePresenter extends BasePresenter<ScheduleView> {
                 .subscribe(new Action1<RealmResults<ScheduleSubject>>() {
                     @Override
                     public void call(RealmResults<ScheduleSubject> scheduleSubjects) {
-                        getViewState().setData(scheduleSubjects);
+                        getViewState().setSubjectsData(scheduleSubjects);
                     }
                 });
     }
@@ -176,7 +176,7 @@ public class SchedulePresenter extends BasePresenter<ScheduleView> {
     }
 
     public void refreshData() {
-        getViewState().showRefreshing();
+        getViewState().setRefreshing(true);
         if (dataUpdateSubscription != null && !dataUpdateSubscription.isUnsubscribed()) {
             dataUpdateSubscription.unsubscribe();
         }
@@ -188,13 +188,13 @@ public class SchedulePresenter extends BasePresenter<ScheduleView> {
 
             @Override
             public void onError(Throwable e) {
-                getViewState().hideRefreshing();
+                getViewState().setRefreshing(false);
             }
 
             @Override
             public void onNext(List<Pair> pairs) {
                 lastUpdate = DateTime.now();
-                getViewState().hideRefreshing();
+                getViewState().setRefreshing(false);
                /* if (pairs != null && pairs.size() > 0) {
                     Log.d("testtt", "onnext service");
                     startService(new Intent(ScheduleActivity.this, NotificationService.class));

@@ -25,7 +25,8 @@ import com.nshmura.recyclertablayout.RecyclerTabLayout;
 
 import org.joda.time.LocalDate;
 
-import io.realm.RealmResults;
+import java.util.List;
+
 import mishindmitriy.timetable.R;
 import mishindmitriy.timetable.app.base.BaseActivity;
 import mishindmitriy.timetable.app.base.BaseAdapter;
@@ -96,7 +97,7 @@ public class ScheduleActivity extends BaseActivity implements ScheduleView {
     }
 
     @Override
-    public void setData(RealmResults<ScheduleSubject> scheduleSubjects) {
+    public void setSubjectsData(List<ScheduleSubject> scheduleSubjects) {
         scheduleSubjectAdapter.setData(scheduleSubjects);
     }
 
@@ -219,16 +220,9 @@ public class ScheduleActivity extends BaseActivity implements ScheduleView {
     }
 
     @Override
-    public void showRefreshing() {
-        if (swipeRefreshLayout != null && !swipeRefreshLayout.isRefreshing()) {
-            swipeRefreshLayout.setRefreshing(true);
-        }
-    }
-
-    @Override
-    public void hideRefreshing() {
-        if (swipeRefreshLayout != null && swipeRefreshLayout.isRefreshing()) {
-            swipeRefreshLayout.setRefreshing(false);
+    public void setRefreshing(boolean enable) {
+        if (swipeRefreshLayout != null) {
+            swipeRefreshLayout.setRefreshing(enable);
         }
     }
 

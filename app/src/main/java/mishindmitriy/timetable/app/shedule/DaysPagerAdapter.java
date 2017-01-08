@@ -9,6 +9,8 @@ import android.view.ViewGroup;
 
 import org.joda.time.LocalDate;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Stack;
 
 import javax.inject.Inject;
@@ -18,6 +20,9 @@ import io.realm.RealmResults;
 import mishindmitriy.timetable.app.TimeTableApp;
 import mishindmitriy.timetable.model.Pair;
 import mishindmitriy.timetable.utils.Prefs;
+import rx.Observable;
+import rx.Subscription;
+import rx.functions.Action1;
 
 import static mishindmitriy.timetable.app.shedule.ScheduleActivity.PAGES_COUNT;
 
@@ -32,6 +37,7 @@ public class DaysPagerAdapter extends PagerAdapter {
     private Stack<RecyclerView> viewStack = new Stack<>();
     private LocalDate startDate = LocalDate.now();
     private SparseArray<RecyclerView> activeViews = new SparseArray<>();
+    private Map<RecyclerView, Subscription> resultsMap = new HashMap<>();
 
     public DaysPagerAdapter(Realm realm) {
         this.realm = realm;
@@ -50,18 +56,31 @@ public class DaysPagerAdapter extends PagerAdapter {
         for (int i = 0; i < activeViews.size(); i++) {
             int position = activeViews.keyAt(i);
             RecyclerView recyclerView = activeViews.get(position);
-            ((PairAdapter) recyclerView.getAdapter()).setData(getRealmResults(position));
+            unbindResults(recyclerView);
+            bindResults(recyclerView, position);
         }
     }
 
-    private RealmResults<Pair> getRealmResults(int position) {
-        if (realm.isClosed()) return null;
+    private void bindResults(final RecyclerView recyclerView, int position) {
+        resultsMap.put(
+                recyclerView,
+                getRealmResults(position)
+                        .subscribe(new Action1<RealmResults<Pair>>() {
+                            @Override
+                            public void call(RealmResults<Pair> pairs) {
+                                ((PairAdapter) recyclerView.getAdapter()).setData(pairs);
+                            }
+                        })
+        );
+    }
+
+    private Observable<RealmResults<Pair>> getRealmResults(int position) {
+        if (realm.isClosed()) return Observable.empty();
         return realm.where(Pair.class)
-                .beginGroup()
                 .equalTo("date", getLocalDate(position).toString())
                 .equalTo("scheduleSubject.id", prefs.getSelectedThingId())
-                .endGroup()
-                .findAllSortedAsync("number");
+                .findAllSortedAsync("number")
+                .asObservable();
     }
 
     @Override
@@ -104,7 +123,7 @@ public class DaysPagerAdapter extends PagerAdapter {
             recyclerView.setVerticalScrollBarEnabled(true);
             recyclerView.setAdapter(new PairAdapter());
         }
-        ((PairAdapter) recyclerView.getAdapter()).setData(getRealmResults(position));
+        bindResults(recyclerView, position);
         activeViews.put(position, recyclerView);
         container.addView(recyclerView);
         return recyclerView;
@@ -114,9 +133,15 @@ public class DaysPagerAdapter extends PagerAdapter {
     public void destroyItem(ViewGroup container, int position, Object object) {
         RecyclerView recyclerView = (RecyclerView) object;
         activeViews.remove(position);
-        ((PairAdapter) recyclerView.getAdapter())
-                .setData(null);
+        unbindResults(recyclerView);
         container.removeView(recyclerView);
         viewStack.push(recyclerView);
+    }
+
+    private void unbindResults(RecyclerView recyclerView) {
+        if (resultsMap.containsKey(recyclerView)) {
+            resultsMap.get(recyclerView).unsubscribe();
+            resultsMap.remove(recyclerView);
+        }
     }
 }

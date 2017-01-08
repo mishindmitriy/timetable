@@ -8,7 +8,6 @@ buildscript {
         maven { url 'https://maven.fabric.io/public' }
     }
     dependencies {
-        classpath 'com.neenbedankt.gradle.plugins:android-apt:1.4'
         classpath 'io.fabric.tools:gradle:1.+'
     }
 }
@@ -35,6 +34,14 @@ android {
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
+    }
+
+    packagingOptions {
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/LICENSE-FIREBASE.txt'
+        exclude 'META-INF/NOTICE'
+        exclude 'META-INF/notice.txt'
+        exclude 'META-INF/license.txt'
     }
 }
 
@@ -63,4 +70,5 @@ dependencies {
     annotationProcessor 'com.arello-mobile:moxy-compiler:1.4.3'
     compile 'com.arello-mobile:moxy-android:1.4.3'
     compile 'com.arello-mobile:moxy-app-compat:1.4.3'
+    compile 'com.firebase:firebase-client-android:2.5.2'
 }

@@ -44,6 +44,7 @@ public class SchedulePresenter extends BasePresenter<ScheduleView> {
                 .subscribe(new Action1<ScheduleSubject>() {
                     @Override
                     public void call(ScheduleSubject scheduleSubject) {
+                        if (scheduleSubject == null) return;
                         getViewState().showCurrentSubjectTitle(getCurrentSubject().getName());
                     }
                 });
@@ -59,11 +60,18 @@ public class SchedulePresenter extends BasePresenter<ScheduleView> {
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
         super.onSharedPreferenceChanged(sharedPreferences, key);
         if (key.equals(Prefs.KEY_SELECTED_THING_ID)) {
-            onDateSelected(LocalDate.now());
+            onDateSelected(null);
         }
     }
 
+    @Override
+    protected void onSubjectChange() {
+        super.onSubjectChange();
+        getViewState().notifyPagerDateChanged();
+    }
+
     public void onDateSelected(LocalDate newDate) {
+        if (newDate == null) newDate = LocalDate.now();
         if (!startDate.isEqual(newDate)) {
             startDate = newDate;
             if (canUpdate() || !isPairsContainsForDate(newDate)) refreshData();
@@ -237,4 +245,6 @@ public class SchedulePresenter extends BasePresenter<ScheduleView> {
             }
         });
     }
+
+
 }

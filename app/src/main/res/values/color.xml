@@ -7,4 +7,5 @@
     <item name="select" type="color">#ffbb33</item>
     <color name="light_black">#6a000000</color>
     <color name="gray">#808080</color>
+    <color name="ltgray">#86808080</color>
 </resources>

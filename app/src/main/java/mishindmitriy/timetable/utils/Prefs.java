@@ -11,6 +11,7 @@ import java.util.Set;
 import javax.inject.Singleton;
 
 import dagger.Provides;
+import mishindmitriy.timetable.BuildConfig;
 import mishindmitriy.timetable.app.ApplicationContext;
 
 /**
@@ -22,10 +23,17 @@ public class Prefs {
     public final static String KEY_SCHEDULE_SUBJECTS_LAST_UPDATE = "subjects_last_update";
     private static final String KEY_PENDING_IDS = "pending_intents_ids";
     private static final String KEY_SCHEDULE_LAST_UPDATE = "schedule_last_update";
+    private static final String KEY_UPDATE_DATE = "update_date";
+    private static final String KEY_FEEDBACK_SHOWED = "feedback_showed";
     final private SharedPreferences prefs;
 
     public Prefs(SharedPreferences prefs) {
         this.prefs = prefs;
+        if (BuildConfig.VERSION_CODE > 16 && !prefs.contains(KEY_UPDATE_DATE)) {
+            prefs.edit()
+                    .putLong(KEY_UPDATE_DATE, DateTime.now().getMillis())
+                    .apply();
+        }
     }
 
     public long getSelectedThingId() {
@@ -90,6 +98,18 @@ public class Prefs {
         prefs.edit()
                 .putLong(KEY_SCHEDULE_LAST_UPDATE, DateTime.now().getMillis())
                 .apply();
+    }
+
+    public DateTime getUpdateDate() {
+        return new DateTime(prefs.getLong(KEY_UPDATE_DATE, 0));
+    }
+
+    public boolean isFeedbackShowed() {
+        return prefs.getBoolean(KEY_FEEDBACK_SHOWED, false);
+    }
+
+    public void setFeedbackShowed() {
+        prefs.edit().putBoolean(KEY_FEEDBACK_SHOWED, true).apply();
     }
 
     @dagger.Module

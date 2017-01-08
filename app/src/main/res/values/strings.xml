@@ -20,4 +20,9 @@
     <string name="classrooms">Аудитории</string>
     <string name="teachers">Преподаватели</string>
     <string name="groups">Группы</string>
+    <string name="feedback_message">Нам важно чтобы Вам было удобно пользоваться приложением, напишите нам в двух словах - что вам нравиться или не нравиться. Спасибо за обратную связь!</string>
+    <string name="send">Отправить</string>
+    <string name="cancel">Отмена</string>
+    <string name="loading">Загрузка, подождите…</string>
+    <string name="feedback">Отзыв</string>
 </resources>

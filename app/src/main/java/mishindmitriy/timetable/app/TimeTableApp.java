@@ -5,9 +5,14 @@ import android.os.StrictMode;
 import android.util.Log;
 
 import com.crashlytics.android.Crashlytics;
+import com.firebase.client.Firebase;
 
 import net.danlew.android.joda.JodaTimeAndroid;
 
+import javax.inject.Singleton;
+
+import dagger.Module;
+import dagger.Provides;
 import io.fabric.sdk.android.Fabric;
 import io.realm.Realm;
 import io.realm.RealmConfiguration;
@@ -30,17 +35,14 @@ public class TimeTableApp extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-        appComponent = DaggerAppComponent.builder()
-                .androidModule(new AndroidModule(this))
-                .realmModule(new RealmModule())
-                .settingsModule(new Prefs.SettingsModule())
-                .build();
+        Firebase.setAndroidContext(this);
         JodaTimeAndroid.init(this);
         Realm.init(this);
         Realm.setDefaultConfiguration(new RealmConfiguration.Builder()
                 .schemaVersion(1)
                 .deleteRealmIfMigrationNeeded()
                 .build());
+
         if (!BuildConfig.DEBUG) {
             Fabric.with(this, new Crashlytics());
         } else {
@@ -56,6 +58,22 @@ public class TimeTableApp extends Application {
         }
 
         DataHelper.init(this);
+
+        appComponent = DaggerAppComponent.builder()
+                .androidModule(new AndroidModule(this))
+                .realmModule(new RealmModule())
+                .settingsModule(new Prefs.SettingsModule())
+                .firebaseModule(new FirebaseModule())
+                .build();
         //startService(new Intent(this, NotificationService.class));
+    }
+
+    @Module
+    static class FirebaseModule {
+        @Provides
+        @Singleton
+        public Firebase provideFirebase() {
+            return new Firebase("https://timetable-cbbbf.firebaseio.com/");
+        }
     }
 }

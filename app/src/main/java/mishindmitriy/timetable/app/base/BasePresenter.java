@@ -42,18 +42,20 @@ public abstract class BasePresenter<V extends MvpView> extends MvpPresenter<V>
         currentSubject = realm.where(ScheduleSubject.class)
                 .equalTo("id", prefs.getSelectedThingId())
                 .findFirst();
-        Observable<ScheduleSubject> observable = currentSubject.asObservable();
-        currentSubjectSubscription = observable.subscribe(new Action1<ScheduleSubject>() {
-            @Override
-            public void call(ScheduleSubject subject) {
-                currentSubjectObservable.onNext(subject);
-            }
-        });
+        if (currentSubject != null) {
+            Observable<ScheduleSubject> observable = currentSubject.asObservable();
+            currentSubjectSubscription = observable.subscribe(new Action1<ScheduleSubject>() {
+                @Override
+                public void call(ScheduleSubject subject) {
+                    currentSubjectObservable.onNext(subject);
+                }
+            });
+        }
         currentSubjectObservable.onNext(currentSubject);
     }
 
     public Observable<ScheduleSubject> getCurrentSubjectObservable() {
-        return currentSubjectObservable;
+        return currentSubjectObservable == null ? Observable.<ScheduleSubject>empty() : currentSubjectObservable;
     }
 
     protected Prefs getPrefs() {
@@ -86,7 +88,11 @@ public abstract class BasePresenter<V extends MvpView> extends MvpPresenter<V>
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
         if (key.equals(Prefs.KEY_SELECTED_THING_ID)) {
-            setCurrentSubject();
+            onSubjectChange();
         }
+    }
+
+    protected void onSubjectChange() {
+        setCurrentSubject();
     }
 }

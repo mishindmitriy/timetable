@@ -18,6 +18,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import mishindmitriy.timetable.BuildConfig;
 import mishindmitriy.timetable.model.Pair;
 import mishindmitriy.timetable.model.ScheduleSubject;
 import mishindmitriy.timetable.model.ScheduleSubjectType;
@@ -177,7 +178,11 @@ public class DataHelper {
 
     public static void init(Context context) {
         HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor();
-        loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.HEADERS);
+        loggingInterceptor.setLevel(
+                BuildConfig.DEBUG
+                        ? HttpLoggingInterceptor.Level.HEADERS
+                        : HttpLoggingInterceptor.Level.NONE
+        );
         httpClient = new OkHttpClient.Builder()
                 .cache(createCache(context))
                 .addInterceptor(loggingInterceptor)

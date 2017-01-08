@@ -139,6 +139,7 @@ public class DaysPagerAdapter extends PagerAdapter {
     }
 
     private void unbindResults(RecyclerView recyclerView) {
+        ((PairAdapter) recyclerView.getAdapter()).setData(null);
         if (resultsMap.containsKey(recyclerView)) {
             resultsMap.get(recyclerView).unsubscribe();
             resultsMap.remove(recyclerView);

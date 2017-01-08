@@ -125,8 +125,15 @@ public class ScheduleSubjectsActivity extends MvpAppCompatActivity implements Sc
     }
 
     @Override
-    public void setRefreshing(boolean enable) {
-        if (swipeRefreshLayout != null) swipeRefreshLayout.setRefreshing(enable);
+    public void setRefreshing(final boolean enable) {
+        if (swipeRefreshLayout != null) {
+            swipeRefreshLayout.post(new Runnable() {
+                @Override
+                public void run() {
+                    swipeRefreshLayout.setRefreshing(enable);
+                }
+            });
+        }
     }
 
     @Override

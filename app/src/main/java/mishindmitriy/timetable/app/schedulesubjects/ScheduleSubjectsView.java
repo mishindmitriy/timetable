@@ -2,7 +2,6 @@ package mishindmitriy.timetable.app.schedulesubjects;
 
 import com.arellomobile.mvp.MvpView;
 import com.arellomobile.mvp.viewstate.strategy.AddToEndSingleStrategy;
-import com.arellomobile.mvp.viewstate.strategy.SkipStrategy;
 import com.arellomobile.mvp.viewstate.strategy.StateStrategyType;
 
 import java.util.List;
@@ -20,6 +19,6 @@ public interface ScheduleSubjectsView extends MvpView {
     @StateStrategyType(AddToEndSingleStrategy.class)
     void setData(List<ScheduleSubject> allSortedAsync);
 
-    @StateStrategyType(SkipStrategy.class)
+    @StateStrategyType(AddToEndSingleStrategy.class)
     void startScheduleActivity();
 }

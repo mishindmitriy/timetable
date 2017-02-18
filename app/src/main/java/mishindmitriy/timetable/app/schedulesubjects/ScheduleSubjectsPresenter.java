@@ -122,6 +122,11 @@ public class ScheduleSubjectsPresenter extends BasePresenter<ScheduleSubjectsVie
         super.onDestroy();
     }
 
+    @Override
+    protected void onSubjectChange() {
+
+    }
+
     public void loadThings() {
         getViewState().setRefreshing(true);
         subscriptions.clear();

@@ -40,14 +40,6 @@ public class SchedulePresenter extends BasePresenter<ScheduleView> {
 
     public SchedulePresenter() {
         super();
-        getCurrentSubjectObservable()
-                .subscribe(new Action1<ScheduleSubject>() {
-                    @Override
-                    public void call(ScheduleSubject scheduleSubject) {
-                        if (scheduleSubject == null) return;
-                        getViewState().showCurrentSubjectTitle(getCurrentSubject().getName());
-                    }
-                });
         dataUpdateObservable = createLoadPairsObservable(startDate);
     }
 
@@ -66,7 +58,7 @@ public class SchedulePresenter extends BasePresenter<ScheduleView> {
 
     @Override
     protected void onSubjectChange() {
-        super.onSubjectChange();
+        getViewState().showCurrentSubjectTitle(getCurrentSubject().getName());
         getViewState().notifyPagerDateChanged();
     }
 
@@ -78,8 +70,6 @@ public class SchedulePresenter extends BasePresenter<ScheduleView> {
             getViewState().setStartDate(newDate);
         }
         getViewState().notifyPagerDateChanged();
-       /* Log.d("testtt", "date selected service");
-        startService(new Intent(this, NotificationService.class));*/
     }
 
     private boolean isPairsContainsForDate(LocalDate date) {
@@ -201,10 +191,6 @@ public class SchedulePresenter extends BasePresenter<ScheduleView> {
             public void onNext(List<Pair> pairs) {
                 prefs.setScheduleLastUpdate();
                 getViewState().setRefreshing(false);
-               /* if (pairs != null && pairs.size() > 0) {
-                    Log.d("testtt", "onnext service");
-                    startService(new Intent(ScheduleActivity.this, NotificationService.class));
-                }*/
             }
         });
     }
@@ -230,8 +216,7 @@ public class SchedulePresenter extends BasePresenter<ScheduleView> {
         }, new Realm.Transaction.OnSuccess() {
             @Override
             public void onSuccess() {
-                /*Log.d("testtt", "change subject service");
-                startService(new Intent(ScheduleActivity.this, NotificationService.class));*/
+
             }
         }, new Realm.Transaction.OnError() {
             @Override

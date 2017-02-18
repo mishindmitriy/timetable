@@ -44,7 +44,7 @@ public class DataHelper {
                         .maxAge(1, TimeUnit.HOURS)
                         .build())
                 .url(inputUrl);
-        if (requestBody != null) //значит делаем POST запрос
+        if (requestBody != null)
         {
             request.post(requestBody);
         } else {

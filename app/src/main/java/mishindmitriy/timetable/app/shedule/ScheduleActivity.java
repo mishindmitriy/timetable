@@ -120,7 +120,7 @@ public class ScheduleActivity extends MvpAppCompatActivity implements ScheduleVi
     protected void init() {
         chooseThingText.setText(R.string.choose_thing);
 
-        if (!schedulePresenter.isSubjectSelected() || !schedulePresenter.isSubjectNotNull()) {
+        if (!schedulePresenter.isSubjectSelected()) {
             startActivity(new Intent(this, ScheduleSubjectsActivity.class));
             finish();
             return;

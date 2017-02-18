@@ -1,19 +1,9 @@
 <resources>
     <string name="app_name">Расписание ПВГУС</string>
 
-    <string name="wait">Подождите</string>
-    <string name="connToServ">Загрузка</string>
-    <string name="action_caseGroup">Выбрать группу</string>
-
+    <string name="wait">подождите…</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
-    <string name="CaseGroup">Выбрать группу</string>
-    <string name="Refresh">Обновить</string>
-    <string name="congratulations">Поздравляем! На выбранный период занятий нет</string>
-    <string name="load_error">"Ошибка загрузки"</string>
-
-    <string name="title_activity_shedule">Расписание ПВГУС</string>
-    <string name="action_not_possible">Действие не возможно</string>
     <string name="empty_text">Занятия отсутствуют</string>
     <string name="choose_date">Выбрать дату</string>
     <string name="choose_thing">Выбрать</string>
@@ -23,6 +13,6 @@
     <string name="feedback_message">Нам важно чтобы Вам было удобно пользоваться приложением, напишите нам в двух словах - что вам нравиться или не нравиться. Спасибо за обратную связь!</string>
     <string name="send">Отправить</string>
     <string name="cancel">Отмена</string>
-    <string name="loading">Загрузка, подождите…</string>
+    <string name="loading">Загрузка</string>
     <string name="feedback">Отзыв</string>
 </resources>

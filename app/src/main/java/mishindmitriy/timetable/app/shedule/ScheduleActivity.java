@@ -2,7 +2,6 @@ package mishindmitriy.timetable.app.shedule;
 
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
-import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Configuration;
@@ -75,7 +74,6 @@ public class ScheduleActivity extends MvpAppCompatActivity implements ScheduleVi
         }
     };
     private AlertDialog feedbackDialog;
-    private AlertDialog loadingDialog;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -103,7 +101,6 @@ public class ScheduleActivity extends MvpAppCompatActivity implements ScheduleVi
     protected void onDestroy() {
         if (dateDialog != null) dateDialog.dismiss();
         if (feedbackDialog != null) feedbackDialog.dismiss();
-        if (loadingDialog != null) loadingDialog.dismiss();
         super.onDestroy();
     }
 
@@ -237,22 +234,6 @@ public class ScheduleActivity extends MvpAppCompatActivity implements ScheduleVi
         if (feedbackDialog != null && feedbackDialog.isShowing()) {
             feedbackDialog.dismiss();
             feedbackDialog = null;
-        }
-    }
-
-    @Override
-    public void showLoadingAlert(boolean show) {
-        if (show) {
-            if (loadingDialog != null && loadingDialog.isShowing()) return;
-            loadingDialog = new ProgressDialog.Builder(this)
-                    .setTitle(R.string.loading)
-                    .create();
-            loadingDialog.show();
-        } else {
-            if (loadingDialog != null && loadingDialog.isShowing()) {
-                loadingDialog.dismiss();
-                loadingDialog = null;
-            }
         }
     }
 

@@ -3,7 +3,6 @@ package mishindmitriy.timetable.app.shedule;
 import com.arellomobile.mvp.InjectViewState;
 import com.arellomobile.mvp.MvpPresenter;
 import com.firebase.client.Firebase;
-import com.firebase.client.FirebaseError;
 
 import org.joda.time.DateTime;
 
@@ -37,15 +36,9 @@ public class FeedbackPresenter extends MvpPresenter<FeedbackView> {
     }
 
     public void sendFeedback(String androidId, String feedbackMessage) {
-        getViewState().showLoadingAlert(true);
         firebase.child("feedback")
                 .child(androidId)
                 .child(String.valueOf(DateTime.now().getMillis()))
-                .setValue(feedbackMessage, new Firebase.CompletionListener() {
-                    @Override
-                    public void onComplete(FirebaseError firebaseError, Firebase firebase) {
-                        getViewState().showLoadingAlert(false);
-                    }
-                });
+                .setValue(feedbackMessage);
     }
 }

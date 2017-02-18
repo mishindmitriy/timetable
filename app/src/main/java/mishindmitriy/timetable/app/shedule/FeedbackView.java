@@ -14,7 +14,4 @@ public interface FeedbackView extends MvpView {
 
     @StateStrategyType(AddToEndSingleStrategy.class)
     void dismissFeedbackAlert();
-
-    @StateStrategyType(AddToEndSingleStrategy.class)
-    void showLoadingAlert(boolean show);
 }

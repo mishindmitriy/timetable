@@ -154,6 +154,15 @@ public class SchedulePresenter extends BasePresenter<ScheduleView> {
                                         p.setNotified();
                                     }
                                 }
+                                if (pairs.size() > 0) {
+                                    realm.where(Pair.class)
+                                            .equalTo(
+                                                    "scheduleSubject.id",
+                                                    pairs.get(0).getScheduleSubject().getId()
+                                            )
+                                            .findAll()
+                                            .deleteAllFromRealm();
+                                }
                                 realm.copyToRealmOrUpdate(pairs);
                                 // TODO: 19.09.16 add remove old pairs for this period (change date type to millis?)
                             }

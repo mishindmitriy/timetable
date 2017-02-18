@@ -38,7 +38,6 @@ import mishindmitriy.timetable.app.base.BaseAdapter;
 import mishindmitriy.timetable.app.schedulesubjects.ScheduleSubjectAdapter;
 import mishindmitriy.timetable.app.schedulesubjects.ScheduleSubjectsActivity;
 import mishindmitriy.timetable.model.ScheduleSubject;
-import rx.Observable;
 
 public class ScheduleActivity extends MvpAppCompatActivity implements ScheduleView, FeedbackView {
     public final static int PAGES_COUNT = 100;
@@ -56,7 +55,7 @@ public class ScheduleActivity extends MvpAppCompatActivity implements ScheduleVi
     @InjectPresenter
     FeedbackPresenter feedbackPresenter;
     private ActionBarDrawerToggle mDrawerToggle;
-    private ScheduleSubjectAdapter scheduleSubjectAdapter = new ScheduleSubjectAdapter(Observable.just(""));
+    private ScheduleSubjectAdapter scheduleSubjectAdapter = new ScheduleSubjectAdapter();
     private DatePickerDialog dateDialog;
     private DaysPagerAdapter pagerAdapter;
     private DatePickerDialog.OnDateSetListener onDateSetListener = new DatePickerDialog.OnDateSetListener() {

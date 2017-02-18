@@ -17,6 +17,16 @@ public class ScheduleSubject extends RealmObject implements Serializable {
     private long id;
     private int timesOpen = 0;
     private int sortRating;
+    private String search;
+
+    public String getSearch() {
+        return search;
+    }
+
+    public ScheduleSubject setSearch(String search) {
+        this.search = search.toLowerCase();
+        return this;
+    }
 
     public String getType() {
         return type;

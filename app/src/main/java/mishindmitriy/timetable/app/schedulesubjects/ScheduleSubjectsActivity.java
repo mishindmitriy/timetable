@@ -70,34 +70,7 @@ public class ScheduleSubjectsActivity extends MvpAppCompatActivity implements Sc
         if (savedInstanceState != null) {
             searchView.setQuery(savedInstanceState.getString(KEY_QUERY), false);
         }
-        scheduleSubjectAdapter = new ScheduleSubjectAdapter(
-                Observable.create(new Observable.OnSubscribe<String>() {
-                    @Override
-                    public void call(final Subscriber<? super String> subscriber) {
-                        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-                            @Override
-                            public boolean onQueryTextSubmit(String query) {
-                                subscriber.onNext(query);
-                                return true;
-                            }
-
-                            @Override
-                            public boolean onQueryTextChange(String newText) {
-                                subscriber.onNext(newText);
-                                return true;
-                            }
-                        });
-                    }
-                })
-                        .debounce(200, TimeUnit.MILLISECONDS)
-                        .onErrorReturn(new Func1<Throwable, String>() {
-                            @Override
-                            public String call(Throwable throwable) {
-                                return "";
-                            }
-                        })
-                        .startWith(searchView.getQuery().toString())
-        );
+        scheduleSubjectAdapter = new ScheduleSubjectAdapter();
 
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         final StickyRecyclerHeadersDecoration decoration = new StickyRecyclerHeadersDecoration(scheduleSubjectAdapter);
@@ -116,6 +89,37 @@ public class ScheduleSubjectsActivity extends MvpAppCompatActivity implements Sc
                 presenter.onSubjectClicked(subject);
             }
         });
+
+        presenter.setSearchObservable(createSearchObservable());
+    }
+
+    private Observable<String> createSearchObservable() {
+        return Observable.create(new Observable.OnSubscribe<String>() {
+            @Override
+            public void call(final Subscriber<? super String> subscriber) {
+                searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+                    @Override
+                    public boolean onQueryTextSubmit(String query) {
+                        subscriber.onNext(query);
+                        return true;
+                    }
+
+                    @Override
+                    public boolean onQueryTextChange(String newText) {
+                        subscriber.onNext(newText);
+                        return true;
+                    }
+                });
+            }
+        })
+                .debounce(200, TimeUnit.MILLISECONDS)
+                .onErrorReturn(new Func1<Throwable, String>() {
+                    @Override
+                    public String call(Throwable throwable) {
+                        return "";
+                    }
+                })
+                .startWith(searchView.getQuery().toString());
     }
 
     @Override

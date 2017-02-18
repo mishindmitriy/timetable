@@ -13,15 +13,13 @@ import mishindmitriy.timetable.R;
 import mishindmitriy.timetable.app.base.BaseAdapter;
 import mishindmitriy.timetable.app.base.BaseViewHolder;
 import mishindmitriy.timetable.model.ScheduleSubject;
-import rx.Observable;
 
 /**
  * Created by dmitriy on 19.09.16.
  */
 public class ScheduleSubjectAdapter extends BaseAdapter<ScheduleSubject, ScheduleSubjectViewHolder>
         implements StickyRecyclerHeadersAdapter<BaseViewHolder<String>> {
-    public ScheduleSubjectAdapter(Observable<String> filterObservable) {
-        super(filterObservable);
+    public ScheduleSubjectAdapter() {
         setHasStableIds(true);
     }
 

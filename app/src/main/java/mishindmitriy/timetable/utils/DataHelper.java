@@ -166,6 +166,7 @@ public class DataHelper {
                     .setServerId(serverId)
                     .setName(name)
                     .setEnumType(type)
+                    .setSearch(name)
                     .setId());
         }
         return scheduleSubjects;

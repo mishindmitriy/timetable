@@ -6,63 +6,21 @@ import android.view.View;
 import java.util.ArrayList;
 import java.util.List;
 
-import rx.Observable;
-import rx.android.schedulers.AndroidSchedulers;
-import rx.functions.Action1;
-import rx.functions.Func2;
-import rx.subjects.BehaviorSubject;
-
 /**
  * Created by mishindmitriy on 02.07.2016.
  */
 public abstract class BaseAdapter<I, VH extends BaseViewHolder<I>>
         extends RecyclerView.Adapter<VH> {
-    private final BehaviorSubject<List<I>> publishSubject;
     private OnItemClickListener<I> itemClickListener = null;
-    private List<I> filteredList = new ArrayList<>();
-
-    protected BaseAdapter(Observable<String> filterQueryObservable) {
-        publishSubject = BehaviorSubject.create();
-        publishSubject.onNext(new ArrayList<I>());
-        Observable.combineLatest(
-                filterQueryObservable.observeOn(AndroidSchedulers.mainThread()),
-                publishSubject,
-                new Func2<String, List<I>, List<I>>() {
-                    @Override
-                    public List<I> call(String filterPhrase, List<I> items) {
-                        List<I> filteredList = new ArrayList<I>();
-                        if (items != null) {
-                            if (filterPhrase == null || filterPhrase.isEmpty()) {
-                                filteredList.addAll(items);
-                            } else {
-                                for (I t : items) {
-                                    if (contains(t, filterPhrase)) {
-                                        filteredList.add(t);
-                                    }
-                                }
-                            }
-                        }
-                        return filteredList;
-                    }
-                }
-        )
-                .subscribeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Action1<List<I>>() {
-                    @Override
-                    public void call(List<I> filteredList) {
-                        BaseAdapter.this.filteredList = filteredList;
-                        notifyDataSetChanged();
-                    }
-                });
-    }
+    private List<I> data = new ArrayList<>();
 
     @Override
     public int getItemCount() {
-        return filteredList.size();
+        return data.size();
     }
 
     public I getItem(int position) {
-        return filteredList.get(position);
+        return data.get(position);
     }
 
     @Override
@@ -83,7 +41,9 @@ public abstract class BaseAdapter<I, VH extends BaseViewHolder<I>>
     }
 
     public void setData(List<I> items) {
-        publishSubject.onNext(items);
+        data.clear();
+        if (items != null) data.addAll(items);
+        notifyDataSetChanged();
     }
 
     protected boolean contains(I t, String filterPhrase) {

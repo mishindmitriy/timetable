@@ -4,14 +4,12 @@ import android.view.ViewGroup;
 
 import mishindmitriy.timetable.app.base.BaseAdapter;
 import mishindmitriy.timetable.model.Pair;
-import rx.Observable;
 
 /**
  * Created by dmitriy on 19.09.16.
  */
 public class PairAdapter extends BaseAdapter<Pair, PairViewHolder> {
     public PairAdapter() {
-        super(Observable.just(""));
         setHasStableIds(true);
     }
 

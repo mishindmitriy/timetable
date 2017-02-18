@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import io.realm.Case;
 import io.realm.Realm;
 import io.realm.RealmResults;
 import io.realm.Sort;
@@ -21,8 +22,11 @@ import mishindmitriy.timetable.model.ScheduleSubjectType;
 import mishindmitriy.timetable.utils.DataHelper;
 import rx.Observable;
 import rx.Subscriber;
+import rx.Subscription;
+import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
 import rx.functions.Func1;
+import rx.functions.Func2;
 import rx.functions.Func3;
 import rx.schedulers.Schedulers;
 import rx.subscriptions.CompositeSubscription;
@@ -34,9 +38,9 @@ import rx.subscriptions.CompositeSubscription;
 public class ScheduleSubjectsPresenter extends BasePresenter<ScheduleSubjectsView> {
     private static final long UPDATE_INTERVAL = 1000 * 60 * 60 * 24; //24 hours
     private Observable<List<ScheduleSubject>> loadSubjectsObservable = Observable.zip(
-            createLoadThingObservable(ScheduleSubjectType.GROUP),
-            createLoadThingObservable(ScheduleSubjectType.TEACHER),
-            createLoadThingObservable(ScheduleSubjectType.CLASSROOM),
+            createLoadSubjectsObservable(ScheduleSubjectType.GROUP),
+            createLoadSubjectsObservable(ScheduleSubjectType.TEACHER),
+            createLoadSubjectsObservable(ScheduleSubjectType.CLASSROOM),
             new Func3<List<ScheduleSubject>, List<ScheduleSubject>,
                     List<ScheduleSubject>, List<ScheduleSubject>>() {
                 @Override
@@ -66,24 +70,50 @@ public class ScheduleSubjectsPresenter extends BasePresenter<ScheduleSubjectsVie
             })
             .subscribeOn(Schedulers.io());
     private CompositeSubscription subscriptions = new CompositeSubscription();
+    private Observable<String> searchObservable = Observable.just("");
+    private Subscription dataSubscription;
 
     public ScheduleSubjectsPresenter() {
         super();
         TimeTableApp.component().inject(this);
-        realm.where(ScheduleSubject.class)
-                .findAllSortedAsync("sortRating", Sort.ASCENDING, "name", Sort.ASCENDING)
-                .asObservable()
-                .subscribe(new Action1<RealmResults<ScheduleSubject>>() {
+        showData();
+    }
+
+    private void showData() {
+        if (dataSubscription != null) dataSubscription.unsubscribe();
+        dataSubscription = Observable.combineLatest(
+                searchObservable,
+                realm.where(ScheduleSubject.class).findAllAsync()
+                        .asObservable()
+                        //use realm observable only to know when data updated
+                        .map(new Func1<RealmResults<ScheduleSubject>, Boolean>() {
+                            @Override
+                            public Boolean call(RealmResults<ScheduleSubject> scheduleSubjects) {
+                                return true;
+                            }
+                        }),
+                new Func2<String, Boolean, List<ScheduleSubject>>() {
                     @Override
-                    public void call(RealmResults<ScheduleSubject> scheduleSubjects) {
+                    public List<ScheduleSubject> call(String s, Boolean avoid) {
+                        Realm realm = Realm.getDefaultInstance();
+                        try {
+                            RealmResults<ScheduleSubject> results = realm.where(ScheduleSubject.class)
+                                    .contains("search", s.toLowerCase(), Case.INSENSITIVE)
+                                    .findAllSorted("sortRating", Sort.ASCENDING, "name", Sort.ASCENDING);
+                            return realm.copyFromRealm(results);
+                        } finally {
+                            realm.close();
+                        }
+                    }
+                }
+        )
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Action1<List<ScheduleSubject>>() {
+                    @Override
+                    public void call(List<ScheduleSubject> scheduleSubjects) {
                         getViewState().setData(scheduleSubjects);
                     }
                 });
-    }
-
-    @Override
-    protected void onFirstViewAttach() {
-        super.onFirstViewAttach();
     }
 
     @Override
@@ -138,7 +168,7 @@ public class ScheduleSubjectsPresenter extends BasePresenter<ScheduleSubjectsVie
         realm.close();
     }
 
-    private Observable<List<ScheduleSubject>> createLoadThingObservable(
+    private Observable<List<ScheduleSubject>> createLoadSubjectsObservable(
             @NonNull final ScheduleSubjectType scheduleSubjectType
     ) {
         return Observable.create(new Observable.OnSubscribe<List<ScheduleSubject>>() {
@@ -156,7 +186,7 @@ public class ScheduleSubjectsPresenter extends BasePresenter<ScheduleSubjectsVie
                 }
             }
         })
-                .timeout(5, TimeUnit.SECONDS)
+                .timeout(10, TimeUnit.SECONDS)
                 .onErrorReturn(new Func1<Throwable, List<ScheduleSubject>>() {
                     @Override
                     public List<ScheduleSubject> call(Throwable throwable) {
@@ -190,5 +220,10 @@ public class ScheduleSubjectsPresenter extends BasePresenter<ScheduleSubjectsVie
             }
         });
         getViewState().startScheduleActivity();
+    }
+
+    public void setSearchObservable(Observable<String> searchObservable) {
+        this.searchObservable = searchObservable;
+        showData();
     }
 }

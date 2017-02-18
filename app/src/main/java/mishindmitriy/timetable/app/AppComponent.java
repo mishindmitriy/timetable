@@ -5,7 +5,6 @@ import android.content.Context;
 import javax.inject.Singleton;
 
 import dagger.Component;
-import mishindmitriy.timetable.app.notifications.NotificationService;
 import mishindmitriy.timetable.app.schedulesubjects.ScheduleSubjectsPresenter;
 import mishindmitriy.timetable.app.shedule.DaysPagerAdapter;
 import mishindmitriy.timetable.app.shedule.FeedbackPresenter;
@@ -22,8 +21,6 @@ import mishindmitriy.timetable.utils.Prefs;
 public interface AppComponent {
     @ApplicationContext
     Context context();
-
-    void inject(NotificationService notificationService);
 
     void inject(DaysPagerAdapter daysPagerAdapter);
 

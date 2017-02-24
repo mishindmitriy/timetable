@@ -7,7 +7,6 @@ import javax.inject.Singleton;
 import dagger.Component;
 import mishindmitriy.timetable.app.schedulesubjects.ScheduleSubjectsPresenter;
 import mishindmitriy.timetable.app.shedule.DaysPagerAdapter;
-import mishindmitriy.timetable.app.shedule.FeedbackPresenter;
 import mishindmitriy.timetable.app.shedule.SchedulePresenter;
 import mishindmitriy.timetable.utils.Prefs;
 
@@ -16,7 +15,7 @@ import mishindmitriy.timetable.utils.Prefs;
  */
 
 @Component(modules = {AndroidModule.class, Prefs.SettingsModule.class,
-        RealmModule.class, TimeTableApp.FirebaseModule.class})
+        RealmModule.class})
 @Singleton
 public interface AppComponent {
     @ApplicationContext
@@ -30,5 +29,5 @@ public interface AppComponent {
 
     void inject(ScheduleSubjectsPresenter scheduleSubjectsPresenter);
 
-    void inject(FeedbackPresenter feedbackPresenter);
+    void inject(TimeTableApp timeTableApp);
 }

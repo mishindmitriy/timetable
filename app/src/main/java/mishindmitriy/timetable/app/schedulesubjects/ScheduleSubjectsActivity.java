@@ -1,13 +1,13 @@
 package mishindmitriy.timetable.app.schedulesubjects;
 
 import android.content.Intent;
+import android.databinding.DataBindingUtil;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
-import android.support.v7.widget.Toolbar;
 import android.text.InputType;
 import android.view.View;
 
@@ -21,6 +21,7 @@ import java.util.concurrent.TimeUnit;
 import mishindmitriy.timetable.R;
 import mishindmitriy.timetable.app.base.BaseAdapter;
 import mishindmitriy.timetable.app.shedule.ScheduleActivity;
+import mishindmitriy.timetable.databinding.ActivityScheduleSubjectsBinding;
 import mishindmitriy.timetable.model.ScheduleSubject;
 import rx.Observable;
 import rx.Subscriber;
@@ -28,28 +29,25 @@ import rx.functions.Func1;
 
 public class ScheduleSubjectsActivity extends MvpAppCompatActivity implements ScheduleSubjectsView {
     private static final String KEY_QUERY = "search_query";
-    protected SearchView searchView;
-    protected Toolbar toolbar;
-    protected RecyclerView recyclerView;
-    protected SwipeRefreshLayout swipeRefreshLayout;
     @InjectPresenter
     ScheduleSubjectsPresenter presenter;
     private ScheduleSubjectAdapter scheduleSubjectAdapter;
+    private ActivityScheduleSubjectsBinding binding;
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putString(KEY_QUERY, searchView.getQuery().toString());
+        outState.putString(KEY_QUERY, binding.searchView.getQuery().toString());
     }
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_things);
-        initView();
+        binding = DataBindingUtil.setContentView(this, R.layout.activity_schedule_subjects);
+
         if (presenter.isSubjectSelected()) {
-            toolbar.setNavigationIcon(R.drawable.ic_arrow_back_white_24dp);
-            toolbar.setNavigationOnClickListener(new View.OnClickListener() {
+            binding.toolbar.setNavigationIcon(R.drawable.ic_arrow_back_white_24dp);
+            binding.toolbar.setNavigationOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     onBackPressed();
@@ -57,10 +55,10 @@ public class ScheduleSubjectsActivity extends MvpAppCompatActivity implements Sc
             });
         }
 
-        searchView.onActionViewExpanded();
-        searchView.setInputType(InputType.TYPE_TEXT_FLAG_CAP_CHARACTERS);
+        binding.searchView.onActionViewExpanded();
+        binding.searchView.setInputType(InputType.TYPE_TEXT_FLAG_CAP_CHARACTERS);
 
-        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+        binding.swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
                 presenter.loadThings();
@@ -68,20 +66,20 @@ public class ScheduleSubjectsActivity extends MvpAppCompatActivity implements Sc
         });
 
         if (savedInstanceState != null) {
-            searchView.setQuery(savedInstanceState.getString(KEY_QUERY), false);
+            binding.searchView.setQuery(savedInstanceState.getString(KEY_QUERY), false);
         }
         scheduleSubjectAdapter = new ScheduleSubjectAdapter();
 
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        binding.recyclerView.setLayoutManager(new LinearLayoutManager(this));
         final StickyRecyclerHeadersDecoration decoration = new StickyRecyclerHeadersDecoration(scheduleSubjectAdapter);
-        recyclerView.addItemDecoration(decoration);
+        binding.recyclerView.addItemDecoration(decoration);
         scheduleSubjectAdapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
             @Override
             public void onChanged() {
                 decoration.invalidateHeaders();
             }
         });
-        recyclerView.setAdapter(scheduleSubjectAdapter);
+        binding.recyclerView.setAdapter(scheduleSubjectAdapter);
 
         scheduleSubjectAdapter.setOnItemClickListener(new BaseAdapter.OnItemClickListener<ScheduleSubject>() {
             @Override
@@ -97,7 +95,7 @@ public class ScheduleSubjectsActivity extends MvpAppCompatActivity implements Sc
         return Observable.create(new Observable.OnSubscribe<String>() {
             @Override
             public void call(final Subscriber<? super String> subscriber) {
-                searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+                binding.searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
                     @Override
                     public boolean onQueryTextSubmit(String query) {
                         subscriber.onNext(query);
@@ -119,7 +117,7 @@ public class ScheduleSubjectsActivity extends MvpAppCompatActivity implements Sc
                         return "";
                     }
                 })
-                .startWith(searchView.getQuery().toString());
+                .startWith(binding.searchView.getQuery().toString());
     }
 
     @Override
@@ -130,13 +128,8 @@ public class ScheduleSubjectsActivity extends MvpAppCompatActivity implements Sc
 
     @Override
     public void setRefreshing(final boolean enable) {
-        if (swipeRefreshLayout != null) {
-            swipeRefreshLayout.post(new Runnable() {
-                @Override
-                public void run() {
-                    swipeRefreshLayout.setRefreshing(enable);
-                }
-            });
+        if (binding.swipeRefreshLayout != null) {
+            binding.swipeRefreshLayout.setRefreshing(enable);
         }
     }
 
@@ -157,12 +150,5 @@ public class ScheduleSubjectsActivity extends MvpAppCompatActivity implements Sc
     protected void onPause() {
         super.onPause();
         setRefreshing(false);
-    }
-
-    private void initView() {
-        searchView = (SearchView) findViewById(R.id.searchView);
-        toolbar = (Toolbar) findViewById(R.id.toolbar);
-        recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
-        swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipeRefreshLayout);
     }
 }

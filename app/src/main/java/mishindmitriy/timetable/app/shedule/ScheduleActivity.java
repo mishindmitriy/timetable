@@ -2,31 +2,26 @@ package mishindmitriy.timetable.app.shedule;
 
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.database.DataSetObserver;
+import android.databinding.DataBindingUtil;
 import android.os.Bundle;
-import android.provider.Settings;
 import android.support.annotation.Nullable;
-import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.DatePicker;
-import android.widget.EditText;
-import android.widget.TextView;
 
 import com.arellomobile.mvp.MvpAppCompatActivity;
 import com.arellomobile.mvp.presenter.InjectPresenter;
-import com.nshmura.recyclertablayout.RecyclerTabLayout;
+import com.github.mishindmitriy.feedbackhelper.FeedbackAlertHelper;
 
 import org.joda.time.LocalDate;
 
@@ -36,23 +31,14 @@ import mishindmitriy.timetable.R;
 import mishindmitriy.timetable.app.base.BaseAdapter;
 import mishindmitriy.timetable.app.schedulesubjects.ScheduleSubjectAdapter;
 import mishindmitriy.timetable.app.schedulesubjects.ScheduleSubjectsActivity;
+import mishindmitriy.timetable.databinding.ActivityScheduleBinding;
 import mishindmitriy.timetable.model.ScheduleSubject;
+import mishindmitriy.timetable.utils.FirebaseHelper;
 
-public class ScheduleActivity extends MvpAppCompatActivity implements ScheduleView, FeedbackView {
+public class ScheduleActivity extends MvpAppCompatActivity implements ScheduleView {
     public final static int PAGES_COUNT = 100;
-    protected TextView currentThingTitle;
-    protected Toolbar toolbar;
-    protected RecyclerTabLayout tabLayout;
-    protected ViewPager viewPager;
-    protected SwipeRefreshLayout swipeRefreshLayout;
-    protected TextView chooseThingText;
-    protected RecyclerView recyclerView;
-    protected NavigationView nvView;
-    protected DrawerLayout mDrawerLayout;
     @InjectPresenter
     SchedulePresenter schedulePresenter;
-    @InjectPresenter
-    FeedbackPresenter feedbackPresenter;
     private ActionBarDrawerToggle mDrawerToggle;
     private ScheduleSubjectAdapter scheduleSubjectAdapter = new ScheduleSubjectAdapter();
     private DatePickerDialog dateDialog;
@@ -60,10 +46,6 @@ public class ScheduleActivity extends MvpAppCompatActivity implements ScheduleVi
     private DatePickerDialog.OnDateSetListener onDateSetListener = new DatePickerDialog.OnDateSetListener() {
         @Override
         public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
-            if (dateDialog != null) {
-                dateDialog.dismiss();
-                dateDialog = null;
-            }
             LocalDate newDate = new LocalDate(
                     String.format("%d-%d-%d",
                             year,
@@ -71,28 +53,29 @@ public class ScheduleActivity extends MvpAppCompatActivity implements ScheduleVi
                             dayOfMonth)
             );
             schedulePresenter.onDateSelected(newDate);
+            schedulePresenter.dismissDateDialog();
         }
     };
     private AlertDialog feedbackDialog;
+    private ActivityScheduleBinding binding;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        super.setContentView(R.layout.activity_shedule);
-        initView();
+        binding = DataBindingUtil.setContentView(this, R.layout.activity_schedule);
         pagerAdapter = new DaysPagerAdapter(schedulePresenter.getRealm());
         init();
-        chooseThingText.setOnClickListener(new View.OnClickListener() {
+        binding.navigation.chooseThing.text.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mDrawerLayout.addDrawerListener(new DrawerLayout.SimpleDrawerListener() {
+                binding.drawerLayout.addDrawerListener(new DrawerLayout.SimpleDrawerListener() {
                     @Override
                     public void onDrawerClosed(View drawerView) {
                         startActivity(new Intent(ScheduleActivity.this, ScheduleSubjectsActivity.class));
-                        mDrawerLayout.removeDrawerListener(this);
+                        binding.drawerLayout.removeDrawerListener(this);
                     }
                 });
-                mDrawerLayout.closeDrawers();
+                binding.drawerLayout.closeDrawers();
             }
         });
     }
@@ -105,8 +88,30 @@ public class ScheduleActivity extends MvpAppCompatActivity implements ScheduleVi
     }
 
     @Override
+    public void dismissDateDialog() {
+        if (dateDialog != null) {
+            dateDialog.dismiss();
+            dateDialog = null;
+        }
+    }
+
+    @Override
+    public void showFeedbackAlert() {
+        new FeedbackAlertHelper.Builder()
+                .from(this)
+                .setFeedbackListener(new FeedbackAlertHelper.FeedbackListener() {
+                    @Override
+                    public void onFeedbackSubmit(String feedback) {
+                        FirebaseHelper.sendFeedback(getContentResolver(), feedback);
+                    }
+                })
+                .build()
+                .showFeedbackAlert();
+    }
+
+    @Override
     public void showCurrentSubjectTitle(String name) {
-        currentThingTitle.setText(name);
+        binding.currentThingTitle.setText(name);
     }
 
     @Override
@@ -114,8 +119,22 @@ public class ScheduleActivity extends MvpAppCompatActivity implements ScheduleVi
         scheduleSubjectAdapter.setData(scheduleSubjects);
     }
 
+    @Override
+    public void showDateDialog() {
+        if (dateDialog == null) {
+            dateDialog = new DatePickerDialog(
+                    this,
+                    onDateSetListener,
+                    schedulePresenter.getStartDate().getYear(),
+                    schedulePresenter.getStartDate().getMonthOfYear() - 1,
+                    schedulePresenter.getStartDate().getDayOfMonth());
+        }
+        dateDialog.setCancelable(true);
+        dateDialog.show();
+    }
+
     protected void init() {
-        chooseThingText.setText(R.string.choose_thing);
+        binding.navigation.chooseThing.text.setText(R.string.choose_thing);
 
         if (!schedulePresenter.isSubjectSelected()) {
             startActivity(new Intent(this, ScheduleSubjectsActivity.class));
@@ -123,35 +142,27 @@ public class ScheduleActivity extends MvpAppCompatActivity implements ScheduleVi
             return;
         }
 
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        recyclerView.setAdapter(scheduleSubjectAdapter);
+        binding.navigation.recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        binding.navigation.recyclerView.setAdapter(scheduleSubjectAdapter);
 
         scheduleSubjectAdapter.setOnItemClickListener(new BaseAdapter.OnItemClickListener<ScheduleSubject>() {
             @Override
             public void onItemClick(final ScheduleSubject scheduleSubject) {
                 schedulePresenter.scheduleSubjectClicked(scheduleSubject);
-                mDrawerLayout.closeDrawers();
+                binding.drawerLayout.closeDrawers();
             }
         });
 
-        toolbar.inflateMenu(R.menu.menu_shedule);
-        toolbar.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
+        binding.toolbar.inflateMenu(R.menu.menu_shedule);
+        binding.toolbar.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
             @Override
             public boolean onMenuItemClick(MenuItem item) {
                 switch (item.getItemId()) {
                     case R.id.case_date:
-                        if (dateDialog == null) {
-                            dateDialog = new DatePickerDialog(ScheduleActivity.this,
-                                    onDateSetListener,
-                                    schedulePresenter.getStartDate().getYear(),
-                                    schedulePresenter.getStartDate().getMonthOfYear() - 1,
-                                    schedulePresenter.getStartDate().getDayOfMonth());
-                        }
-                        dateDialog.setCancelable(true);
-                        dateDialog.show();
+                        schedulePresenter.showDateDialog();
                         break;
                     case R.id.feedback:
-                        showFeedbackAlert();
+                        schedulePresenter.showFeedbackAlert();
                         break;
                 }
                 return false;
@@ -162,34 +173,34 @@ public class ScheduleActivity extends MvpAppCompatActivity implements ScheduleVi
             // setScheduleSubject navigation drawer
             mDrawerToggle = new ActionBarDrawerToggle(
                     this,                    /* host Activity */
-                    ScheduleActivity.this.mDrawerLayout, toolbar,                    /* DrawerLayout object */
+                    ScheduleActivity.this.binding.drawerLayout, binding.toolbar,                    /* DrawerLayout object */
                     R.string.navigation_drawer_open,  /* "open drawer" description for accessibility */
                     R.string.navigation_drawer_close  /* "close drawer" description for accessibility */
             );
             // Set the drawer toggle as the DrawerListener
-            mDrawerLayout.setDrawerListener(mDrawerToggle);
+            binding.drawerLayout.setDrawerListener(mDrawerToggle);
         }
 
-        viewPager.setAdapter(pagerAdapter);
-        tabLayout.setUpWithViewPager(viewPager);
+        binding.viewPager.setAdapter(pagerAdapter);
+        binding.tabLayout.setUpWithViewPager(binding.viewPager);
 
-        viewPager.getAdapter().registerDataSetObserver(new DataSetObserver() {
+        binding.viewPager.getAdapter().registerDataSetObserver(new DataSetObserver() {
             @Override
             public void onChanged() {
-                tabLayout.getAdapter().notifyDataSetChanged();
+                binding.tabLayout.getAdapter().notifyDataSetChanged();
             }
         });
 
-        viewPager.setCurrentItem(PAGES_COUNT / 2, false);
+        binding.viewPager.setCurrentItem(PAGES_COUNT / 2, false);
 
-        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+        binding.swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
                 schedulePresenter.refreshData();
             }
         });
 
-        viewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+        binding.viewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
             public void onPageScrolled(int position, float v, int i1) {
 
@@ -203,13 +214,13 @@ public class ScheduleActivity extends MvpAppCompatActivity implements ScheduleVi
             public void onPageScrollStateChanged(int state) {
                 switch (state) {
                     case ViewPager.SCROLL_STATE_DRAGGING:
-                        if (!swipeRefreshLayout.isRefreshing()) {
-                            swipeRefreshLayout.setEnabled(false);
+                        if (!binding.swipeRefreshLayout.isRefreshing()) {
+                            binding.swipeRefreshLayout.setEnabled(false);
                         }
                         break;
                     case ViewPager.SCROLL_STATE_SETTLING:
                     case ViewPager.SCROLL_STATE_IDLE:
-                        swipeRefreshLayout.setEnabled(true);
+                        binding.swipeRefreshLayout.setEnabled(true);
                         break;
                 }
             }
@@ -225,43 +236,8 @@ public class ScheduleActivity extends MvpAppCompatActivity implements ScheduleVi
     public void notifyPagerDateChanged() {
         pagerAdapter.notifyDataChanged();
         updateTabs();
-        viewPager.setCurrentItem(PAGES_COUNT / 2, true);
-        tabLayout.scrollToPosition(PAGES_COUNT / 2);
-    }
-
-    @Override
-    public void dismissFeedbackAlert() {
-        if (feedbackDialog != null && feedbackDialog.isShowing()) {
-            feedbackDialog.dismiss();
-            feedbackDialog = null;
-        }
-    }
-
-    @Override
-    public void showFeedbackAlert() {
-        View view = getLayoutInflater().inflate(R.layout.alert_feedback, null);
-        final EditText editText = (EditText) view.findViewById(R.id.text);
-        feedbackDialog = new AlertDialog.Builder(this)
-                .setView(view)
-                .setPositiveButton(R.string.send, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        feedbackPresenter.dismissFeedbackAlert();
-                        String androidId = Settings.Secure.getString(
-                                getContentResolver(),
-                                Settings.Secure.ANDROID_ID
-                        );
-                        feedbackPresenter.sendFeedback(androidId, editText.getText().toString());
-                    }
-                })
-                .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        feedbackPresenter.dismissFeedbackAlert();
-                    }
-                })
-                .create();
-        feedbackDialog.show();
+        binding.viewPager.setCurrentItem(PAGES_COUNT / 2, true);
+        binding.tabLayout.scrollToPosition(PAGES_COUNT / 2);
     }
 
     @Override
@@ -269,23 +245,22 @@ public class ScheduleActivity extends MvpAppCompatActivity implements ScheduleVi
         super.onResume();
         updateTabs();
         schedulePresenter.loadIfNeed();
-        feedbackPresenter.checkNeedFeedbackAlert();
     }
 
     @Override
     public void setRefreshing(final boolean enable) {
-        if (swipeRefreshLayout != null) {
-            swipeRefreshLayout.post(new Runnable() {
+        if (binding.swipeRefreshLayout != null) {
+            binding.swipeRefreshLayout.post(new Runnable() {
                 @Override
                 public void run() {
-                    swipeRefreshLayout.setRefreshing(enable);
+                    binding.swipeRefreshLayout.setRefreshing(enable);
                 }
             });
         }
     }
 
     private void updateTabs() {
-        tabLayout.getAdapter().notifyDataSetChanged();
+        binding.tabLayout.getAdapter().notifyDataSetChanged();
     }
 
     @Override
@@ -304,22 +279,10 @@ public class ScheduleActivity extends MvpAppCompatActivity implements ScheduleVi
 
     @Override
     public void onBackPressed() {
-        if (mDrawerLayout.isDrawerOpen(GravityCompat.START)) {
-            mDrawerLayout.closeDrawers();
+        if (binding.drawerLayout.isDrawerOpen(GravityCompat.START)) {
+            binding.drawerLayout.closeDrawers();
         } else {
             super.onBackPressed();
         }
-    }
-
-    private void initView() {
-        currentThingTitle = (TextView) findViewById(R.id.current_thing_title);
-        toolbar = (Toolbar) findViewById(R.id.toolbar);
-        tabLayout = (RecyclerTabLayout) findViewById(R.id.tabLayout);
-        viewPager = (ViewPager) findViewById(R.id.viewPager);
-        swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipeRefreshLayout);
-        chooseThingText = (TextView) findViewById(R.id.choose_thing);
-        recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
-        nvView = (NavigationView) findViewById(R.id.nvView);
-        mDrawerLayout = (DrawerLayout) findViewById(R.id.sheduleLayout);
     }
 }

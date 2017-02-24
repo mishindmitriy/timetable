@@ -19,6 +19,10 @@ android {
     compileSdkVersion 25
     buildToolsVersion '25.0.2'
 
+    dataBinding {
+        enabled = true
+    }
+
     defaultConfig {
         applicationId "mishindmitriy.timetable.phone"
         minSdkVersion 16
@@ -50,7 +54,7 @@ realm {
 }
 
 dependencies {
-    compile 'com.android.support:design:25.1.1'
+    compile 'com.android.support:design:25.2.0'
     compile 'org.jsoup:jsoup:1.8.3'
     compile('com.crashlytics.sdk.android:crashlytics:2.6.6@aar') {
         transitive = true;

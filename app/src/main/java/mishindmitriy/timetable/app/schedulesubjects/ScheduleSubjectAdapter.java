@@ -1,17 +1,17 @@
 package mishindmitriy.timetable.app.schedulesubjects;
 
+import android.databinding.DataBindingUtil;
 import android.graphics.Color;
 import android.support.annotation.NonNull;
 import android.view.LayoutInflater;
-import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 
 import com.timehop.stickyheadersrecyclerview.StickyRecyclerHeadersAdapter;
 
 import mishindmitriy.timetable.R;
 import mishindmitriy.timetable.app.base.BaseAdapter;
 import mishindmitriy.timetable.app.base.BaseViewHolder;
+import mishindmitriy.timetable.databinding.ItemThingBinding;
 import mishindmitriy.timetable.model.ScheduleSubject;
 
 /**
@@ -49,15 +49,16 @@ public class ScheduleSubjectAdapter extends BaseAdapter<ScheduleSubject, Schedul
 
     @Override
     public BaseViewHolder<String> onCreateHeaderViewHolder(ViewGroup parent) {
-        View view = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.item_thing, parent, false);
-        view.findViewById(R.id.text)
-                .setBackgroundColor(view.getContext().getResources().getColor(R.color.teal500));
-        ((TextView) view.findViewById(R.id.text)).setTextColor(Color.WHITE);
-        return new BaseViewHolder<String>(view) {
+        final ItemThingBinding binding = DataBindingUtil.inflate(
+                LayoutInflater.from(parent.getContext()),
+                R.layout.item_thing,
+                parent, false);
+        binding.text.setBackgroundColor(parent.getContext().getResources().getColor(R.color.teal500));
+        binding.text.setTextColor(Color.WHITE);
+        return new BaseViewHolder<String>(binding.getRoot()) {
             @Override
             public void update(@NonNull String item) {
-                ((TextView) itemView.findViewById(R.id.text)).setText(item);
+                binding.text.setText(item);
             }
         };
     }

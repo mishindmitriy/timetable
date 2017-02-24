@@ -29,4 +29,11 @@ public interface ScheduleView extends MvpView {
 
     @StateStrategyType(AddToEndSingleStrategy.class)
     void setRefreshing(boolean enable);
+
+    @StateStrategyType(AddToEndSingleStrategy.class)
+    void showDateDialog();
+
+    void showFeedbackAlert();
+
+    void dismissDateDialog();
 }

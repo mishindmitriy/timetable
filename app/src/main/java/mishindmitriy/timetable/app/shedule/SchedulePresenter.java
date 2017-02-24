@@ -236,4 +236,15 @@ public class SchedulePresenter extends BasePresenter<ScheduleView> {
     }
 
 
+    public void showDateDialog() {
+        getViewState().showDateDialog();
+    }
+
+    public void showFeedbackAlert() {
+        getViewState().showFeedbackAlert();
+    }
+
+    public void dismissDateDialog() {
+        getViewState().dismissDateDialog();
+    }
 }

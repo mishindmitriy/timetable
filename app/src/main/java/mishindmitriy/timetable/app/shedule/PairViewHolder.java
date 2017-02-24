@@ -1,5 +1,6 @@
 package mishindmitriy.timetable.app.shedule;
 
+import android.databinding.DataBindingUtil;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.Typeface;
@@ -9,47 +10,30 @@ import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 
 import mishindmitriy.timetable.R;
 import mishindmitriy.timetable.app.base.BaseViewHolder;
+import mishindmitriy.timetable.databinding.ItemPairBinding;
 import mishindmitriy.timetable.model.Pair;
 
 /**
  * Created by dmitriy on 19.09.16.
  */
 public class PairViewHolder extends BaseViewHolder<Pair> {
-    private final TextView classroomTextView;
-    private final TextView subjectTextView;
-    private final TextView teacherTextView;
-    private final TextView pairTypeTextView;
-    private final TextView pairStartTextView;
-    private final TextView pairEndTextView;
-    private final TextView noteTextView;
-    private final TextView pairNumberTextView;
-    private final View background;
+    private final ItemPairBinding binding;
 
     public PairViewHolder(ViewGroup parent) {
         super(LayoutInflater.from(parent.getContext()).inflate(R.layout.item_pair, parent, false));
-        classroomTextView = (TextView) itemView.findViewById(R.id.textViewClassroom);
-        subjectTextView = (TextView) itemView.findViewById(R.id.textViewSubject);
-        teacherTextView = (TextView) itemView.findViewById(R.id.textViewTeacher);
-        pairTypeTextView = (TextView) itemView.findViewById(R.id.textViewTypePair);
-        pairStartTextView = (TextView) itemView.findViewById(R.id.textViewPairStart);
-        pairEndTextView = (TextView) itemView.findViewById(R.id.textViewPairEnd);
-        noteTextView = (TextView) itemView.findViewById(R.id.textNote);
-        pairNumberTextView = (TextView) itemView.findViewById(R.id.textViewPairNumber);
-        background = itemView.findViewById(R.id.background);
-
-        subjectTextView.setTypeface(Typeface.create("sans-serif-light", Typeface.NORMAL));
-        teacherTextView.setTypeface(Typeface.create("sans-serif-light", Typeface.NORMAL));
-        pairTypeTextView.setTypeface(Typeface.create("sans-serif-light", Typeface.NORMAL));
-        Drawable drawable = classroomTextView.getCompoundDrawables()[0];
+        binding = DataBindingUtil.bind(itemView);
+        binding.textViewSubject.setTypeface(Typeface.create("sans-serif-light", Typeface.NORMAL));
+        binding.textViewTeacher.setTypeface(Typeface.create("sans-serif-light", Typeface.NORMAL));
+        binding.textViewTypePair.setTypeface(Typeface.create("sans-serif-light", Typeface.NORMAL));
+        Drawable drawable = binding.textViewClassroom.getCompoundDrawables()[0];
         if (drawable != null) drawable.setColorFilter(Color.GRAY, PorterDuff.Mode.MULTIPLY);
-        drawable = noteTextView.getCompoundDrawables()[0];
+        drawable = binding.textNote.getCompoundDrawables()[0];
         if (drawable != null) drawable.setColorFilter(Color.GRAY, PorterDuff.Mode.MULTIPLY);
     }
 
@@ -57,40 +41,40 @@ public class PairViewHolder extends BaseViewHolder<Pair> {
     public void update(@NonNull Pair pair) {
         switch (pair.getScheduleSubject().getEnumType()) {
             case GROUP:
-                classroomTextView.setText(pair.getClassroom());
-                teacherTextView.setText(pair.getTeacher());
+                binding.textViewClassroom.setText(pair.getClassroom());
+                binding.textViewTeacher.setText(pair.getTeacher());
                 Drawable drawable = itemView.getContext()
                         .getResources().getDrawable(R.drawable.ic_record_voice_over_white_18dp);
                 if (drawable != null) drawable.setColorFilter(Color.GRAY, PorterDuff.Mode.MULTIPLY);
-                teacherTextView.setCompoundDrawablesWithIntrinsicBounds(drawable, null, null, null);
+                binding.textViewTeacher.setCompoundDrawablesWithIntrinsicBounds(drawable, null, null, null);
                 break;
             case TEACHER:
-                classroomTextView.setText(pair.getClassroom());
-                teacherTextView.setText(pair.getGroup());
-                teacherTextView.setCompoundDrawables(null, null, null, null);
+                binding.textViewClassroom.setText(pair.getClassroom());
+                binding.textViewTeacher.setText(pair.getGroup());
+                binding.textViewTeacher.setCompoundDrawables(null, null, null, null);
                 break;
             case CLASSROOM:
-                classroomTextView.setText(pair.getGroup());
-                teacherTextView.setText(pair.getTeacher());
-                teacherTextView.setCompoundDrawables(null, null, null, null);
+                binding.textViewClassroom.setText(pair.getGroup());
+                binding.textViewTeacher.setText(pair.getTeacher());
+                binding.textViewTeacher.setCompoundDrawables(null, null, null, null);
                 break;
         }
 
         if (TextUtils.isEmpty(pair.getTeacher())) {
-            teacherTextView.setVisibility(View.GONE);
-        } else teacherTextView.setVisibility(View.VISIBLE);
+            binding.textViewTeacher.setVisibility(View.GONE);
+        } else binding.textViewTeacher.setVisibility(View.VISIBLE);
 
         if (TextUtils.isEmpty(pair.getNote())) {
-            noteTextView.setVisibility(View.GONE);
-        } else noteTextView.setVisibility(View.VISIBLE);
+            binding.textNote.setVisibility(View.GONE);
+        } else binding.textNote.setVisibility(View.VISIBLE);
 
-        pairTypeTextView.setText(pair.getType());
-        subjectTextView.setText(pair.getSubject());
-        noteTextView.setText(pair.getNote());
-        pairNumberTextView.setText(String.valueOf(pair.getNumber()));
+        binding.textViewTypePair.setText(pair.getType());
+        binding.textViewSubject.setText(pair.getSubject());
+        binding.textNote.setText(pair.getNote());
+        binding.textViewPairNumber.setText(String.valueOf(pair.getNumber()));
 
-        pairStartTextView.setText(pair.getStringStartTime());
-        pairEndTextView.setText(pair.getStringEndTime());
+        binding.textViewPairStart.setText(pair.getStringStartTime());
+        binding.textViewPairEnd.setText(pair.getStringEndTime());
 
         final DateTime startDateTime = pair.getStartDateTime();
         final DateTime endDateTime = pair.getEndDateTime();
@@ -121,20 +105,20 @@ public class PairViewHolder extends BaseViewHolder<Pair> {
         }
 
         if (startDateTime.isBefore(now)) {
-            pairStartTextView.setVisibility(View.INVISIBLE);
+            binding.textViewPairStart.setVisibility(View.INVISIBLE);
         } else {
-            pairStartTextView.setVisibility(View.VISIBLE);
+            binding.textViewPairStart.setVisibility(View.VISIBLE);
         }
 
         if (endDateTime.isBefore(now)) {
-            pairEndTextView.setVisibility(View.INVISIBLE);
+            binding.textViewPairEnd.setVisibility(View.INVISIBLE);
         } else {
-            pairEndTextView.setVisibility(View.VISIBLE);
+            binding.textViewPairEnd.setVisibility(View.VISIBLE);
         }
     }
 
     private void setBackgroundHeight(int height) {
-        background.getLayoutParams().height = height;
-        background.requestLayout();
+        binding.background.getLayoutParams().height = height;
+        binding.background.requestLayout();
     }
 }

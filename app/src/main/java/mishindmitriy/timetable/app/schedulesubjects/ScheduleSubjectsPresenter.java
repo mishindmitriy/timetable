@@ -62,12 +62,6 @@ public class ScheduleSubjectsPresenter extends BasePresenter<ScheduleSubjectsVie
                 }
             })
             .timeout(10, TimeUnit.SECONDS)
-            .onErrorReturn(new Func1<Throwable, List<ScheduleSubject>>() {
-                @Override
-                public List<ScheduleSubject> call(Throwable throwable) {
-                    return null;
-                }
-            })
             .subscribeOn(Schedulers.io());
     private CompositeSubscription subscriptions = new CompositeSubscription();
     private Observable<String> searchObservable = Observable.just("");

@@ -10,9 +10,17 @@
     <string name="classrooms">Аудитории</string>
     <string name="teachers">Преподаватели</string>
     <string name="groups">Группы</string>
-    <string name="feedback_message">Нам важно чтобы Вам было удобно пользоваться приложением, напишите нам в двух словах - что вам нравиться или не нравиться. Спасибо за обратную связь!</string>
+    <string name="feedback_message">Напишите что мы можем исправить</string>
     <string name="send">Отправить</string>
     <string name="cancel">Отмена</string>
     <string name="loading">Загрузка</string>
-    <string name="feedback">Отзыв</string>
+    <string name="feedback_title">Обратная связь</string>
+    <string name="later">Позже</string>
+    <string name="never">Никогда</string>
+    <string name="no">Нет</string>
+    <string name="ok">OK</string>
+    <string name="rate_title">Насколько Вам нравиться приложение?</string>
+    <string name="review_message">Не могли бы Вы оставить отзыв в Play Market? Мы надеемся на Вашу помощь!</string>
+    <string name="review_title">Большое спасибо!</string>
+    <string name="yes">Да</string>
 </resources>

@@ -6,19 +6,19 @@ import android.util.Log;
 
 import com.crashlytics.android.Crashlytics;
 import com.firebase.client.Firebase;
+import com.github.mishindmitriy.feedbackhelper.FeedbackAlertHelper;
+import com.github.mishindmitriy.feedbackhelper.FeedbackHelper;
+import com.github.mishindmitriy.feedbackhelper.configs.RateAppConfig;
 
 import net.danlew.android.joda.JodaTimeAndroid;
 
-import javax.inject.Singleton;
-
-import dagger.Module;
-import dagger.Provides;
 import io.fabric.sdk.android.Fabric;
 import io.realm.Realm;
 import io.realm.RealmConfiguration;
 import io.realm.log.RealmLog;
 import mishindmitriy.timetable.BuildConfig;
 import mishindmitriy.timetable.utils.DataHelper;
+import mishindmitriy.timetable.utils.FirebaseHelper;
 import mishindmitriy.timetable.utils.Prefs;
 
 /**
@@ -27,7 +27,6 @@ import mishindmitriy.timetable.utils.Prefs;
  */
 public class TimeTableApp extends Application {
     private static AppComponent appComponent;
-
     public static AppComponent component() {
         return appComponent;
     }
@@ -63,17 +62,17 @@ public class TimeTableApp extends Application {
                 .androidModule(new AndroidModule(this))
                 .realmModule(new RealmModule())
                 .settingsModule(new Prefs.SettingsModule())
-                .firebaseModule(new FirebaseModule())
                 .build();
-        //startService(new Intent(this, NotificationService.class));
-    }
+        appComponent.inject(this);
 
-    @Module
-    static class FirebaseModule {
-        @Provides
-        @Singleton
-        public Firebase provideFirebase() {
-            return new Firebase("https://timetable-cbbbf.firebaseio.com/");
-        }
+        FeedbackHelper.startInit(this)
+                .addConfig(new RateAppConfig(10, 10)
+                        .setListener(new FeedbackAlertHelper.RatingFeedbackListener() {
+                            @Override
+                            public void onRatingFeedback(float rating, String feedback) {
+                                FirebaseHelper.sendFeedback(getContentResolver(), feedback);
+                            }
+                        }))
+                .init();
     }
 }

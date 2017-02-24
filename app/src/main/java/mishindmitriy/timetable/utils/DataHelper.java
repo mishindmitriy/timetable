@@ -44,20 +44,24 @@ public class DataHelper {
                         .maxAge(1, TimeUnit.HOURS)
                         .build())
                 .url(inputUrl);
-        if (requestBody != null)
-        {
+        if (requestBody != null) {
             request.post(requestBody);
         } else {
             request.get();
         }
 
         Response response = httpClient.newCall(request.build()).execute();
-        if (response.code() != 200) {
+        if (!response.isSuccessful()) {
             throw new IOException("query failed with error code " + response.code());
         }
-        String html = response.body().string();
-        validateHtml(html);
-        return html;
+        try {
+            String html = response.body().string();
+            validateHtml(html);
+            return html;
+        } finally {
+            if (response.body() != null) response.body().close();
+        }
+
     }
 
     private static List<Pair> mappingListPairs(String html, ScheduleSubject scheduleSubject) {
@@ -188,8 +192,8 @@ public class DataHelper {
                 .cache(createCache(context))
                 .addInterceptor(loggingInterceptor)
                 .connectTimeout(10, TimeUnit.SECONDS)
-                .writeTimeout(10, TimeUnit.SECONDS)
-                .readTimeout(10, TimeUnit.SECONDS)
+                .writeTimeout(20, TimeUnit.SECONDS)
+                .readTimeout(60, TimeUnit.SECONDS)
                 .build();
     }
 

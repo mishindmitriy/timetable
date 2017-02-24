@@ -9,7 +9,6 @@ import org.joda.time.DateTime;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import io.realm.Case;
 import io.realm.Realm;
@@ -27,7 +26,6 @@ import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
 import rx.functions.Func1;
 import rx.functions.Func2;
-import rx.functions.Func3;
 import rx.schedulers.Schedulers;
 import rx.subscriptions.CompositeSubscription;
 
@@ -37,11 +35,11 @@ import rx.subscriptions.CompositeSubscription;
 @InjectViewState
 public class ScheduleSubjectsPresenter extends BasePresenter<ScheduleSubjectsView> {
     private static final long UPDATE_INTERVAL = 1000 * 60 * 60 * 24; //24 hours
-    private Observable<List<ScheduleSubject>> loadSubjectsObservable = Observable.zip(
+    private Observable<List<ScheduleSubject>> loadSubjectsObservable = Observable.merge(
             createLoadSubjectsObservable(ScheduleSubjectType.GROUP),
             createLoadSubjectsObservable(ScheduleSubjectType.TEACHER),
-            createLoadSubjectsObservable(ScheduleSubjectType.CLASSROOM),
-            new Func3<List<ScheduleSubject>, List<ScheduleSubject>,
+            createLoadSubjectsObservable(ScheduleSubjectType.CLASSROOM)
+            /*new Func3<List<ScheduleSubject>, List<ScheduleSubject>,
                     List<ScheduleSubject>, List<ScheduleSubject>>() {
                 @Override
                 public List<ScheduleSubject> call(List<ScheduleSubject> subjects1,
@@ -53,7 +51,7 @@ public class ScheduleSubjectsPresenter extends BasePresenter<ScheduleSubjectsVie
                     allScheduleSubjects.addAll(subjects3);
                     return allScheduleSubjects;
                 }
-            }
+            }*/
     )
             .doOnNext(new Action1<List<ScheduleSubject>>() {
                 @Override
@@ -61,7 +59,6 @@ public class ScheduleSubjectsPresenter extends BasePresenter<ScheduleSubjectsVie
                     cacheSubjects(scheduleSubjects);
                 }
             })
-            .timeout(10, TimeUnit.SECONDS)
             .subscribeOn(Schedulers.io());
     private CompositeSubscription subscriptions = new CompositeSubscription();
     private Observable<String> searchObservable = Observable.just("");
@@ -125,6 +122,7 @@ public class ScheduleSubjectsPresenter extends BasePresenter<ScheduleSubjectsVie
         getViewState().setRefreshing(true);
         subscriptions.clear();
         subscriptions.add(loadSubjectsObservable
+                .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Subscriber<List<ScheduleSubject>>() {
                     @Override
                     public void onCompleted() {
@@ -185,7 +183,6 @@ public class ScheduleSubjectsPresenter extends BasePresenter<ScheduleSubjectsVie
                 }
             }
         })
-                .timeout(10, TimeUnit.SECONDS)
                 .onErrorReturn(new Func1<Throwable, List<ScheduleSubject>>() {
                     @Override
                     public List<ScheduleSubject> call(Throwable throwable) {

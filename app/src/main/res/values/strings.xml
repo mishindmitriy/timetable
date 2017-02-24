@@ -10,7 +10,7 @@
     <string name="classrooms">Аудитории</string>
     <string name="teachers">Преподаватели</string>
     <string name="groups">Группы</string>
-    <string name="feedback_message">Напишите что мы можем исправить</string>
+    <string name="feedback_message">Что мы можем исправить?</string>
     <string name="send">Отправить</string>
     <string name="cancel">Отмена</string>
     <string name="loading">Загрузка</string>

@@ -26,6 +26,7 @@ import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
 import rx.functions.Func1;
 import rx.functions.Func2;
+import rx.functions.Func3;
 import rx.schedulers.Schedulers;
 import rx.subscriptions.CompositeSubscription;
 
@@ -35,11 +36,11 @@ import rx.subscriptions.CompositeSubscription;
 @InjectViewState
 public class ScheduleSubjectsPresenter extends BasePresenter<ScheduleSubjectsView> {
     private static final long UPDATE_INTERVAL = 1000 * 60 * 60 * 24; //24 hours
-    private Observable<List<ScheduleSubject>> loadSubjectsObservable = Observable.merge(
+    private Observable<List<ScheduleSubject>> loadSubjectsObservable = Observable.zip(
             createLoadSubjectsObservable(ScheduleSubjectType.GROUP),
             createLoadSubjectsObservable(ScheduleSubjectType.TEACHER),
-            createLoadSubjectsObservable(ScheduleSubjectType.CLASSROOM)
-            /*new Func3<List<ScheduleSubject>, List<ScheduleSubject>,
+            createLoadSubjectsObservable(ScheduleSubjectType.CLASSROOM),
+            new Func3<List<ScheduleSubject>, List<ScheduleSubject>,
                     List<ScheduleSubject>, List<ScheduleSubject>>() {
                 @Override
                 public List<ScheduleSubject> call(List<ScheduleSubject> subjects1,
@@ -51,7 +52,7 @@ public class ScheduleSubjectsPresenter extends BasePresenter<ScheduleSubjectsVie
                     allScheduleSubjects.addAll(subjects3);
                     return allScheduleSubjects;
                 }
-            }*/
+            }
     )
             .doOnNext(new Action1<List<ScheduleSubject>>() {
                 @Override

@@ -6,11 +6,12 @@
         <item name="colorPrimaryDark">@color/teal800</item>
         <item name="colorAccent">@color/select</item>
         <item name="android:textColor">@android:color/tertiary_text_light</item>
-        <item name="android:editTextColor">@android:color/white</item>
+        <item name="android:editTextColor">@android:color/black</item>
     </style>
 
-    <style name="SearchTheme" parent="AppTheme">
-        <item name="android:textColor">@android:color/white</item>
+    <style name="SearchTheme" parent="Widget.AppCompat.SearchView">
+        <item name="android:textColorHint">@color/white_lite</item>
+        <item name="android:textColorPrimary">@android:color/white</item>
     </style>
 
     <style name="TabTextAppearance" parent="rtl_RecyclerTabLayout.Tab">
@@ -28,4 +29,6 @@
     <style name="SplashTheme" parent="Theme.AppCompat.NoActionBar">
         <item name="android:windowBackground">@drawable/background_splash</item>
     </style>
+
+
 </resources>

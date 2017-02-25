@@ -3,16 +3,15 @@
     <style name="AppTheme" parent="@style/Theme.AppCompat.Light.NoActionBar">
         <item name="colorPrimary">@color/teal500</item>
         <item name="colorPrimaryDark">@color/teal800</item>
-        <item name="android:colorAccent">@color/select</item>
+        <item name="colorAccent">@color/select</item>
         <item name="android:windowTranslucentStatus">true</item>
         <item name="android:textColor">@android:color/tertiary_text_light</item>
+        <item name="android:editTextColor">@android:color/black</item>
+    </style>
+
+    <style name="SearchTheme" parent="Widget.AppCompat.SearchView">
+        <item name="android:colorControlActivated">@color/select</item>
+        <item name="android:textColorHint">@color/white_lite</item>
         <item name="android:editTextColor">@android:color/white</item>
     </style>
-
-    <style name="SearchTheme" parent="AppTheme">
-        <item name="android:colorControlActivated">@android:color/white</item>
-        <item name="android:textColor">@android:color/white</item>
-    </style>
-
-
 </resources>

@@ -25,7 +25,8 @@ public class ScheduleSubjectAdapter extends BaseAdapter<ScheduleSubject, Schedul
 
     @Override
     public long getItemId(int position) {
-        return getItem(position).getId();
+        ScheduleSubject item = getItem(position);
+        return item == null ? 0 : getItem(position).getId();
     }
 
     @Override
@@ -35,6 +36,8 @@ public class ScheduleSubjectAdapter extends BaseAdapter<ScheduleSubject, Schedul
 
     @Override
     public long getHeaderId(int position) {
+        ScheduleSubject item = getItem(position);
+        if (item == null) return 0;
         switch (getItem(position).getEnumType()) {
             case CLASSROOM:
                 return 1;
@@ -65,6 +68,11 @@ public class ScheduleSubjectAdapter extends BaseAdapter<ScheduleSubject, Schedul
 
     @Override
     public void onBindHeaderViewHolder(BaseViewHolder<String> holder, int position) {
+        ScheduleSubject item = getItem(position);
+        if (item == null) {
+            holder.update("");
+            return;
+        }
         switch (getItem(position).getEnumType()) {
             case CLASSROOM:
                 holder.update(holder.itemView.getContext().getResources()
@@ -82,10 +90,5 @@ public class ScheduleSubjectAdapter extends BaseAdapter<ScheduleSubject, Schedul
                 holder.update("");
                 break;
         }
-    }
-
-    @Override
-    protected boolean contains(ScheduleSubject s, String filterPhrase) {
-        return s.getName().toLowerCase().contains(filterPhrase.toLowerCase());
     }
 }

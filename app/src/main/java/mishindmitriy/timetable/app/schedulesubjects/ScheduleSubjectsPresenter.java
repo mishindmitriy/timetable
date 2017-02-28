@@ -36,7 +36,7 @@ import rx.subscriptions.CompositeSubscription;
 @InjectViewState
 public class ScheduleSubjectsPresenter extends BasePresenter<ScheduleSubjectsView> {
     private static final long UPDATE_INTERVAL = 1000 * 60 * 60 * 24; //24 hours
-    private Observable<List<ScheduleSubject>> loadSubjectsObservable = Observable.zip(
+    private final Observable<List<ScheduleSubject>> loadSubjectsObservable = Observable.zip(
             createLoadSubjectsObservable(ScheduleSubjectType.GROUP),
             createLoadSubjectsObservable(ScheduleSubjectType.TEACHER),
             createLoadSubjectsObservable(ScheduleSubjectType.CLASSROOM),

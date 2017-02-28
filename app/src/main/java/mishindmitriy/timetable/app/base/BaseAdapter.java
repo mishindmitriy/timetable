@@ -20,7 +20,7 @@ public abstract class BaseAdapter<I, VH extends BaseViewHolder<I>>
     }
 
     public I getItem(int position) {
-        return data.get(position);
+        return position < 0 || position > getItemCount() - 1 ? null : data.get(position);
     }
 
     @Override
@@ -29,7 +29,8 @@ public abstract class BaseAdapter<I, VH extends BaseViewHolder<I>>
             @Override
             public void onClick(View view) {
                 if (itemClickListener != null) {
-                    itemClickListener.onItemClick(getItem(holder.getAdapterPosition()));
+                    I item = getItem(holder.getAdapterPosition());
+                    if (item != null) itemClickListener.onItemClick(item);
                 }
             }
         });
@@ -44,10 +45,6 @@ public abstract class BaseAdapter<I, VH extends BaseViewHolder<I>>
         data.clear();
         if (items != null) data.addAll(items);
         notifyDataSetChanged();
-    }
-
-    protected boolean contains(I t, String filterPhrase) {
-        return true;
     }
 
     public interface OnItemClickListener<ITEM> {

@@ -15,7 +15,8 @@ public class PairAdapter extends BaseAdapter<Pair, PairViewHolder> {
 
     @Override
     public long getItemId(int position) {
-        return getItem(position).getId();
+        Pair item = getItem(position);
+        return item == null ? 0 : item.getId();
     }
 
     @Override
